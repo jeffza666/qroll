@@ -7,7 +7,7 @@
 
 ## 🎯 Current Status
 
-**Phase:** `Phase 1 — Database` ✅ **DONE**
+**Phase:** `Phase 2 — Auth via TU API` ✅ **DONE**
 **Last updated:** 2026-04-28
 
 ---
@@ -39,16 +39,30 @@
 
 ---
 
-## 🎯 Next Step (Phase 2 — ขั้นถัดไปทันที)
+## ✅ ทำเสร็จแล้ว (Phase 2)
 
-**Auth via TU API (NextAuth v5)**
+| # | Task | สถานะ | Note |
+| --- | --- | --- | --- |
+| 1 | เขียน PRP 02 — Auth via TU API | ✅ | `docs/prps/02-auth-tu-api.md` |
+| 2 | Install NextAuth v5 beta + Zod + lucide-react | ✅ | auth, validation, icons |
+| 3 | สร้าง NextAuth Credentials provider | ✅ | BYPASS mode + real TU API contract |
+| 4 | สร้าง auth helpers | ✅ | `requireAuth`, `requireTeacher`, `requireStudent` |
+| 5 | สร้าง middleware auth gate | ✅ | redirect ไป `/login?from=...` |
+| 6 | สร้าง login page จาก HTML design | ✅ | Server shell + Client form |
+| 7 | Update env template | ✅ | `TU_API_URL`, `TU_API_KEY`, `NEXTAUTH_*`, `BYPASS_TU_AUTH` |
+| 8 | Verify lint/build + BYPASS smoke test | ✅ | teacher/student session claims ถูกต้อง |
 
-1. เขียน `docs/prps/02-auth-tu-api.md` (PRP สำหรับ auth)
-2. Install NextAuth v5: `npm install next-auth@5`
-3. สร้าง `src/lib/auth.ts` — NextAuth config + TU API custom credentials provider
-4. สร้าง `src/middleware.ts` — Layer 1 auth gate (redirect ถ้าไม่มี session)
-5. สร้าง route `app/(auth)/login/page.tsx`
-6. ทดสอบ login ด้วย seed user (`BYPASS_TU_AUTH=true` mode)
+---
+
+## 🎯 Next Step (Phase 3 — ขั้นถัดไปทันที)
+
+**Teacher: สร้างวิชา + import นักศึกษา (CSV)**
+
+1. เขียน PRP 03 สำหรับ Teacher course + CSV import
+2. สร้าง `/teacher` dashboard shell
+3. สร้าง Server Actions สำหรับ create course และ import enrollment
+4. ใช้ `requireTeacher()` ทุก action
+5. เพิ่ม ownership helper เมื่อมี course actions จริง
 
 ---
 
@@ -58,8 +72,8 @@
 | ----- | ---------------------------------------------------- | -------------- |
 | 0     | Setup project + Context Architecture                 | ✅ Done        |
 | 1     | Database (Prisma + Supabase + schema)                | ✅ Done        |
-| 2     | Auth via TU API (NextAuth v5)                        | 🔜 **Up next** |
-| 3     | Teacher: สร้างวิชา + import นักศึกษา (CSV)           | ⏳             |
+| 2     | Auth via TU API (NextAuth v5)                        | ✅ Done        |
+| 3     | Teacher: สร้างวิชา + import นักศึกษา (CSV)           | 🔜 **Up next** |
 | 4     | Teacher: สร้างคาบเรียน + Dynamic QR                  | ⏳             |
 | 5     | Student: สแกน QR → check-in                          | ⏳             |
 | 6     | Teacher Dashboard (สรุปการเข้าเรียน)                 | ⏳             |
@@ -74,7 +88,7 @@
 | ----------------------------------- | ------------------------------------ | ---------- |
 | `docs/prps/00-security-model.md`    | Security Model (threats + controls)  | ✅ Done    |
 | `docs/prps/01-database-schema.md`   | Database Schema (Prisma blueprint)   | ✅ Done    |
-| `docs/prps/02-auth-tu-api.md`       | NextAuth v5 + TU API custom provider | ⏳ Pending |
+| `docs/prps/02-auth-tu-api.md`       | NextAuth v5 + TU API custom provider | ✅ Done    |
 | `docs/prps/03-dynamic-qr.md`        | Dynamic QR (refresh ทุก 30s + token) | ⏳ Pending |
 | `docs/prps/04-checkin-flow.md`      | Student check-in flow                | ⏳ Pending |
 | `docs/prps/05-teacher-dashboard.md` | Teacher dashboard + reports          | ⏳ Pending |
@@ -120,11 +134,26 @@
 - **Decision:** ใช้ 2 ไฟล์ — `.env.local` สำหรับ Next.js runtime, `.env` สำหรับ Prisma CLI
 - **Why:** Prisma 5 CLI อ่านแค่ `.env` (dotenv default) ไม่อ่าน `.env.local` — Next.js อ่านทั้งสองไฟล์ — ทั้งสองถูก gitignore ด้วย `.env*` rule ใน `.gitignore`
 
+### 2026-04-28 — JWT session strategy for NextAuth
+
+- **Decision:** ใช้ NextAuth v5 Credentials provider + JWT session strategy โดยไม่ wire PrismaAdapter
+- **Why:** Phase 2 ต้องการ claims สั้น ๆ (`id`, `role`, `studentId`) ที่ middleware อ่านได้ตรง และลด moving parts ใน final project MVP
+
+### 2026-04-28 — TU login upsert ไม่ update role
+
+- **Decision:** ตอน real TU login ให้ `upsert` user แต่ update เฉพาะ `name` เมื่อ user มีอยู่แล้ว
+- **Why:** ป้องกัน privilege drift ถ้าข้อมูลภายนอกเปลี่ยน หรือ mapping ผิดพลาดแล้วทำให้ role ใน Qroll ถูกยกระดับ/ลดระดับโดยไม่ตั้งใจ
+
+### 2026-04-28 — Phase 2 auth helper scope
+
+- **Decision:** Phase 2 มีแค่ `requireAuth`, `requireTeacher`, `requireStudent`
+- **Why:** `requireCourseOwner` และ `requireEnrolledStudent` ต้องอิง course/enrollment actions จริง จึงค่อยเพิ่มใน Phase 3/5 เพื่อไม่สร้าง dead code
+
 ---
 
 ## 🚧 Blockers / Open Questions
 
-ไม่มีตอนนี้ — Phase 2 พร้อมเริ่ม
+ไม่มีตอนนี้ — Phase 3 พร้อมเริ่ม
 
 ---
 
@@ -133,12 +162,13 @@
 1. **อ่าน 3 ไฟล์นี้ตามลำดับก่อนเขียนโค้ด:**
    - `INSTRUCTIONS.md` (กฎเหล็ก)
    - `STATE.md` (ไฟล์นี้ — รู้สถานะ)
-   - `docs/prps/02-auth-tu-api.md` (ถ้ายังไม่มีให้เขียนก่อน)
+   - PRP ของ Phase ถัดไป (Phase 3 ยังต้องเขียนก่อนเริ่ม code)
 
 2. **Stack ที่ติดตั้งจริง** (ดู `package.json`):
    - Next.js `15.5.15`, React `19.2.4`, Tailwind `v4`
    - Prisma `5.22.0`, `@prisma/client` `5.22.0`, `server-only`, `ts-node`
-   - ยังไม่ install: NextAuth v5, Zod, qrcode, html5-qrcode
+   - NextAuth v5 beta, Zod, lucide-react
+   - ยังไม่ install: qrcode, html5-qrcode
 
 3. **Seed users (dev login Phase 2):**
    - Teacher: `teacher@tu.ac.th`
