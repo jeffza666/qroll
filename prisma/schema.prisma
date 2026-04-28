@@ -1,0 +1,187 @@
+// prisma/schema.prisma
+// Blueprint: docs/prps/01-database-schema.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT // เช็คอินทันเวลา
+  LATE // เช็คอินสายตามเกณฑ์ที่อาจารย์กำหนด
+  ABSENT // ไม่ได้เช็คอินจนคาบเรียนปิด (สร้างโดย system job)
+}
+
+// ============================================
+// USER (Teacher + Student)
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique // ❗ STUDENT = @dome.tu.ac.th, TEACHER = @tu.ac.th — validate ที่ signIn callback
+  name      String
+  studentId String?  @unique // null สำหรับ TEACHER, unique สำหรับ STUDENT
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NextAuth relations (ถ้าใช้ database adapter)
+  accounts Account[]
+  sessions Session[] // NextAuth Session — ไม่ใช่ ClassSession ของเรา
+
+  // Domain relations
+  taughtCourses Course[]     @relation("CourseTeacher")
+  enrollments   Enrollment[]
+  attendances   Attendance[]
+
+  @@index([role])
+  @@index([studentId])
+}
+
+// ============================================
+// COURSE
+// ============================================
+
+model Course {
+  id        String   @id @default(cuid())
+  code      String // เช่น "CS101 Sec1" — ไม่ unique global เผื่อข้ามเทอม
+  name      String
+  semester  String // เช่น "1/2026"
+  teacherId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher       User           @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  enrollments   Enrollment[]
+  classSessions ClassSession[]
+
+  @@unique([code, semester, teacherId]) // กันสร้างวิชาซ้ำต่อเทอมต่ออาจารย์
+  @@index([teacherId])
+  @@index([semester])
+}
+
+// ============================================
+// ENROLLMENT (M:N User<->Course)
+// ============================================
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student User   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId]) // ❗ กันลงทะเบียนซ้ำ
+  @@index([courseId])
+  @@index([studentId])
+}
+
+// ============================================
+// CLASS SESSION (คาบเรียน — เปลี่ยนชื่อจาก "Session")
+// ============================================
+
+model ClassSession {
+  id        String   @id @default(cuid())
+  courseId  String
+  startsAt  DateTime // เวลาเริ่มคาบ (server time)
+  endsAt    DateTime // เวลาจบคาบ
+  lateAfter DateTime? // หลังเวลานี้ถือว่ามาสาย (optional)
+
+  // ❗ Dynamic QR fields — refresh ทุก 30s
+  qrToken          String?   @unique // ค่าที่ encode ลง QR (regenerate ทุก 30s)
+  qrTokenExpiresAt DateTime? // หมดอายุ QR ปัจจุบัน
+  qrRefreshedAt    DateTime? // เวลา teacher (หรือ system job) สร้าง token ล่าสุด
+
+  isOpen    Boolean  @default(true) // false = ปิดคาบ ไม่รับ check-in อีก
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@index([courseId])
+  @@index([startsAt])
+  @@index([qrToken]) // lookup เร็วตอน student ส่ง token มา verify
+}
+
+// ============================================
+// ATTENDANCE (การเช็คอิน)
+// ============================================
+
+model Attendance {
+  id             String           @id @default(cuid())
+  classSessionId String
+  studentId      String
+  status         AttendanceStatus @default(PRESENT)
+  checkedInAt    DateTime         @default(now()) // server time — ห้ามเชื่อ client
+  ipAddress      String? // forensics (optional)
+  userAgent      String? // forensics (optional)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classSession ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+  student      User         @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([classSessionId, studentId]) // ❗❗❗ กัน race condition + replay attack
+  @@index([studentId])
+  @@index([classSessionId])
+}
+
+// ============================================
+// NEXTAUTH ADAPTER MODELS (Auth.js v5 standard)
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  // ⚠️ NextAuth Session — อย่าสับสนกับ ClassSession ของเรา
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
