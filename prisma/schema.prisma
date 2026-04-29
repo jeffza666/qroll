@@ -129,9 +129,15 @@ model ClassSession {
   lateAfter  DateTime? // Phase 4: หลังเวลานี้ถือว่ามาสาย
 
   // ❗ Dynamic QR fields — refresh ทุก 30s (Phase 4)
-  qrToken          String?   @unique
-  qrTokenExpiresAt DateTime?
-  qrRefreshedAt    DateTime?
+  qrToken              String?   @unique
+  qrTokenExpiresAt     DateTime?
+  qrRefreshedAt        DateTime?
+  qrPrevToken          String?
+  qrPrevTokenExpiresAt DateTime?
+
+  // Entry code fallback - rotates with QR token
+  entryCode     String?
+  entryCodePrev String?
 
   isOpen    Boolean   @default(true) // false = ปิดคาบ ไม่รับ check-in อีก
   closedAt  DateTime? // เวลาปิดจริง (manual หรือ auto-close)
@@ -146,6 +152,8 @@ model ClassSession {
   @@index([scheduleId])
   @@index([startsAt])
   @@index([qrToken])
+  @@index([qrPrevToken])
+  @@index([entryCode])
   // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
   // CREATE UNIQUE INDEX "ClassSession_one_open_per_course" ON "ClassSession"("courseId") WHERE "isOpen" = true;
 }
