@@ -67,6 +67,7 @@ model Course {
 
   teacher       User           @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
   enrollments   Enrollment[]
+  schedules     Schedule[]
   classSessions ClassSession[]
 
   @@unique([code, semester, teacherId]) // กันสร้างวิชาซ้ำต่อเทอมต่ออาจารย์
@@ -94,31 +95,59 @@ model Enrollment {
 }
 
 // ============================================
+// SCHEDULE (ตารางสอนรายสัปดาห์ recurring)
+// ============================================
+
+model Schedule {
+  id        String  @id @default(cuid())
+  courseId  String
+  dayOfWeek Int     // 0=Sun, 1=Mon, ..., 6=Sat (ตรงกับ JS Date.getDay())
+  startTime String  // "HH:MM" 24h เช่น "09:00"
+  endTime   String  // "HH:MM" 24h เช่น "12:00"
+  room      String? // optional เช่น "SC-3001"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  classSessions ClassSession[]
+
+  @@index([courseId])
+  @@index([dayOfWeek])
+}
+
+// ============================================
 // CLASS SESSION (คาบเรียน — เปลี่ยนชื่อจาก "Session")
 // ============================================
 
 model ClassSession {
-  id        String   @id @default(cuid())
-  courseId  String
-  startsAt  DateTime // เวลาเริ่มคาบ (server time)
-  endsAt    DateTime // เวลาจบคาบ
-  lateAfter DateTime? // หลังเวลานี้ถือว่ามาสาย (optional)
+  id         String    @id @default(cuid())
+  courseId   String
+  scheduleId String    // ❗ must bind — ห้าม nullable (ดู PRP 03.5)
+  startsAt   DateTime  // เวลาเริ่มคาบ (server time — คำนวณจาก Schedule)
+  endsAt     DateTime  // เวลาจบคาบ
+  lateAfter  DateTime? // Phase 4: หลังเวลานี้ถือว่ามาสาย
 
-  // ❗ Dynamic QR fields — refresh ทุก 30s
-  qrToken          String?   @unique // ค่าที่ encode ลง QR (regenerate ทุก 30s)
-  qrTokenExpiresAt DateTime? // หมดอายุ QR ปัจจุบัน
-  qrRefreshedAt    DateTime? // เวลา teacher (หรือ system job) สร้าง token ล่าสุด
+  // ❗ Dynamic QR fields — refresh ทุก 30s (Phase 4)
+  qrToken          String?   @unique
+  qrTokenExpiresAt DateTime?
+  qrRefreshedAt    DateTime?
 
-  isOpen    Boolean  @default(true) // false = ปิดคาบ ไม่รับ check-in อีก
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isOpen    Boolean   @default(true) // false = ปิดคาบ ไม่รับ check-in อีก
+  closedAt  DateTime? // เวลาปิดจริง (manual หรือ auto-close)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  schedule    Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
   attendances Attendance[]
 
   @@index([courseId])
+  @@index([scheduleId])
   @@index([startsAt])
-  @@index([qrToken]) // lookup เร็วตอน student ส่ง token มา verify
+  @@index([qrToken])
+  // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
+  // CREATE UNIQUE INDEX "ClassSession_one_open_per_course" ON "ClassSession"("courseId") WHERE "isOpen" = true;
 }
 
 // ============================================
