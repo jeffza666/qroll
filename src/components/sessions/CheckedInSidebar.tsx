@@ -1,39 +1,200 @@
-import { UsersRound } from "lucide-react";
+"use client";
 
-type Props = {
-  count: number;
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { CheckCircle2, Clock, UsersRound } from "lucide-react";
+
+export type AttendanceListItem = {
+  id: string;
+  name: string;
+  studentId: string | null;
+  status: "PRESENT" | "LATE" | "ABSENT";
+  checkedInAt: string;
 };
 
-export default function CheckedInSidebar({ count }: Props) {
+export type DemoCheckInListItem = {
+  id: string;
+  displayName: string;
+  checkedInAt: string;
+};
+
+type Props = {
+  sessionId: string;
+  initialAttendanceCount: number;
+  initialDemoCount: number;
+  initialAttendances: AttendanceListItem[];
+  initialDemoCheckIns: DemoCheckInListItem[];
+  demoEnabled: boolean;
+  demoUrl: string | null;
+  demoQrDataUrl: string | null;
+};
+
+type CheckInsResponse = {
+  attendanceCount: number;
+  demoCount: number;
+  attendances: AttendanceListItem[];
+  demoCheckIns: DemoCheckInListItem[];
+};
+
+function formatTime(value: string) {
+  return new Date(value).toLocaleTimeString("th-TH", {
+    timeZone: "Asia/Bangkok",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function StatusBadge({ status }: { status: AttendanceListItem["status"] }) {
+  const label = status === "LATE" ? "สาย" : status === "ABSENT" ? "ขาด" : "ทันเวลา";
+  const tone =
+    status === "LATE"
+      ? "bg-amber-50 text-amber-700 ring-amber-200"
+      : status === "ABSENT"
+        ? "bg-red-50 text-red-700 ring-red-200"
+        : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+
   return (
-    <aside className="flex h-full min-h-0 flex-col border-l border-slate-200 bg-white/70 px-6 py-8">
+    <span className={`rounded-md px-2 py-1 text-[11px] font-bold ring-1 ${tone}`}>
+      {label}
+    </span>
+  );
+}
+
+export default function CheckedInSidebar({
+  sessionId,
+  initialAttendanceCount,
+  initialDemoCount,
+  initialAttendances,
+  initialDemoCheckIns,
+  demoEnabled,
+  demoUrl,
+  demoQrDataUrl,
+}: Props) {
+  const [attendanceCount, setAttendanceCount] = useState(initialAttendanceCount);
+  const [demoCount, setDemoCount] = useState(initialDemoCount);
+  const [attendances, setAttendances] = useState(initialAttendances);
+  const [demoCheckIns, setDemoCheckIns] = useState(initialDemoCheckIns);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCheckIns() {
+      const response = await fetch(`/api/sessions/${sessionId}/checkins`, {
+        cache: "no-store",
+      });
+      if (!response.ok || cancelled) return;
+
+      const data = (await response.json()) as CheckInsResponse;
+      setAttendanceCount(data.attendanceCount);
+      setDemoCount(data.demoCount);
+      setAttendances(data.attendances);
+      setDemoCheckIns(data.demoCheckIns);
+    }
+
+    const timer = window.setInterval(() => {
+      void fetchCheckIns();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [sessionId]);
+
+  return (
+    <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-l border-slate-200 bg-white/80 px-6 py-8">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-950 text-white">
           <UsersRound className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-500">เช็คอินแล้ว</p>
-          <p className="text-3xl font-black tabular-nums text-slate-950">{count}</p>
+          <p className="text-sm font-semibold text-slate-500">เช็คชื่อจริง</p>
+          <p className="text-3xl font-black tabular-nums text-slate-950">
+            {attendanceCount}
+          </p>
         </div>
       </div>
 
-      <div className="mt-8 border-t border-slate-200 pt-6">
-        <p className="text-sm font-bold text-slate-900">รายชื่อล่าสุด</p>
+      <section className="mt-8 border-t border-slate-200 pt-6">
+        <p className="text-sm font-bold text-slate-900">รายชื่อนักศึกษาล่าสุด</p>
         <div className="mt-4 space-y-3">
-          {[0, 1, 2].map((item) => (
-            <div key={item} className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-slate-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-2.5 w-24 rounded-full bg-slate-100" />
-                <div className="h-2 w-16 rounded-full bg-slate-100" />
+          {attendances.length === 0 ? (
+            <p className="rounded-xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+              ยังไม่มีนักศึกษาเช็คชื่อ
+            </p>
+          ) : (
+            attendances.map((item) => (
+              <div key={item.id} className="flex gap-3">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-slate-500">
+                    {item.studentId ?? "ไม่มีรหัสนักศึกษา"} · {formatTime(item.checkedInAt)} น.
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
-        <p className="mt-5 text-xs leading-5 text-slate-500">
-          รายชื่อเช็คอินสดจะเชื่อมต่อใน Phase 4.5
-        </p>
-      </div>
+      </section>
+
+      {demoEnabled && (
+        <section className="mt-8 border-t border-slate-200 pt-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-slate-900">Demo check-ins</p>
+              <p className="text-xs text-slate-500">แยกจาก Attendance จริง</p>
+            </div>
+            <p className="text-2xl font-black tabular-nums text-slate-950">{demoCount}</p>
+          </div>
+
+          {demoQrDataUrl && demoUrl && (
+            <div className="mt-4 rounded-xl border border-red-100 bg-red-50/60 p-3">
+              <Image
+                src={demoQrDataUrl}
+                alt="Demo check-in QR"
+                width={128}
+                height={128}
+                unoptimized
+                className="mx-auto h-32 w-32 rounded-lg bg-white p-2"
+              />
+              <p className="mt-2 break-all text-center text-[11px] font-semibold text-[#990000]">
+                {demoUrl}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-4 space-y-3">
+            {demoCheckIns.length === 0 ? (
+              <p className="rounded-xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+                ยังไม่มี demo check-in
+              </p>
+            ) : (
+              demoCheckIns.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-[#990000]">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {item.displayName}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatTime(item.checkedInAt)} น.
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      )}
     </aside>
   );
 }
