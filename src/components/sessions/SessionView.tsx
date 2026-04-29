@@ -5,6 +5,10 @@ import QRCode from "qrcode";
 import { AlertCircle, Clock, MapPin } from "lucide-react";
 
 import CheckedInSidebar from "@/components/sessions/CheckedInSidebar";
+import type {
+  AttendanceListItem,
+  DemoCheckInListItem,
+} from "@/components/sessions/CheckedInSidebar";
 import EntryCodeCard from "@/components/sessions/EntryCodeCard";
 import FullscreenButton from "@/components/sessions/FullscreenButton";
 import QrDisplay from "@/components/sessions/QrDisplay";
@@ -23,7 +27,11 @@ type Props = {
   sessionId: string;
   initialIsOpen: boolean;
   initialClosedAtLabel: string | null;
-  attendanceCount: number;
+  initialAttendanceCount: number;
+  initialDemoCount: number;
+  initialAttendances: AttendanceListItem[];
+  initialDemoCheckIns: DemoCheckInListItem[];
+  demoEnabled: boolean;
   sessionInfo: SessionInfo;
 };
 
@@ -54,7 +62,11 @@ export default function SessionView({
   sessionId,
   initialIsOpen,
   initialClosedAtLabel,
-  attendanceCount,
+  initialAttendanceCount,
+  initialDemoCount,
+  initialAttendances,
+  initialDemoCheckIns,
+  demoEnabled,
   sessionInfo,
 }: Props) {
   const presenterRef = useRef<HTMLDivElement>(null);
@@ -62,6 +74,8 @@ export default function SessionView({
   const [isOpen, setIsOpen] = useState(initialIsOpen);
   const [closedAtLabel, setClosedAtLabel] = useState(initialClosedAtLabel);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [demoQrDataUrl, setDemoQrDataUrl] = useState<string | null>(null);
+  const [demoUrl, setDemoUrl] = useState<string | null>(null);
   const [entryCode, setEntryCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(30);
@@ -84,6 +98,8 @@ export default function SessionView({
       if (!data.isOpen) {
         setIsOpen(false);
         setQrDataUrl(null);
+        setDemoQrDataUrl(null);
+        setDemoUrl(null);
         setEntryCode(null);
         setExpiresAt(null);
         setClosedAtLabel(data.closedAt ? formatBangkokTime(data.closedAt) : null);
@@ -94,14 +110,26 @@ export default function SessionView({
 
       const payload = new URL("/checkin", window.location.origin);
       payload.searchParams.set("t", data.token);
+      const demoPayload = new URL("/demo/checkin", window.location.origin);
+      demoPayload.searchParams.set("t", data.token);
       const dataUrl = await QRCode.toDataURL(payload.toString(), {
         width: 960,
         margin: 1,
         color: { dark: "#0f172a", light: "#ffffff" },
         errorCorrectionLevel: "M",
       });
+      const demoDataUrl = demoEnabled
+        ? await QRCode.toDataURL(demoPayload.toString(), {
+            width: 420,
+            margin: 1,
+            color: { dark: "#990000", light: "#ffffff" },
+            errorCorrectionLevel: "M",
+          })
+        : null;
 
       setQrDataUrl(dataUrl);
+      setDemoQrDataUrl(demoDataUrl);
+      setDemoUrl(demoEnabled ? demoPayload.toString() : null);
       setEntryCode(data.entryCode);
       setExpiresAt(data.expiresAt);
       setRefreshIntervalMs(data.refreshIntervalMs);
@@ -116,7 +144,7 @@ export default function SessionView({
     } finally {
       setIsLoading(false);
     }
-  }, [isOpen, sessionId]);
+  }, [demoEnabled, isOpen, sessionId]);
 
   useEffect(() => {
     void fetchQr();
@@ -229,7 +257,16 @@ export default function SessionView({
       </main>
 
       <div className="hidden w-80 shrink-0 lg:block">
-        <CheckedInSidebar count={attendanceCount} />
+        <CheckedInSidebar
+          sessionId={sessionId}
+          initialAttendanceCount={initialAttendanceCount}
+          initialDemoCount={initialDemoCount}
+          initialAttendances={initialAttendances}
+          initialDemoCheckIns={initialDemoCheckIns}
+          demoEnabled={demoEnabled}
+          demoUrl={demoUrl}
+          demoQrDataUrl={demoQrDataUrl}
+        />
       </div>
     </div>
   );

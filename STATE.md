@@ -7,28 +7,23 @@
 
 ## Current Status
 
-**Phase:** `Phase 4 — Dynamic QR Display` ✅ **DONE**  
+**Phase:** `Phase 4.5 — Student Check-in Flow` ✅ **IMPLEMENTED**
 **Last updated:** 2026-04-29
 
-โปรเจกต์ตอนนี้มี flow ฝั่งอาจารย์ครบถึงขั้นเปิดคาบเรียนแล้วแสดง Dynamic QR ที่หมุนทุก 30 วินาที พร้อมรหัสเข้าเรียน 6 หลักและ fullscreen สำหรับฉายหน้าห้อง
+Phase 4.5 now has real student QR check-in and separated public demo check-in. Real flow writes `Attendance` only after login + enrollment check. Demo flow writes to `DemoCheckIn` through `/demo/checkin` and is controlled by `DEMO_CHECKIN_ENABLED`.
 
 ---
 
 ## Next Step
 
-### Phase 4.5 — Student Check-in Flow
+### Phase 5 — Teacher Dashboard + Reports
 
-งานถัดไปคือฝั่งนักศึกษา:
+งานถัดไปคือ dashboard ฝั่งอาจารย์แบบ live/historical:
 
-1. อ่าน `docs/prps/05-checkin-flow.md`
-2. สร้างหน้า `/checkin?t=<token>`
-3. ใช้ helper ที่เตรียมไว้แล้วใน Phase 4:
-   - `verifyQrToken(token)`
-   - `verifyEntryCode(sessionId, code)`
-4. เช็กว่า student อยู่ใน `Enrollment` ของ course นั้นก่อนเขียน attendance
-5. บันทึก `Attendance` ด้วย server time เท่านั้น
-6. ใช้ unique constraint `(classSessionId, studentId)` + `upsert` เพื่อกัน replay/race condition
-7. ทำ UI ผลลัพธ์: success, late, duplicate, expired, not enrolled
+1. สรุป attendance ต่อ session/course
+2. ดูรายชื่อนักศึกษาที่มา/สาย/ขาด
+3. แยกข้อมูล demo ออกจากรายงานจริง
+4. เตรียมพื้นฐาน export/report ใน Phase 6
 
 ---
 
@@ -42,7 +37,7 @@
 | 3     | Teacher: AppShell + Courses + Roster import (CSV/XLSX) | ✅ Done        |
 | 3.5   | Teacher: Schedule + ClassSession lifecycle             | ✅ Done        |
 | 4     | Teacher: Dynamic QR Display (rotate 30s + fullscreen)  | ✅ Done        |
-| 4.5   | Student: Login + Scan QR + Check-in                    | 🔜 Up next     |
+| 4.5   | Student: Login + Scan QR + Check-in                    | ✅ Done        |
 | 5     | Teacher: Live + Historical Dashboard                   | ⏳ Pending     |
 | 6     | Geofence + Manual Edit + Export                        | ⏳ Pending     |
 | 7     | Face Scan + Email notify                               | ⏳ Pending     |
@@ -59,7 +54,7 @@
 | `docs/prps/03-teacher-courses.md`    | Teacher Courses + Roster import            | ✅ Done    |
 | `docs/prps/03.5-schedule-session.md` | Schedule + ClassSession lifecycle          | ✅ Done    |
 | `docs/prps/04-dynamic-qr.md`         | Dynamic QR Display                         | ✅ Done    |
-| `docs/prps/05-checkin-flow.md`       | Student check-in flow                      | ⏳ Pending |
+| `docs/prps/05-checkin-flow.md`       | Student check-in flow                      | ✅ Approved |
 | `docs/prps/06-teacher-dashboard.md`  | Teacher dashboard + reports                | ⏳ Pending |
 
 ---
@@ -154,6 +149,21 @@
 | 8 | Add checked-in sidebar skeleton           | ✅     | For Phase 4.5 live feed later     |
 | 9 | Verify build                              | ✅     | `npm.cmd run build` passed        |
 
+### Phase 4.5 — Student Check-in Flow
+
+| # | Task                                      | Status | Note                              |
+| - | ----------------------------------------- | ------ | --------------------------------- |
+| 1 | Write/approve PRP 05                      | ✅     | real + separated demo scope       |
+| 2 | Add `DemoCheckIn` schema + migration      | ✅     | `phase45_checkin_flow` applied    |
+| 3 | Add real check-in Server Action           | ✅     | auth + enrollment + server time   |
+| 4 | Add demo check-in Server Action           | ✅     | writes only to `DemoCheckIn`      |
+| 5 | Add `/checkin?t=<token>` mobile page      | ✅     | student identity from login       |
+| 6 | Add `/demo/checkin?t=<token>` mobile page | ✅     | guarded by env flag               |
+| 7 | Preserve query string through login       | ✅     | middleware uses path + search     |
+| 8 | Wire teacher session live sidebar         | ✅     | real/demo lists separated         |
+| 9 | Add student dashboard/course/history pages| ✅     | keeps student nav usable          |
+| 10 | Verify build                             | ✅     | `npm.cmd run build` passed        |
+
 ---
 
 ## Important Files
@@ -185,9 +195,39 @@
 - `src/components/sessions/FullscreenButton.tsx`
 - `src/components/sessions/CheckedInSidebar.tsx`
 
+### Phase 4.5 Files
+
+- `docs/prps/05-checkin-flow.md`
+- `prisma/migrations/20260429072441_phase45_checkin_flow/migration.sql`
+- `src/lib/checkin.ts`
+- `src/lib/validations/checkin.ts`
+- `src/app/actions/checkin.ts`
+- `src/app/checkin/page.tsx`
+- `src/app/demo/checkin/page.tsx`
+- `src/app/api/sessions/[id]/checkins/route.ts`
+- `src/components/checkin/CheckInShell.tsx`
+- `src/components/checkin/SessionSummary.tsx`
+- `src/components/checkin/StudentCheckInForm.tsx`
+- `src/components/checkin/DemoCheckInForm.tsx`
+- `src/components/checkin/StatusPanel.tsx`
+- `src/app/(app)/student/page.tsx`
+- `src/app/(app)/student/courses/page.tsx`
+- `src/app/(app)/student/history/page.tsx`
+
 ---
 
 ## Decision Log
+
+### 2026-04-29 — Phase 4.5 Student Check-in + Demo Mode
+
+- **Decision:** Real student check-in uses logged-in Auth.js identity only; no student name picker.
+- **Why:** Login proves the person, QR proves the session, and `Enrollment` proves permission to check in.
+- **Decision:** Public showcase check-in uses `/demo/checkin?t=<token>` and writes to `DemoCheckIn`.
+- **Why:** Visitors can try the product with phones while real `Attendance`, `User`, and `Enrollment` data stays clean.
+- **Decision:** Demo mode is controlled by `DEMO_CHECKIN_ENABLED`.
+- **Why:** The feature can be enabled for showcase and disabled for real production use without deleting code.
+- **Decision:** Teacher session sidebar shows real attendance and demo check-ins in separate sections.
+- **Why:** Good for presentation, but still keeps the meaning of academic attendance clear.
 
 ### 2026-04-29 — Phase 4 Dynamic QR Rotation
 
@@ -266,11 +306,11 @@
 
 ไม่มี blocker ตอนนี้
 
-สิ่งที่ต้องเช็กก่อนเริ่ม Phase 4.5:
+สิ่งที่ต้องเช็กก่อนเริ่ม Phase 5:
 
-- `docs/prps/05-checkin-flow.md` พร้อมและตรงกับ schema ปัจจุบันหรือยัง
-- ต้องมี route `/checkin` อยู่ใน middleware allowlist/guard pattern ที่ถูกต้อง
-- Student ต้องถูก enroll ใน course ก่อน test check-in
+- Test real check-in manually with an enrolled student before demo day.
+- Set `DEMO_CHECKIN_ENABLED=true` in local/showcase env when public demo mode is needed.
+- Phase 5 reports must exclude `DemoCheckIn` from real attendance metrics.
 
 ---
 
@@ -309,5 +349,6 @@ npx prisma generate
 ### Latest Verification
 
 - `npx.cmd prisma migrate dev --name phase4_dynamic_qr` ✅
+- `npx.cmd prisma migrate dev --name phase45_checkin_flow` ✅
+- `npx.cmd prisma generate` ✅
 - `npm.cmd run build` ✅
-

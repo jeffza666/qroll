@@ -147,6 +147,7 @@ model ClassSession {
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   schedule    Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
   attendances Attendance[]
+  demoCheckIns DemoCheckIn[]
 
   @@index([courseId])
   @@index([scheduleId])
@@ -180,6 +181,27 @@ model Attendance {
   @@unique([classSessionId, studentId]) // ❗❗❗ กัน race condition + replay attack
   @@index([studentId])
   @@index([classSessionId])
+}
+
+// ============================================
+// DEMO CHECK-IN (public showcase data, separate from real Attendance)
+// ============================================
+
+model DemoCheckIn {
+  id             String   @id @default(cuid())
+  classSessionId String
+  displayName    String
+  checkedInAt    DateTime @default(now())
+  ipAddress      String?
+  userAgent      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classSession ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+
+  @@index([classSessionId])
+  @@index([checkedInAt])
 }
 
 // ============================================
