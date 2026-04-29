@@ -8,11 +8,14 @@ export default auth((req) => {
   const isLoggedIn = Boolean(req.auth);
   const path = req.nextUrl.pathname;
   const isPublic =
-    path === "/" || path.startsWith("/login") || path.startsWith("/api/auth");
+    path === "/" ||
+    path.startsWith("/login") ||
+    path.startsWith("/api/auth") ||
+    path.startsWith("/demo/checkin");
 
   if (!isLoggedIn && !isPublic) {
     const url = new URL("/login", req.url);
-    url.searchParams.set("from", path);
+    url.searchParams.set("from", `${path}${req.nextUrl.search}`);
     return Response.redirect(url);
   }
 

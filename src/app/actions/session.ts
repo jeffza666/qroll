@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { LATE_AFTER_MIN, QR_REFRESH_INTERVAL_MS } from "@/lib/qr-config";
@@ -35,6 +36,14 @@ export async function openSession(scheduleId: string) {
   const now = new Date();
   const lateAfter = new Date(startsAt.getTime() + LATE_AFTER_MIN * 60 * 1000);
 
+  const existingOpenSession = await db.classSession.findFirst({
+    where: { courseId: schedule.courseId, isOpen: true },
+    select: { id: true },
+  });
+  if (existingOpenSession) {
+    redirect(`/teacher/sessions/${existingOpenSession.id}`);
+  }
+
   let sessionId: string;
   try {
     const session = await db.classSession.create({
@@ -54,6 +63,24 @@ export async function openSession(scheduleId: string) {
     });
     sessionId = session.id;
   } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      const activeSession = await db.classSession.findFirst({
+        where: { courseId: schedule.courseId, isOpen: true },
+        select: { id: true },
+      });
+
+      if (activeSession) {
+        redirect(`/teacher/sessions/${activeSession.id}`);
+      }
+
+      return {
+        error: "มี session ของวิชานี้ที่เปิดอยู่แล้ว กรุณาปิดก่อนเปิดใหม่",
+      };
+    }
+
     const msg = err instanceof Error ? err.message : "";
     // Prisma P2002 = unique constraint violation = partial unique index hit = double-open
     if (msg.includes("P2002") || msg.includes("unique constraint")) {

@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import CloseSessionButton from "@/components/courses/CloseSessionButton";
 import SessionView from "@/components/sessions/SessionView";
 import { requireCourseOwner } from "@/lib/auth-helpers";
+import { isDemoCheckInEnabled } from "@/lib/checkin";
 import { db } from "@/lib/db";
 import { autoCloseIfExpired } from "@/lib/session-helpers";
 
@@ -31,7 +32,17 @@ export default async function SessionDetailPage({ params }: Props) {
       schedule: {
         select: { dayOfWeek: true, startTime: true, endTime: true, room: true },
       },
-      _count: { select: { attendances: true } },
+      attendances: {
+        orderBy: { checkedInAt: "desc" },
+        take: 8,
+        include: { student: { select: { name: true, studentId: true } } },
+      },
+      demoCheckIns: {
+        orderBy: { checkedInAt: "desc" },
+        take: 8,
+        select: { id: true, displayName: true, checkedInAt: true },
+      },
+      _count: { select: { attendances: true, demoCheckIns: true } },
     },
   });
 
@@ -69,7 +80,21 @@ export default async function SessionDetailPage({ params }: Props) {
         sessionId={session.id}
         initialIsOpen={session.isOpen}
         initialClosedAtLabel={session.closedAt ? formatBangkokTime(session.closedAt) : null}
-        attendanceCount={raw._count.attendances}
+        initialAttendanceCount={raw._count.attendances}
+        initialDemoCount={raw._count.demoCheckIns}
+        initialAttendances={raw.attendances.map((attendance) => ({
+          id: attendance.id,
+          name: attendance.student.name,
+          studentId: attendance.student.studentId,
+          status: attendance.status,
+          checkedInAt: attendance.checkedInAt.toISOString(),
+        }))}
+        initialDemoCheckIns={raw.demoCheckIns.map((demoCheckIn) => ({
+          id: demoCheckIn.id,
+          displayName: demoCheckIn.displayName,
+          checkedInAt: demoCheckIn.checkedInAt.toISOString(),
+        }))}
+        demoEnabled={isDemoCheckInEnabled()}
         sessionInfo={{
           courseCode: raw.course.code,
           courseName: raw.course.name,
