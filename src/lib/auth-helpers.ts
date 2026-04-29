@@ -40,3 +40,17 @@ export async function requireStudent() {
 
   return user;
 }
+
+export async function requireCourseOwner(courseId: string) {
+  const user = await requireTeacher();
+  const { db } = await import("@/lib/db");
+
+  const course = await db.course.findFirst({
+    where: { id: courseId, teacherId: user.id },
+    select: { id: true },
+  });
+
+  if (!course) throw new AuthError("FORBIDDEN");
+
+  return user;
+}

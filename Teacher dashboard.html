@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRoll - Teacher Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root {
+            --qroll-red: #CC0000;
+            --qroll-red-dark: #990000;
+            --bg: #F7F8FC;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #0F172A;
+            --muted: #64748B;
+            --faint: #94A3B8;
+        }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        button, input, select { font: inherit; }
+        a { color: inherit; text-decoration: none; }
+        table { border-collapse: collapse; }
+        img, svg { display: block; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+
+        /* Local fallback for the Tailwind utilities used in this prototype. */
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .grid { display: grid; }
+        .hidden { display: none; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .sticky { position: sticky; }
+        .inset-0 { inset: 0; }
+        .top-0 { top: 0; }
+        .right-0 { right: 0; }
+        .bottom-0 { bottom: 0; }
+        .left-10 { left: 2.5rem; }
+        .-top-1 { top: -0.25rem; }
+        .-right-1 { right: -0.25rem; }
+        .z-0 { z-index: 0; }
+        .z-10 { z-index: 10; }
+        .z-20 { z-index: 20; }
+        .h-screen { height: 100vh; }
+        .h-20 { height: 5rem; }
+        .h-28 { height: 7rem; }
+        .h-2 { height: 0.5rem; }
+        .h-3 { height: 0.75rem; }
+        .h-4 { height: 1rem; }
+        .h-5 { height: 1.25rem; }
+        .h-6 { height: 1.5rem; }
+        .h-8 { height: 2rem; }
+        .h-10 { height: 2.5rem; }
+        .h-11 { height: 2.75rem; }
+        .h-12 { height: 3rem; }
+        .h-20 { height: 5rem; }
+        .h-28 { height: 7rem; }
+        .h-48 { height: 12rem; }
+        .h-full { height: 100%; }
+        .w-2 { width: 0.5rem; }
+        .w-3 { width: 0.75rem; }
+        .w-4 { width: 1rem; }
+        .w-5 { width: 1.25rem; }
+        .w-6 { width: 1.5rem; }
+        .w-8 { width: 2rem; }
+        .w-10 { width: 2.5rem; }
+        .w-11 { width: 2.75rem; }
+        .w-12 { width: 3rem; }
+        .w-20 { width: 5rem; }
+        .w-32 { width: 8rem; }
+        .w-48 { width: 12rem; }
+        .w-64 { width: 16rem; }
+        .w-full { width: 100%; }
+        .w-\[170px\] { width: 170px; }
+        .w-\[35\%\] { width: 35%; }
+        .w-\[20\%\] { width: 20%; }
+        .w-\[25\%\] { width: 25%; }
+        .max-w-\[140px\] { max-width: 140px; }
+        .max-w-\[180px\] { max-width: 180px; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .items-center { align-items: center; }
+        .items-baseline { align-items: baseline; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-1\.5 { gap: 0.375rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-2\.5 { gap: 0.625rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-y-auto { overflow-y: auto; }
+        .overflow-x-auto { overflow-x: auto; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .min-w-0 { min-width: 0; }
+        .rounded { border-radius: 0.25rem; }
+        .rounded-md { border-radius: 0.375rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-full { border-radius: 9999px; }
+        .border { border-width: 1px; border-style: solid; }
+        .border-2 { border-width: 2px; border-style: solid; }
+        .border-r { border-right: 1px solid; }
+        .border-b { border-bottom: 1px solid; }
+        .border-t { border-top: 1px solid; }
+        .border-l-4 { border-left: 4px solid; }
+        .border-white { border-color: #fff; }
+        .border-slate-100 { border-color: #F1F5F9; }
+        .border-slate-200 { border-color: #E2E8F0; }
+        .border-slate-300 { border-color: #CBD5E1; }
+        .border-red-100 { border-color: #FEE2E2; }
+        .border-emerald-100 { border-color: #D1FAE5; }
+        .border-emerald-200 { border-color: #A7F3D0; }
+        .border-l-emerald-500 { border-left-color: #10B981; }
+        .bg-\[\#F8FAFC\], .bg-slate-50 { background: #F8FAFC; }
+        .bg-white { background: #FFFFFF; }
+        .bg-white\/80 { background: rgba(255,255,255,0.8); }
+        .bg-slate-50\/80 { background: rgba(248,250,252,0.8); }
+        .bg-slate-50\/50 { background: rgba(248,250,252,0.5); }
+        .bg-slate-100 { background: #F1F5F9; }
+        .bg-\[\#990000\] { background: var(--qroll-red-dark); }
+        .bg-red-50 { background: #FEF2F2; }
+        .bg-red-50\/50 { background: rgba(254,242,242,0.5); }
+        .bg-red-800 { background: #991B1B; }
+        .bg-blue-50 { background: #EFF6FF; }
+        .bg-indigo-50 { background: #EEF2FF; }
+        .bg-emerald-50 { background: #ECFDF5; }
+        .bg-emerald-50\/30 { background: rgba(236,253,245,0.3); }
+        .bg-emerald-50\/50 { background: rgba(236,253,245,0.5); }
+        .bg-emerald-50\/60 { background: rgba(236,253,245,0.6); }
+        .bg-emerald-100\/50 { background: rgba(209,250,229,0.5); }
+        .bg-emerald-400 { background: #34D399; }
+        .bg-emerald-500 { background: #10B981; }
+        .bg-emerald-600 { background: #059669; }
+        .bg-amber-50\/50 { background: rgba(255,251,235,0.5); }
+        .bg-black { background: #000; }
+        .bg-gradient-to-br { background-image: linear-gradient(135deg, var(--tw-gradient-from, #990000), var(--tw-gradient-to, #991B1B)); }
+        .from-\[\#990000\] { --tw-gradient-from: var(--qroll-red-dark); }
+        .to-red-800 { --tw-gradient-to: #991B1B; }
+        .bg-gradient-to-r { background-image: linear-gradient(90deg, var(--tw-gradient-from, #34D399), var(--tw-gradient-to, #059669)); }
+        .from-emerald-400 { --tw-gradient-from: #34D399; }
+        .to-emerald-600 { --tw-gradient-to: #059669; }
+        .text-white { color: #fff; }
+        .text-\[\#990000\] { color: var(--qroll-red-dark); }
+        .text-slate-400 { color: #94A3B8; }
+        .text-slate-500 { color: #64748B; }
+        .text-slate-600 { color: #475569; }
+        .text-slate-700 { color: #334155; }
+        .text-slate-800 { color: #1E293B; }
+        .text-slate-900 { color: #0F172A; }
+        .text-red-200 { color: #FECACA; }
+        .text-red-600 { color: #DC2626; }
+        .text-red-800 { color: #991B1B; }
+        .text-blue-600 { color: #2563EB; }
+        .text-indigo-600 { color: #4F46E5; }
+        .text-emerald-600 { color: #059669; }
+        .text-amber-600 { color: #D97706; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.25rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-10 { padding: 2.5rem; }
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .px-7 { padding-left: 1.75rem; padding-right: 1.75rem; }
+        .px-10 { padding-left: 2.5rem; padding-right: 2.5rem; }
+        .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .pl-6 { padding-left: 1.5rem; }
+        .mb-0\.5 { margin-bottom: 0.125rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mt-0\.5 { margin-top: 0.125rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-5 { margin-top: 1.25rem; }
+        .mt-8 { margin-top: 2rem; }
+        .-mt-1 { margin-top: -0.25rem; }
+        .-mt-10 { margin-top: -2.5rem; }
+        .-mt-14 { margin-top: -3.5rem; }
+        .-mr-10 { margin-right: -2.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .leading-tight { line-height: 1.25; }
+        .leading-snug { line-height: 1.375; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .align-middle { vertical-align: middle; }
+        .text-\[10px\] { font-size: 10px; }
+        .text-\[11px\] { font-size: 11px; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .font-extrabold { font-weight: 800; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-tight { letter-spacing: 0; }
+        .tracking-wide { letter-spacing: 0; }
+        .tracking-wider { letter-spacing: 0; }
+        .opacity-5 { opacity: 0.05; }
+        .opacity-10 { opacity: 0.10; }
+        .opacity-75 { opacity: 0.75; }
+        .shadow-sm { box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+        .shadow-md { box-shadow: 0 6px 16px rgba(15,23,42,0.10); }
+        .shadow-lg { box-shadow: 0 14px 28px rgba(15,23,42,0.12); }
+        .shadow-red-900\/20 { box-shadow: 0 12px 26px rgba(127,29,29,0.20); }
+        .shadow-slate-200\/50 { box-shadow: 0 10px 22px rgba(226,232,240,0.50); }
+        .shadow-emerald-100 { box-shadow: 0 8px 18px rgba(209,250,229,0.65); }
+        .backdrop-blur-md { backdrop-filter: blur(12px); }
+        .blur-sm { filter: blur(4px); }
+        .blur-xl { filter: blur(24px); }
+        .transition-colors, .transition-all, .transition-shadow { transition: all 180ms ease; }
+        .duration-300 { transition-duration: 300ms; }
+        .transform { transform: translateZ(0); }
+        .-rotate-90 { transform: rotate(-90deg); }
+        .origin-center { transform-origin: center; }
+        .divide-y > * + * { border-top: 1px solid #F1F5F9; }
+        .animate-ping { animation: qroll-ping 1.2s cubic-bezier(0,0,0.2,1) infinite; }
+        .animate-pulse { animation: qroll-pulse 1.6s cubic-bezier(0.4,0,0.6,1) infinite; }
+        @keyframes qroll-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        @keyframes qroll-pulse { 50% { opacity: .55; } }
+        @media (min-width: 768px) { .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (min-width: 1280px) {
+            .xl\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .xl\:col-span-2 { grid-column: span 2 / span 2; }
+        }
+        .hover\:bg-slate-50:hover { background: #F8FAFC; }
+        .hover\:bg-slate-50\/80:hover { background: rgba(248,250,252,0.8); }
+        .hover\:bg-red-50:hover { background: #FEF2F2; }
+        .hover\:bg-red-800:hover { background: #991B1B; }
+        .hover\:bg-emerald-600:hover { background: #059669; }
+        .hover\:border-slate-300:hover { border-color: #CBD5E1; }
+        .hover\:text-slate-900:hover { color: #0F172A; }
+        .hover\:text-red-600:hover { color: #DC2626; }
+        .hover\:text-red-800:hover { color: #991B1B; }
+        .hover\:shadow-md:hover { box-shadow: 0 8px 22px rgba(15,23,42,0.10); }
+        .hover\:-translate-y-0\.5:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen bg-[#F8FAFC]">
+        
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
+            <div class="h-20 flex items-center px-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#990000] rounded-xl flex items-center justify-center shadow-md shadow-red-900/20">
+                        <i data-lucide="scan-face" class="text-white w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold text-slate-900 tracking-tight">QRoll<span class="text-[#990000]">.</span></span>
+                        <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider -mt-1">Smart Attendance</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-8 space-y-2">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-red-50 text-[#990000] rounded-xl font-medium transition-colors border border-red-100">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    หน้าหลัก (Dashboard)
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                    รายวิชาของฉัน
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    รายชื่อนักศึกษา
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    ตั้งค่าระบบ
+                </a>
+            </nav>
+
+            <div class="p-5 border-t border-slate-100 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2044%22%3E%3Crect%20width%3D%2244%22%20height%3D%2244%22%20rx%3D%2222%22%20fill%3D%22%23fecaca%22%2F%3E%3Ccircle%20cx%3D%2222%22%20cy%3D%2217%22%20r%3D%227%22%20fill%3D%22%230f172a%22%2F%3E%3Cpath%20d%3D%22M9%2038c2.8-8%208.2-12%2013-12s10.2%204%2013%2012%22%20fill%3D%22%230f172a%22%2F%3E%3Cpath%20d%3D%22M15%2015c2-6%2012-6%2014%200-4-2-10-2-14%200z%22%20fill%3D%22%23111827%22%2F%3E%3C%2Fsvg%3E" alt="" class="w-11 h-11 rounded-full border-2 border-white shadow-sm bg-white">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-900 truncate">อ. สมชาย ใจดี</p>
+                        <p class="text-xs text-slate-500 truncate">somchai.j@dome.tu.ac.th</p>
+                    </div>
+                </div>
+                <button class="mt-5 w-full flex items-center justify-center gap-2 text-sm font-medium text-slate-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    ออกจากระบบ
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">ภาพรวมการจัดการเรียนการสอน</h1>
+                    <p class="text-sm text-slate-500">ภาคเรียนที่ 1/2569 • มหาวิทยาลัยธรรมศาสตร์</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:border-slate-300 hover:bg-slate-50 transition-all shadow-sm">
+                        <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+                        Import CSV รายชื่อ
+                    </button>
+                    <button class="flex items-center gap-2 px-5 py-2.5 bg-[#990000] text-white rounded-xl text-sm font-semibold hover:bg-red-800 shadow-lg shadow-red-900/20 transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        สร้างวิชาใหม่
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-10">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                <i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-500">วิชาที่รับผิดชอบ</p>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h2 class="text-4xl font-bold text-slate-800">3</h2>
+                            <span class="text-sm font-medium text-slate-500">รายวิชา</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-500">นักศึกษาทั้งหมด</p>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h2 class="text-4xl font-bold text-slate-800">164</h2>
+                            <span class="text-sm font-medium text-slate-500">คน</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-500">อัตราเข้าเรียนเฉลี่ย</p>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h2 class="text-4xl font-bold text-emerald-600">88.5%</h2>
+                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+2.4%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    
+                    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                        <div class="px-7 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">ตารางสอนวันนี้ (Today's Schedule)</h3>
+                                <p class="text-sm text-slate-500 mt-1">อังคารที่ 21 เมษายน 2026</p>
+                            </div>
+                            <button class="text-sm font-bold text-[#990000] hover:text-red-800 flex items-center gap-1">
+                                ดูตารางทั้งหมด <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full">
+                                <thead class="bg-slate-50/80 border-b border-slate-100">
+                                    <tr>
+                                        <th class="px-7 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-[35%]">รายวิชา</th>
+                                        <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-[20%]">กลุ่มเรียน</th>
+                                        <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-[20%]">สถานะคาบเรียน</th>
+                                        <th class="px-7 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-[25%]">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    
+                                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                                        <td class="px-7 py-6">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
+                                                    <i data-lucide="book-open" class="w-5 h-5 text-slate-400 group-hover:text-[#990000]"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-extrabold text-slate-900 leading-tight">CS311</p>
+                                                    <p class="text-xs font-medium text-slate-500 mt-1 truncate max-w-[180px]">Operating Systems</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <p class="text-sm font-bold text-slate-700">Sec 650001</p>
+                                            <p class="text-xs font-medium text-slate-500 mt-0.5">45 คน</p>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <div class="flex items-center gap-2 text-slate-500">
+                                                <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                                                <span class="text-sm font-semibold">รอเวลาเรียน (13:30)</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-7 py-6 align-middle text-center">
+                                            <button class="group/btn inline-flex justify-center items-center gap-2.5 w-[170px] px-4 py-2.5 bg-[#990000] text-white rounded-xl text-sm font-bold hover:bg-red-800 shadow-md shadow-red-900/20 transition-all duration-300 transform hover:-translate-y-0.5">
+                                                <i data-lucide="qr-code" class="w-5 h-5"></i>
+                                                <span>สร้าง QR Code</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="bg-emerald-50/30 border-l-4 border-l-emerald-500 hover:bg-emerald-50/60 transition-colors">
+                                        <td class="px-7 py-6 pl-6">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-xl bg-white border border-emerald-200 shadow-sm shadow-emerald-100 flex items-center justify-center flex-shrink-0 relative">
+                                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                                    </span>
+                                                    <i data-lucide="radio" class="w-5 h-5 text-emerald-600"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-extrabold text-slate-900 leading-tight">CS326</p>
+                                                    <p class="text-xs font-medium text-slate-500 mt-1 truncate max-w-[180px]">Web App Development</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <p class="text-sm font-bold text-slate-700">Sec 650002</p>
+                                            <p class="text-xs font-medium text-slate-500 mt-0.5">52 คน</p>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <div class="flex flex-col gap-2 w-full max-w-[140px]">
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <span class="font-bold text-emerald-600 uppercase tracking-wide">เปิดรับเช็คชื่อ</span>
+                                                    <span class="font-bold text-slate-700">24<span class="text-slate-400 font-medium">/52</span></span>
+                                                </div>
+                                                <div class="w-full bg-emerald-100/50 rounded-full h-2 shadow-inner">
+                                                    <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-2 rounded-full relative" style="width: 46%;">
+                                                        <div class="absolute top-0 right-0 bottom-0 w-2 bg-white/30 rounded-full animate-pulse"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-7 py-6 align-middle text-center">
+                                            <button class="relative overflow-hidden inline-flex justify-center items-center gap-2.5 w-[170px] px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_16px_rgba(16,185,129,0.35)] transform hover:-translate-y-0.5 transition-all duration-300">
+                                                <i data-lucide="monitor-play" class="w-5 h-5 relative z-10"></i>
+                                                <span class="relative z-10">แสดง QR Code ขึ้นจอ</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-slate-50/80 transition-colors">
+                                        <td class="px-7 py-6">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-slate-400"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-extrabold text-slate-900 leading-tight">CS412</p>
+                                                    <p class="text-xs font-medium text-slate-500 mt-1 truncate max-w-[180px]">Artificial Intelligence</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <p class="text-sm font-bold text-slate-700">Sec 650001</p>
+                                            <p class="text-xs font-medium text-slate-500 mt-0.5">67 คน</p>
+                                        </td>
+                                        <td class="px-4 py-6 align-middle">
+                                            <div class="flex items-center gap-2 text-slate-500">
+                                                <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                                                <span class="text-sm font-semibold">ปิดเช็คชื่อแล้ว (คาบเช้า)</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-7 py-6 align-middle text-center">
+                                            <button class="group/btn inline-flex justify-center items-center gap-2.5 w-[170px] px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all duration-300 transform hover:-translate-y-0.5">
+                                                <i data-lucide="file-text" class="w-5 h-5 text-slate-500 group-hover/btn:text-slate-700"></i>
+                                                <span>สรุปผลวันนี้</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                        <div class="h-28 bg-gradient-to-br from-[#990000] to-red-800 p-6 relative">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-sm"></div>
+                            <div class="absolute bottom-0 left-10 w-20 h-20 bg-black opacity-10 rounded-full blur-xl"></div>
+                            
+                            <h3 class="text-lg font-bold text-white relative z-10 tracking-wide">สรุปคลาสเรียนล่าสุด</h3>
+                            <p class="text-sm font-medium text-red-200 mt-1 flex items-center gap-1.5 relative z-10">
+                                <i data-lucide="clock" class="w-4 h-4"></i> 21 เม.ย. 2026 • 09:30 น.
+                            </p>
+                        </div>
+
+                        <div class="p-6 flex flex-col flex-1 bg-white relative">
+                            
+                            <div class="bg-white border border-slate-100 rounded-xl p-4 shadow-md shadow-slate-200/50 -mt-14 relative z-20 mb-8 flex items-center gap-4">
+                                <div class="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center border border-red-100 flex-shrink-0">
+                                    <i data-lucide="book-open" class="w-6 h-6 text-[#990000]"></i>
+                                </div>
+                                <div>
+                                    <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                        Sec 650001
+                                    </span>
+                                    <h4 class="text-sm font-bold text-slate-900 leading-snug">CS412 Artificial Intelligence</h4>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-1 flex flex-col items-center justify-center">
+                                
+                                <div class="relative w-48 h-48 mb-8">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" stroke-width="12" />
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="56.3" stroke-linecap="round" />
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f59e0b" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="213.8" stroke-linecap="round" class="origin-center" transform="rotate(279.4)" />
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="232.4" stroke-linecap="round" class="origin-center" transform="rotate(333.1)" />
+                                    </svg>
+                                    
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span class="text-4xl font-extrabold text-slate-800">67</span>
+                                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">คนทั้งหมด</span>
+                                    </div>
+                                </div>
+
+                                <div class="w-full grid grid-cols-3 gap-3">
+                                    <div class="bg-emerald-50/50 rounded-xl p-3 border border-emerald-100 flex flex-col items-center text-center">
+                                        <span class="text-2xl font-extrabold text-emerald-600 mb-0.5">52</span>
+                                        <span class="text-[11px] font-bold text-slate-600">มาเรียน</span>
+                                    </div>
+                                    <div class="bg-amber-50/50 rounded-xl p-3 border border-amber-100 flex flex-col items-center text-center">
+                                        <span class="text-2xl font-extrabold text-amber-600 mb-0.5">10</span>
+                                        <span class="text-[11px] font-bold text-slate-600">มาสาย</span>
+                                    </div>
+                                    <div class="bg-red-50/50 rounded-xl p-3 border border-red-100 flex flex-col items-center text-center">
+                                        <span class="text-2xl font-extrabold text-red-600 mb-0.5">5</span>
+                                        <span class="text-[11px] font-bold text-slate-600">ขาดเรียน</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

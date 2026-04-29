@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QRoll — Session Active</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F8FC;
+    --white: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-faint: #94A3B8;
+  }
+  html, body, #root { height: 100%; background: var(--bg); font-family: 'Sarabun', 'Inter', sans-serif; }
+  * { -webkit-font-smoothing: antialiased; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "refreshInterval": 30,
+  "accentColor": "#CC0000",
+  "showEntryCode": true
+}/*EDITMODE-END*/;
+
+function QRollLogo({ size = 36, accent = '#CC0000' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ width: size, height: size, borderRadius: 12, background: accent, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(127, 29, 29, 0.20)' }}>
+        <svg width={Math.round(size * 0.56)} height={Math.round(size * 0.56)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+          <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+          <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+          <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+          <path d="M9 9h.01" />
+          <path d="M15 9h.01" />
+        </svg>
+      </div>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: Math.round(size * 0.58), color: 'var(--text)', fontFamily: 'Inter', letterSpacing: 0, lineHeight: 1 }}>QRoll<span style={{ color: accent }}>.</span></div>
+        <div style={{ fontSize: Math.max(8.5, Math.round(size * 0.25)), color: 'var(--text-muted)', letterSpacing: 0, fontWeight: 600, marginTop: -1, fontFamily: 'Inter', textTransform: 'uppercase' }}>Smart Attendance</div>
+      </div>
+    </div>
+  );
+}
+
+function NavIcon({ name, size = 20 }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  if (name === 'layout') return <svg {...common}><rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" /></svg>;
+  if (name === 'book') return <svg {...common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M4 4v15.5A2.5 2.5 0 0 1 6.5 22H20V6a2 2 0 0 0-2-2z" /></svg>;
+  if (name === 'users') return <svg {...common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+  if (name === 'settings') return <svg {...common}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.72l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>;
+  if (name === 'logout') return <svg {...common}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16,17 21,12 16,7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
+  return null;
+}
+
+function Sidebar({ accent }) {
+  const navAccent = '#990000';
+  const items = [
+    ['layout', 'หน้าหลัก (Dashboard)', true],
+    ['book', 'รายวิชาของฉัน', false],
+    ['users', 'รายชื่อนักศึกษา', false],
+    ['settings', 'ตั้งค่าระบบ', false]
+  ];
+  const avatarUrl = 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2044%22%3E%3Crect%20width%3D%2244%22%20height%3D%2244%22%20rx%3D%2222%22%20fill%3D%22%23fecaca%22%2F%3E%3Ccircle%20cx%3D%2222%22%20cy%3D%2217%22%20r%3D%227%22%20fill%3D%22%230f172a%22%2F%3E%3Cpath%20d%3D%22M9%2038c2.8-8%208.2-12%2013-12s10.2%204%2013%2012%22%20fill%3D%22%230f172a%22%2F%3E%3Cpath%20d%3D%22M15%2015c2-6%2012-6%2014%200-4-2-10-2-14%200z%22%20fill%3D%22%23111827%22%2F%3E%3C%2Fsvg%3E';
+
+  return (
+    <aside style={{ width: 256, background: '#FFFFFF', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 4px rgba(15,23,42,0.06)', zIndex: 10 }}>
+      <div>
+        <div style={{ height: 80, display: 'flex', alignItems: 'center', padding: '0 24px', borderBottom: '1px solid #F1F5F9' }}>
+          <QRollLogo size={40} accent={navAccent} />
+        </div>
+        <nav style={{ flex: 1, padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {items.map(([icon, label, active]) => (
+            <a key={label} href="#" onClick={(e) => e.preventDefault()} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '12px 16px', borderRadius: 12,
+              background: active ? '#FEF2F2' : 'transparent',
+              border: active ? '1px solid #FEE2E2' : '1px solid transparent',
+              color: active ? navAccent : '#475569',
+              fontSize: 14, fontWeight: 500, textDecoration: 'none',
+              transition: 'background 160ms ease, color 160ms ease'
+            }}>
+              <NavIcon name={icon} size={20} />
+              {label}
+            </a>
+          ))}
+        </nav>
+      </div>
+      <div style={{ padding: 20, borderTop: '1px solid #F1F5F9', background: 'rgba(248,250,252,0.55)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src={avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid white', boxShadow: '0 1px 4px rgba(15,23,42,0.06)', background: 'white', display: 'block', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, color: 'var(--text)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>อ. สมชาย ใจดี</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>somchai.j@dome.tu.ac.th</div>
+          </div>
+        </div>
+        <button type="button" style={{
+          marginTop: 20, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 8, padding: '8px 12px', borderRadius: 8, border: 'none',
+          background: 'transparent', color: '#475569', cursor: 'pointer',
+          fontSize: 14, fontWeight: 500, fontFamily: 'Sarabun,sans-serif'
+        }}>
+          <NavIcon name="logout" size={16} />
+          ออกจากระบบ
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function seededRand(seed) {
+  let s = seed;
+  return () => {s = s * 1664525 + 1013904223 & 0xffffffff;return (s >>> 0) / 0xffffffff;};
+}
+
+function generateQRMatrix(seed, size = 25) {
+  const rand = seededRand(seed);
+  const m = Array.from({ length: size }, () => Array(size).fill(0));
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+    const inTL = r < 9 && c < 9,inTR = r < 9 && c >= size - 8,inBL = r >= size - 8 && c < 9;
+    if (!inTL && !inTR && !inBL) m[r][c] = rand() > 0.48 ? 1 : 0;
+  }
+  const drawFinder = (row, col) => {
+    for (let dr = 0; dr < 7; dr++) for (let dc = 0; dc < 7; dc++) {
+      const onB = dr === 0 || dr === 6 || dc === 0 || dc === 6,onI = dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4;
+      m[row + dr][col + dc] = onB || onI ? 1 : 0;
+    }
+  };
+  drawFinder(0, 0);drawFinder(0, size - 7);drawFinder(size - 7, 0);
+  for (let i = 8; i < size - 8; i++) {m[6][i] = i % 2 === 0 ? 1 : 0;m[i][6] = i % 2 === 0 ? 1 : 0;}
+  return m;
+}
+
+function QRCodeSVG({ seed, size = 240, fading = false }) {
+  const matrix = generateQRMatrix(seed);
+  const n = matrix.length;
+  const cs = size / n;
+  const r = Math.max(1, cs * 0.18);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+    style={{ display: 'block', opacity: fading ? 0.15 : 1, transition: 'opacity 0.4s ease' }}>
+      {matrix.map((row, ri) => row.map((v, ci) => v ?
+      <rect key={`${ri}-${ci}`} x={ci * cs + 0.5} y={ri * cs + 0.5}
+      width={cs - 1} height={cs - 1} rx={r} ry={r} fill="#0D1B2A" /> :
+      null))}
+    </svg>);
+
+}
+
+function CountdownRing({ seconds, total, ringSize, accent }) {
+  const stroke = 8;
+  const rad = (ringSize - stroke) / 2;
+  const circ = 2 * Math.PI * rad;
+  const dash = circ * (seconds / total);
+  const ringColor = seconds <= 5 ? '#EF4444' : seconds <= 10 ? '#F59E0B' : accent;
+  return (
+    <svg width={ringSize} height={ringSize}
+    style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+      <circle cx={ringSize / 2} cy={ringSize / 2} r={rad} fill="none" stroke="#E2E8F0" strokeWidth={stroke} />
+      <circle cx={ringSize / 2} cy={ringSize / 2} r={rad} fill="none"
+      stroke={ringColor} strokeWidth={stroke} strokeLinecap="round"
+      strokeDasharray={`${dash} ${circ}`}
+      style={{ transition: 'stroke-dasharray 0.95s linear, stroke 0.3s ease' }} />
+    </svg>);
+
+}
+
+function CheckinToast({ name, onDone }) {
+  useEffect(() => {const t = setTimeout(onDone, 2800);return () => clearTimeout(t);}, []);
+  return (
+    <div style={{
+      position: 'fixed', bottom: 32, right: 32, zIndex: 200,
+      background: '#16A34A', borderRadius: 14, padding: '14px 20px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      boxShadow: '0 8px 32px rgba(22,163,74,0.3)',
+      animation: 'slideInRight 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+      color: 'white', fontFamily: 'Sarabun,sans-serif'
+    }}>
+      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✓</div>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>{name}</div>
+        <div style={{ fontSize: 12, opacity: 0.85 }}>เช็คชื่อสำเร็จ</div>
+      </div>
+    </div>);
+
+}
+
+const DEMO_STUDENTS = [
+'สมชาย ใจดี', 'กานต์ รักเรียน', 'พิมพ์ใจ สว่าง', 'ธนพล วงศ์ศรี',
+'อาทิตย์ แก้วมณี', 'วราภรณ์ ทองดี', 'ชนาธิป รุ่งเรือง', 'ปริยา นิลสุวรรณ',
+'กิตติ เจริญสุข', 'นภัส มั่นคง', 'ธีรเดช บุญมาก', 'สุภาพร ไพบูลย์'];
+
+const ENTRY_CODES = ['QR-2847', 'TU-5519', 'QR-1093', 'TU-7732'];
+
+// Ring wrapper size (bigger than QR card)
+const RING_SIZE = 520;
+// QR white card size (inside the ring)
+const QR_CARD = 350;
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [showTweaks, setShowTweaks] = useState(false);
+
+  const TOTAL = tweaks.refreshInterval;
+  const [seconds, setSeconds] = useState(TOTAL);
+  const [qrSeed, setQrSeed] = useState(42);
+  const [entryCodeIdx, setEntryCodeIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+  const [generation, setGeneration] = useState(1);
+  const [checkedIn, setCheckedIn] = useState(
+    () => DEMO_STUDENTS.slice(0, 7).map((n, i) => ({ name: n, time: new Date(Date.now() - (7 - i) * 70000), id: i }))
+  );
+  const [toast, setToast] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const accent = tweaks.accentColor;
+
+  useEffect(() => {
+    if (paused || sessionEnded) return;
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [paused, sessionEnded]);
+
+  useEffect(() => {
+    if (paused || sessionEnded) return;
+    const t = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          setFading(true);
+          setTimeout(() => {
+            setQrSeed(Date.now() + Math.random() * 1e6);
+            setEntryCodeIdx((i) => (i + 1) % ENTRY_CODES.length);
+            setGeneration((g) => g + 1);
+            setFading(false);
+          }, 400);
+          return TOTAL;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [paused, sessionEnded, TOTAL]);
+
+  useEffect(() => {
+    if (paused || sessionEnded) return;
+    const remaining = DEMO_STUDENTS.filter((n) => !checkedIn.find((c) => c.name === n));
+    if (!remaining.length) return;
+    const delay = 4000 + Math.random() * 8000;
+    const t = setTimeout(() => {
+      const name = remaining[Math.floor(Math.random() * remaining.length)];
+      setCheckedIn((prev) => [...prev, { name, time: new Date(), id: Date.now() }]);
+      setToast(name);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [checkedIn, paused, sessionEnded]);
+
+  useEffect(() => {
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === '__activate_edit_mode') setShowTweaks(true);
+      if (e.data?.type === '__deactivate_edit_mode') setShowTweaks(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  const updateTweak = (key, val) => {
+    setTweaks((t) => ({ ...t, [key]: val }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+  };
+
+  const fmtTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  const fmtClock = (d) => d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  const ringColor = seconds <= 5 ? '#EF4444' : seconds <= 10 ? '#F59E0B' : accent;
+  const totalStudents = 42;
+
+  const progressPct = checkedIn.length / totalStudents * 100;
+
+  if (sessionEnded) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'grid', gridTemplateColumns: '256px minmax(0,1fr)' }}>
+        <Sidebar accent={accent} />
+        <main style={{ minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+          <section style={{ width: '100%', maxWidth: 430, background: 'white', border: '1px solid var(--border)', borderRadius: 16, padding: 34, textAlign: 'center', boxShadow: '0 14px 28px rgba(15,23,42,0.08)' }}>
+            <div style={{ width: 72, height: 72, borderRadius: 18, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', margin: '0 auto 18px' }}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20,6 9,17 4,12" /></svg>
+            </div>
+            <h2 style={{ color: 'var(--text)', fontSize: 28, fontWeight: 800 }}>ปิด Session แล้ว</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 17, marginTop: 8 }}>นักศึกษาเช็คชื่อ {checkedIn.length}/{totalStudents} คน</p>
+            <button onClick={() => {setSessionEnded(false);setElapsed(0);setSeconds(TOTAL);setGeneration(1);setCheckedIn(DEMO_STUDENTS.slice(0, 7).map((n, i) => ({ name: n, time: new Date(Date.now() - (7 - i) * 70000), id: i })));}} style={{
+              marginTop: 24, padding: '12px 28px', borderRadius: 12, border: 'none', background: accent,
+              color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer', fontFamily: 'Sarabun'
+            }}>เริ่ม Session ใหม่</button>
+          </section>
+        </main>
+      </div>);
+
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', display: 'grid', gridTemplateColumns: '256px minmax(0,1fr)' }}>
+
+      <Sidebar accent={accent} />
+
+      <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header style={{
+          height: 80, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 1
+        }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1E293B', lineHeight: 1.2 }}>Session Active</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 2 }}>CS101 Introduction to Programming · Section 650001 · ห้อง SC3-412</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ textAlign: 'right', marginRight: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700 }}>เวลาในการสอน</div>
+              <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{fmtTime(elapsed)}</div>
+            </div>
+            <button onClick={() => setPaused((p) => !p)} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12,
+              border: '1.5px solid var(--border)', background: 'var(--white)', color: 'var(--text)',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'Sarabun,sans-serif',
+              boxShadow: '0 1px 4px rgba(15,23,42,0.06)'
+            }}>
+              {paused ?
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg> ดำเนินต่อ</> :
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg> หยุดชั่วคราว</>
+              }
+            </button>
+            <button onClick={() => setSessionEnded(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12,
+              border: 'none', background: accent, color: 'white',
+              cursor: 'pointer', fontSize: 14, fontWeight: 800, fontFamily: 'Sarabun,sans-serif',
+              boxShadow: '0 12px 26px rgba(127,29,29,0.20)'
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
+              ปิด Session
+            </button>
+          </div>
+        </header>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 24px 40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(720px,1fr) 360px', gap: 28, alignItems: 'stretch', width: '100%' }}>
+            <section style={{
+              background: 'white', border: '1px solid var(--border)', borderRadius: 16,
+              boxShadow: '0 14px 28px rgba(15,23,42,0.08)', padding: '30px 40px 34px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 22, minHeight: 760, position: 'relative'
+            }}>
+
+          {paused &&
+          <div style={{
+            position: 'absolute', zIndex: 5,
+            background: 'rgba(247,248,252,0.93)', backdropFilter: 'blur(8px)',
+            borderRadius: 20, padding: '20px 40px', textAlign: 'center',
+            border: '1px solid var(--border)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>⏸</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>หยุดชั่วคราว</div>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>QR Code หยุดนับถอยหลัง</div>
+            </div>
+          }
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 100, padding: '7px 20px' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 8px #22C55E80', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#15803D', letterSpacing: '0.5px' }}>SESSION ACTIVE</span>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: -8 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-faint)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 6 }}>
+              Dynamic QR · Generation #{generation}
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>
+              สแกน QR เพื่อเช็คชื่อเข้าเรียน
+            </h1>
+          </div>
+
+          <div style={{ position: 'relative', width: RING_SIZE, height: RING_SIZE, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CountdownRing seconds={seconds} total={TOTAL} ringSize={RING_SIZE} accent={accent} />
+
+            <div style={{
+              width: QR_CARD, height: QR_CARD,
+              background: 'white', borderRadius: 20,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px var(--border)',
+              position: 'relative'
+            }}>
+              <div style={{ padding: 12, opacity: paused ? 0.35 : 1, transition: 'opacity 0.3s' }}>
+                <QRCodeSVG seed={qrSeed} size={QR_CARD - 28} fading={fading} />
+              </div>
+              {fading && <div style={{ position: 'absolute', inset: 0, background: 'white', borderRadius: 20, opacity: 0.7 }} />}
+            </div>
+
+            {/* Countdown badge */}
+            <div style={{
+              position: 'absolute', bottom: -16, left: '50%', transform: 'translateX(-50%)',
+              background: 'white',
+              border: `1.5px solid ${seconds <= 5 ? '#FECACA' : seconds <= 10 ? '#FDE68A' : 'var(--border)'}`,
+              borderRadius: 100, padding: '6px 18px',
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transition: 'border-color 0.3s'
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ringColor} strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" />
+              </svg>
+              <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: ringColor, letterSpacing: '1px' }}>
+                {String(seconds).padStart(2, '0')}s
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>รีเฟรช</span>
+            </div>
+          </div>
+
+          {tweaks.showEntryCode &&
+          <div style={{
+            background: 'white', border: '1.5px solid var(--border)',
+            borderRadius: 18, padding: '18px 44px', textAlign: 'center',
+            width: '100%', maxWidth: 430,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: '1.5px', marginBottom: 10, textTransform: 'uppercase' }}>
+                Entry Code — กรอกแทน QR ได้
+              </div>
+              <div style={{
+              fontFamily: 'JetBrains Mono,monospace', fontSize: 34, fontWeight: 700,
+              letterSpacing: '8px', color: 'var(--text)',
+              animation: fading ? 'codeFlip 0.4s ease' : 'none'
+            }}>
+                {ENTRY_CODES[entryCodeIdx]}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-faint)' }}>รหัสจะเปลี่ยนพร้อมกับ QR Code</div>
+            </div>
+          }
+            </section>
+
+            <aside style={{
+              background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16,
+              boxShadow: '0 14px 28px rgba(15,23,42,0.08)', display: 'flex',
+              flexDirection: 'column', overflow: 'hidden', minHeight: 760
+            }}>
+              <div style={{ padding: '24px 24px 18px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: '1.2px', marginBottom: 14, textTransform: 'uppercase' }}>
+                  สถิติการเข้าเรียน
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 14 }}>
+                  <span style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, color: 'var(--text)', fontFamily: 'Inter' }}>{checkedIn.length}</span>
+                  <span style={{ fontSize: 22, color: 'var(--text-faint)', fontWeight: 500, marginBottom: 6 }}>/ {totalStudents}</span>
+                </div>
+                <div style={{ height: 8, background: 'var(--bg)', borderRadius: 99, overflow: 'hidden', marginBottom: 10, border: '1px solid var(--border)' }}>
+              <div style={{
+                height: '100%', borderRadius: 99,
+                width: `${progressPct}%`,
+                background: `linear-gradient(90deg, ${accent}, ${accent}CC)`,
+                transition: 'width 0.6s cubic-bezier(0.34,1.1,0.64,1)'
+              }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <span style={{ color: '#16A34A', fontWeight: 600 }}>เข้าเรียน {checkedIn.length} คน</span>
+              <span style={{ color: 'var(--text-faint)' }}>ขาด {totalStudents - checkedIn.length} คน</span>
+            </div>
+              </div>
+
+          <div style={{ padding: '16px 24px 8px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: '1.2px', textTransform: 'uppercase' }}>เข้าเรียนล่าสุด</div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px' }}>
+            {[...checkedIn].reverse().map((s, i) =>
+            <div key={s.id} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+              borderBottom: '1px solid var(--border)',
+              animation: i === 0 && s.id > 6 ? 'slideInNew 0.4s cubic-bezier(0.34,1.56,0.64,1)' : 'none'
+            }}>
+                <div style={{
+                width: 34, height: 34, borderRadius: 10,
+                background: `${accent}12`, border: `1.5px solid ${accent}30`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 700, color: accent, flexShrink: 0
+              }}>
+                  {s.name.charAt(0)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>{fmtClock(s.time)}</div>
+                </div>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20,6 9,17 4,12" /></svg>
+                </div>
+              </div>
+            )}
+          </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      {toast && <CheckinToast name={toast} onDone={() => setToast(null)} />}
+
+      {showTweaks &&
+      <div style={{
+        position: 'fixed', bottom: 24, right: 24, width: 260,
+        background: 'white', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        padding: 20, zIndex: 999, border: '1px solid var(--border)', fontFamily: 'Sarabun,sans-serif'
+      }}>
+          <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: 'var(--text)' }}>Tweaks</h4>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>Accent Color</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {['#CC0000', '#2563EB', '#059669', '#7C3AED', '#D97706'].map((c) =>
+            <button key={c} onClick={() => updateTweak('accentColor', c)} style={{
+              width: 28, height: 28, borderRadius: 8, background: c, border: 'none', cursor: 'pointer',
+              outline: tweaks.accentColor === c ? `3px solid ${c}` : 'none', outlineOffset: 2
+            }} />
+            )}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>
+              Refresh ทุก: <span style={{ color: 'var(--text)' }}>{tweaks.refreshInterval}s</span>
+            </label>
+            <input type="range" min={10} max={60} step={5} value={tweaks.refreshInterval}
+          onChange={(e) => updateTweak('refreshInterval', +e.target.value)}
+          style={{ width: '100%', accentColor: tweaks.accentColor }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-faint)', marginTop: 4 }}>
+              <span>10s</span><span>60s</span>
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>แสดง Entry Code</label>
+            <button onClick={() => updateTweak('showEntryCode', !tweaks.showEntryCode)} style={{
+            padding: '6px 14px', borderRadius: 8,
+            border: `2px solid ${tweaks.showEntryCode ? accent : 'var(--border)'}`,
+            background: tweaks.showEntryCode ? accent : 'white',
+            color: tweaks.showEntryCode ? 'white' : 'var(--text)',
+            cursor: 'pointer', fontSize: 13, fontFamily: 'Sarabun,sans-serif', fontWeight: 600, transition: 'all 0.2s'
+          }}>
+              {tweaks.showEntryCode ? 'เปิด' : 'ปิด'}
+            </button>
+          </div>
+        </div>
+      }
+
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+        @keyframes slideInRight{from{transform:translateX(120px);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideInNew{from{transform:translateY(-10px) scale(0.97);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+        @keyframes codeFlip{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:translateY(0)}}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+      `}</style>
+    </div>);
+
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
