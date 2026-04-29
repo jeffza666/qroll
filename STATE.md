@@ -7,8 +7,8 @@
 
 ## 🎯 Current Status
 
-**Phase:** `Phase 2 — Auth via TU API` ✅ **DONE**
-**Last updated:** 2026-04-28
+**Phase:** `Phase 3 — AppShell + Courses + Roster Import` ✅ **DONE**
+**Last updated:** 2026-04-29
 
 ---
 
@@ -23,6 +23,8 @@
 | 5 | Verify build (`npm run build`) | ✅ | ผ่าน ไม่มี warning |
 | 6 | สร้าง Context Architecture (`STATE.md`, `docs/prps/`) | ✅ | ไฟล์นี้ |
 | 7 | เขียน PRP 01 — Database Schema | ✅ | `docs/prps/01-database-schema.md` |
+
+---
 
 ## ✅ ทำเสร็จแล้ว (Phase 1)
 
@@ -54,44 +56,72 @@
 
 ---
 
-## 🎯 Next Step (Phase 3 — ขั้นถัดไปทันที)
+## ✅ ทำเสร็จแล้ว (Phase 3)
 
-**Teacher: สร้างวิชา + import นักศึกษา (CSV)**
+| # | Task | สถานะ | Note |
+| --- | --- | --- | --- |
+| 1 | เขียน PRP 03 — Teacher Courses + Roster | ✅ | `docs/prps/03-teacher-courses.md` |
+| 2 | Install deps: `xlsx`, `papaparse`, `qrcode` + types | ✅ | server-side parse เท่านั้น |
+| 3 | QRoll brand tokens + Sarabun font | ✅ | `globals.css` — Tailwind v4 `@theme` |
+| 4 | Root page → role-based redirect | ✅ | teacher→/teacher, student→/student |
+| 5 | AppShell (Sidebar + UserCard + layout) | ✅ | `src/components/shell/` |
+| 6 | Nav config | ✅ | `src/lib/nav-config.ts` — role-aware links |
+| 7 | Teacher Dashboard | ✅ | `/teacher` — stat cards จาก DB จริง |
+| 8 | Courses list + create form | ✅ | `/teacher/courses` + `/teacher/courses/new` |
+| 9 | Course detail + roster table | ✅ | `/teacher/courses/[id]` |
+| 10 | Settings stub | ✅ | `/teacher/settings` |
+| 11 | Server Action: `createCourse`, `deleteCourse` | ✅ | `src/app/actions/course.ts` |
+| 12 | Server Action: `importRoster` (CSV + XLSX) | ✅ | `src/app/actions/roster.ts` |
+| 13 | `RosterImport` UI (modal + summary) | ✅ | `src/components/import/RosterImport.tsx` |
+| 14 | `requireCourseOwner` helper | ✅ | `src/lib/auth-helpers.ts` |
+| 15 | `npm run build` ผ่าน 100% | ✅ | TypeScript + ESLint clean |
 
-1. เขียน PRP 03 สำหรับ Teacher course + CSV import
-2. สร้าง `/teacher` dashboard shell
-3. สร้าง Server Actions สำหรับ create course และ import enrollment
-4. ใช้ `requireTeacher()` ทุก action
-5. เพิ่ม ownership helper เมื่อมี course actions จริง
+---
+
+## 🎯 Next Step (Phase 3.5 — ขั้นถัดไปทันที)
+
+**Teacher: Schedule + Class Session lifecycle**
+
+> ⚠️ เขียน PRP 03.5 ก่อนเขียนโค้ดทุกครั้ง
+
+1. เขียน PRP 03.5 — Schedule + ClassSession lifecycle
+2. UI: course detail → tab ตารางสอน (`dayOfWeek`, `startTime`, `endTime`, `room`)
+3. Server Actions: `createSchedule`, `deleteSchedule`
+4. Server Actions: `openSession`, `closeSession` (กัน double-open ด้วย partial unique index)
+5. Teacher dashboard แสดงตารางสอน "วันนี้" จากข้อมูลจริง
+6. ปุ่ม "สร้าง QR Code" → `openSession()` → redirect `/teacher/sessions/[id]` (skeleton)
 
 ---
 
 ## 🛤️ Phase Roadmap
 
-| Phase | Goal                                                 | Status         |
-| ----- | ---------------------------------------------------- | -------------- |
-| 0     | Setup project + Context Architecture                 | ✅ Done        |
-| 1     | Database (Prisma + Supabase + schema)                | ✅ Done        |
-| 2     | Auth via TU API (NextAuth v5)                        | ✅ Done        |
-| 3     | Teacher: สร้างวิชา + import นักศึกษา (CSV)           | 🔜 **Up next** |
-| 4     | Teacher: สร้างคาบเรียน + Dynamic QR                  | ⏳             |
-| 5     | Student: สแกน QR → check-in                          | ⏳             |
-| 6     | Teacher Dashboard (สรุปการเข้าเรียน)                 | ⏳             |
-| 7     | Milestone features (Geofencing, manual edit, export) | ⏳             |
-| 8     | Milestone features (Face Scan, Email notify)         | ⏳             |
+| Phase | Goal | Status |
+| ----- | ---- | ------ |
+| 0 | Setup project + Context Architecture | ✅ Done |
+| 1 | Database (Prisma + Supabase + schema) | ✅ Done |
+| 2 | Auth via TU API (NextAuth v5) | ✅ Done |
+| 3 | Teacher: AppShell + Courses + Roster import (CSV/XLSX) | ✅ Done |
+| 3.5 | Teacher: Schedule + Class Session lifecycle | 🔜 **Up next** |
+| 4 | Teacher: Dynamic QR Display (rotate 30s + fullscreen) | ⏳ |
+| 4.5 | Student: Login + Scan QR + Check-in | ⏳ |
+| 5 | Teacher: Live + Historical Dashboard | ⏳ |
+| 6 | Milestone — Geofence + Manual Edit + Export | ⏳ |
+| 7 | Milestone — Face Scan + Email notify | ⏳ |
 
 ---
 
 ## 📚 PRP Index (Plan-Research-Pattern docs)
 
-| File                                | หัวข้อ                               | สถานะ      |
-| ----------------------------------- | ------------------------------------ | ---------- |
-| `docs/prps/00-security-model.md`    | Security Model (threats + controls)  | ✅ Done    |
-| `docs/prps/01-database-schema.md`   | Database Schema (Prisma blueprint)   | ✅ Done    |
-| `docs/prps/02-auth-tu-api.md`       | NextAuth v5 + TU API custom provider | ✅ Done    |
-| `docs/prps/03-dynamic-qr.md`        | Dynamic QR (refresh ทุก 30s + token) | ⏳ Pending |
-| `docs/prps/04-checkin-flow.md`      | Student check-in flow                | ⏳ Pending |
-| `docs/prps/05-teacher-dashboard.md` | Teacher dashboard + reports          | ⏳ Pending |
+| File | หัวข้อ | สถานะ |
+| ---- | ------ | ----- |
+| `docs/prps/00-security-model.md` | Security Model (threats + controls) | ✅ Done |
+| `docs/prps/01-database-schema.md` | Database Schema (Prisma blueprint) | ✅ Done |
+| `docs/prps/02-auth-tu-api.md` | NextAuth v5 + TU API custom provider | ✅ Done |
+| `docs/prps/03-teacher-courses.md` | Teacher Courses + Roster import (CSV/XLSX) | ✅ Done |
+| `docs/prps/03.5-schedule-session.md` | Schedule + ClassSession lifecycle | ⏳ Pending |
+| `docs/prps/04-dynamic-qr.md` | Dynamic QR (refresh ทุก 30s + token) | ⏳ Pending |
+| `docs/prps/05-checkin-flow.md` | Student check-in flow | ⏳ Pending |
+| `docs/prps/06-teacher-dashboard.md` | Teacher dashboard + reports | ⏳ Pending |
 
 ---
 
@@ -149,11 +179,28 @@
 - **Decision:** Phase 2 มีแค่ `requireAuth`, `requireTeacher`, `requireStudent`
 - **Why:** `requireCourseOwner` และ `requireEnrolledStudent` ต้องอิง course/enrollment actions จริง จึงค่อยเพิ่มใน Phase 3/5 เพื่อไม่สร้าง dead code
 
+### 2026-04-29 — CSV/XLSX parse: xlsx + papaparse (server-side only)
+
+- **Decision:** ใช้ `xlsx` สำหรับ Excel และ `papaparse` สำหรับ CSV — parse ฝั่ง server ใน Server Action เท่านั้น
+- **Why:** ไม่ต้องการ client-side parsing library ที่หนัก — ส่ง raw `File` ผ่าน `FormData` ไปให้ server จัดการ ปลอดภัยกว่าและ bundle size ไม่บวม
+
+### 2026-04-29 — requireCourseOwner แยกเป็น helper ใน auth-helpers.ts
+
+- **Decision:** `requireCourseOwner(courseId)` อยู่ใน `src/lib/auth-helpers.ts` รวมกับ `requireTeacher` / `requireStudent`
+- **Why:** ทุก ownership check อยู่ที่เดียว — ถ้า logic เปลี่ยน (เช่น เพิ่ม co-teacher) แก้ที่เดียวจบ ไม่กระจายใน actions แต่ละไฟล์
+
+### 2026-04-29 — Roster import modal viewport fix
+
+- **Done:** Fixed the roster import modal in `src/components/import/RosterImport.tsx` so it stays inside the viewport and scrolls internally when content is taller than the screen.
+- **Why:** This keeps the teacher import workflow usable after pressing Import without changing the roster import server action or data validation rules.
+- **Verify:** `npm.cmd run build` passed. Existing NextAuth/Jose Edge Runtime warnings still appear and are unrelated to this UI fix.
+
+
 ---
 
 ## 🚧 Blockers / Open Questions
 
-ไม่มีตอนนี้ — Phase 3 พร้อมเริ่ม
+ไม่มีตอนนี้ — Phase 3.5 พร้อมเริ่ม (รอเขียน PRP 03.5 ก่อน)
 
 ---
 
@@ -162,17 +209,25 @@
 1. **อ่าน 3 ไฟล์นี้ตามลำดับก่อนเขียนโค้ด:**
    - `INSTRUCTIONS.md` (กฎเหล็ก)
    - `STATE.md` (ไฟล์นี้ — รู้สถานะ)
-   - PRP ของ Phase ถัดไป (Phase 3 ยังต้องเขียนก่อนเริ่ม code)
+   - `docs/prps/03.5-schedule-session.md` (ต้องเขียนก่อน Phase 3.5)
 
 2. **Stack ที่ติดตั้งจริง** (ดู `package.json`):
    - Next.js `15.5.15`, React `19.2.4`, Tailwind `v4`
    - Prisma `5.22.0`, `@prisma/client` `5.22.0`, `server-only`, `ts-node`
    - NextAuth v5 beta, Zod, lucide-react
-   - ยังไม่ install: qrcode, html5-qrcode
+   - `xlsx` `0.18.5`, `papaparse` `5.5.3`, `qrcode` `1.5.4` + types ครบ
 
-3. **Seed users (dev login Phase 2):**
+3. **ไฟล์หลักที่สร้างใน Phase 3:**
+   - `src/app/actions/course.ts` — createCourse, deleteCourse
+   - `src/app/actions/roster.ts` — importRoster (CSV + XLSX)
+   - `src/lib/auth-helpers.ts` — requireAuth, requireTeacher, requireStudent, requireCourseOwner
+   - `src/lib/nav-config.ts` — role-aware nav links
+   - `src/components/shell/` — AppShell, Sidebar, UserCard
+   - `src/components/import/RosterImport.tsx` — modal + summary UI
+
+4. **Seed users (dev login):**
    - Teacher: `teacher@tu.ac.th`
    - Student: `test.student@dome.tu.ac.th` / studentId: `0000000001`
    - ใช้กับ `BYPASS_TU_AUTH=true` ใน `.env.local` ตอนทดสอบ
 
-4. **Prisma Studio:** รัน `npx prisma studio` เพื่อดู 8 tables + seed data ใน GUI
+5. **Prisma Studio:** รัน `npx prisma studio` เพื่อดู 8 tables + seed data ใน GUI
