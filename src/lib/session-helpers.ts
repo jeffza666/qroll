@@ -19,7 +19,17 @@ export async function autoCloseIfExpired(
 
   const updated = await db.classSession.update({
     where: { id: session.id, isOpen: true },
-    data: { isOpen: false, closedAt: expiresAt },
+    data: {
+      isOpen: false,
+      closedAt: expiresAt,
+      qrToken: null,
+      qrTokenExpiresAt: null,
+      qrRefreshedAt: null,
+      qrPrevToken: null,
+      qrPrevTokenExpiresAt: null,
+      entryCode: null,
+      entryCodePrev: null,
+    },
   });
   return updated;
 }

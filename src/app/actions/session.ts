@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
+import { LATE_AFTER_MIN, QR_REFRESH_INTERVAL_MS } from "@/lib/qr-config";
+import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 
 // แปลง "HH:MM" Bangkok time + Bangkok date → UTC Date
 function buildBangkokDateTime(bangkokDateStr: string, hhmm: string): Date {
@@ -30,6 +32,8 @@ export async function openSession(scheduleId: string) {
   });
   const startsAt = buildBangkokDateTime(bangkokDateStr, schedule.startTime);
   const endsAt = buildBangkokDateTime(bangkokDateStr, schedule.endTime);
+  const now = new Date();
+  const lateAfter = new Date(startsAt.getTime() + LATE_AFTER_MIN * 60 * 1000);
 
   let sessionId: string;
   try {
@@ -39,6 +43,11 @@ export async function openSession(scheduleId: string) {
         scheduleId: schedule.id,
         startsAt,
         endsAt,
+        lateAfter,
+        qrToken: generateQrToken(),
+        qrTokenExpiresAt: new Date(now.getTime() + QR_REFRESH_INTERVAL_MS),
+        qrRefreshedAt: now,
+        entryCode: generateEntryCode(),
         isOpen: true,
       },
       select: { id: true },
@@ -70,7 +79,17 @@ export async function closeSession(sessionId: string) {
   // idempotent — ถ้าปิดไปแล้วก็ no-op
   await db.classSession.updateMany({
     where: { id: sessionId, isOpen: true },
-    data: { isOpen: false, closedAt: new Date() },
+    data: {
+      isOpen: false,
+      closedAt: new Date(),
+      qrToken: null,
+      qrTokenExpiresAt: null,
+      qrRefreshedAt: null,
+      qrPrevToken: null,
+      qrPrevTokenExpiresAt: null,
+      entryCode: null,
+      entryCodePrev: null,
+    },
   });
 
   revalidatePath("/teacher");
