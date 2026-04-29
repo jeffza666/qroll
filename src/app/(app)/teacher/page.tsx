@@ -1,15 +1,35 @@
 import { requireTeacher } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { BookOpen, Users, TrendingUp, CalendarDays, Plus } from "lucide-react";
+import { BookOpen, Users, TrendingUp, CalendarDays, Plus, Clock, MapPin, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import OpenSessionButton from "@/components/courses/OpenSessionButton";
+
+const DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
 
 export default async function TeacherDashboard() {
   const user = await requireTeacher();
 
-  const [courseCount, enrollmentCount] = await Promise.all([
+  const todayDow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
+  ).getDay();
+
+  const [courseCount, enrollmentCount, todaySchedules] = await Promise.all([
     db.course.count({ where: { teacherId: user.id } }),
-    db.enrollment.count({
-      where: { course: { teacherId: user.id } },
+    db.enrollment.count({ where: { course: { teacherId: user.id } } }),
+    db.schedule.findMany({
+      where: {
+        dayOfWeek: todayDow,
+        course: { teacherId: user.id },
+      },
+      include: {
+        course: { select: { id: true, code: true, name: true } },
+        classSessions: {
+          where: { isOpen: true },
+          select: { id: true },
+          take: 1,
+        },
+      },
+      orderBy: { startTime: "asc" },
     }),
   ]);
 
@@ -73,18 +93,75 @@ export default async function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Today's schedule placeholder */}
+        {/* Today's schedule — ข้อมูลจริงจาก DB */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-7 py-5 border-b border-slate-100 flex items-center gap-3">
             <CalendarDays className="w-5 h-5 text-slate-400" />
             <h3 className="text-base font-bold text-slate-800">ตารางสอนวันนี้</h3>
-            <span className="text-sm text-slate-400">(จะแสดงข้อมูลเมื่อเพิ่มตารางสอนใน Phase 3.5)</span>
+            <span className="text-sm font-medium text-slate-500">
+              {DAYS[todayDow]}
+            </span>
           </div>
-          <div className="p-10 text-center text-slate-400">
-            <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">ยังไม่มีตารางสอน</p>
-            <p className="text-xs mt-1">สร้างวิชาและเพิ่มตารางสอนเพื่อเริ่มต้น</p>
-          </div>
+
+          {todaySchedules.length === 0 ? (
+            <div className="p-10 text-center text-slate-400">
+              <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">ไม่มีคาบสอนวันนี้</p>
+              <p className="text-xs mt-1">
+                ไปที่{" "}
+                <Link href="/teacher/courses" className="text-[#2E3192] underline underline-offset-2">
+                  รายวิชา
+                </Link>{" "}
+                เพื่อเพิ่มตารางสอน
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {todaySchedules.map((s) => {
+                const activeSession = s.classSessions[0];
+                return (
+                  <div key={s.id} className="px-7 py-5 flex items-center justify-between hover:bg-slate-50/60 transition-colors">
+                    <div className="flex items-center gap-5">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{s.course.code}</p>
+                        <p className="text-xs text-slate-500">{s.course.name}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        {s.startTime} – {s.endTime}
+                      </div>
+                      {s.room && (
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                          <MapPin className="w-4 h-4 text-slate-400" />
+                          {s.room}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {activeSession ? (
+                        <>
+                          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-lg">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            เปิดอยู่
+                          </span>
+                          <Link
+                            href={`/teacher/sessions/${activeSession.id}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            ดู session
+                          </Link>
+                        </>
+                      ) : (
+                        <OpenSessionButton scheduleId={s.id} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </>
