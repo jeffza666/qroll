@@ -1,5 +1,13 @@
 # PRP 03 — Teacher: AppShell + Courses + Roster Import
 
+> **Implementation update (Phase 4.6 / PRP 06):** roster import contract ด้านล่างถูกปรับแล้วในโค้ดจริง
+>
+> - Import match ด้วย `studentId` เป็นหลัก ไม่ใช่ email
+> - Email ใน roster ไม่จำเป็น และ user ที่สร้างจาก import จะมี `email = null` ได้
+> - ถ้าเจอ user เดิมจาก `studentId` ระบบ enroll เข้า course เท่านั้น ไม่ overwrite `name`, `email`, หรือ `role`
+> - รองรับเพิ่มนักศึกษาทีละคนจาก dialog บน roster tab โดยใช้ `studentId` + `name`
+> - ถ้าข้อความเดิมใน PRP นี้บอกว่าต้องมี email หรือ upsert by email ให้ถือว่าถูก superseded โดย PRP 06
+
 ## Goal
 
 Phase 3 สร้าง foundation UI ที่ใช้ร่วมกันทั้งระบบ (AppShell + Sidebar) และ feature แรกของ Teacher:
@@ -53,13 +61,13 @@ src/app/(app)/
 | field | alias ไทย | alias EN |
 | ----- | --------- | -------- |
 | studentId | รหัสนักศึกษา | studentId, student_id, id |
-| email | อีเมล | email, e-mail |
+| email | อีเมล | email, e-mail (optional หลัง PRP 06) |
 | name | ชื่อ-สกุล | name, fullname |
 
 ### Validation rules
 
 - `studentId` ต้องตรงกับ `^\d{10}$`
-- `email` ต้องลงท้ายด้วย `@dome.tu.ac.th`
+- `email` ถ้ามี ต้องลงท้ายด้วย `@dome.tu.ac.th`; ถ้าไม่มีให้ import ได้และสร้าง user ด้วย `email = null`
 - ขนาดไฟล์ ≤ 1MB
 - แถวข้อมูล ≤ 500 rows (ไม่รวม header)
 
@@ -67,7 +75,9 @@ src/app/(app)/
 
 ```
 db.$transaction([
-  db.user.upsert({ where: { email }, create: {..., role: STUDENT}, update: { name } }),
+  // หลัง PRP 06: match ด้วย studentId และไม่ overwrite user เดิม
+  db.user.findUnique({ where: { studentId } }),
+  // ถ้าไม่เจอจึง create { studentId, name, email: null, role: STUDENT }
   db.enrollment.upsert({ where: { studentId_courseId }, create: {...}, update: {} })
 ])
 ```

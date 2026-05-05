@@ -1,5 +1,13 @@
 # PRP 04 — Teacher: Dynamic QR Display
 
+> **Superseded by PRP 06 / Phase 4.6:** เอกสารนี้เป็น historical design ของ dynamic QR rotation 30s แต่โค้ดจริงปัจจุบันตัด rotation ออกแล้ว
+>
+> - Session ที่เปิดอยู่ใช้ static `qrToken` + static `entryCode` ชุดเดียวจนกว่าจะปิด session
+> - ไม่มี `qrTokenExpiresAt`, `qrRefreshedAt`, previous token/code หรือ generation number ใน schema/UX ปัจจุบัน
+> - Countdown ฝั่งอาจารย์แสดงเวลาเหลือจนถึง `endsAt`; ถ้าเลยเวลาแล้วจะแสดง overtime และ auto-close lazy ที่ `endsAt + 30 นาที`
+> - UI ปัจจุบันใช้วง countdown สี QRoll red รอบ QR และ fullscreen presenter mode ที่เน้น QR กับข้อมูลจำเป็นเท่านั้น
+> - เหตุผลที่เปลี่ยน: rotation ลด screenshot sharing ได้ไม่จริงพอ แต่เพิ่ม complexity; defense หลักของ screenshot/relay ย้ายไป location-based check-in ใน Phase ถัดไป
+
 > **Phase:** 4 (after Phase 3.5 — Schedule + ClassSession lifecycle)
 > **Demo gate:** teacher login → /teacher → "ตารางสอนวันนี้" → กด "เปิด session" → redirect `/teacher/sessions/[id]` → เห็น **QR ใหญ่กลางจอ + countdown ring + Entry Code 6 หลัก + Generation #** → รอ 30s → QR/Code/Generation เปลี่ยนพร้อมกัน → กดปุ่ม Fullscreen → QR เต็มจอ ฉาย projector ได้ → กด ESC ออก → กด "ปิด Session" → status เปลี่ยนเป็นปิด
 
