@@ -305,12 +305,12 @@ prisma/migrations/
 
 #### `Course` — รายวิชา
 
-| Field       | หน้าที่                                             |
-| ----------- | --------------------------------------------------- |
-| `code`      | เช่น `CS101 Sec1` (ไม่ unique global เผื่อข้ามเทอม) |
-| `name`      | ชื่อวิชาเต็ม                                        |
-| `semester`  | เช่น `1/2026`                                       |
-| `teacherId` | foreign key → `User.id` (เจ้าของวิชา)               |
+| Field       | หน้าที่                                                  |
+| ----------- | -------------------------------------------------------- |
+| `code`      | เช่น `CS101 Sec650001` (ไม่ unique global เผื่อข้ามเทอม) |
+| `name`      | ชื่อวิชาเต็ม                                             |
+| `semester`  | เช่น `1/2026`                                            |
+| `teacherId` | foreign key → `User.id` (เจ้าของวิชา)                    |
 
 **Constraint:** `@@unique([code, semester, teacherId])` กันอาจารย์คนเดียวสร้างวิชาซ้ำในเทอมเดียว
 **Cascade rule:** ถ้าลบ teacher จะ `Restrict` (ลบไม่ได้) — ป้องกันข้อมูลเสียหาย
@@ -443,7 +443,7 @@ ON "ClassSession"("courseId") WHERE "isOpen" = true;
 - เขียน [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md), [`STATE.md`](../../STATE.md), [`docs/prps/`](../prps/) — เพื่อให้ session ถัดไปไม่หลงทาง
 - เขียน PRP 01 เป็น blueprint สำหรับ DB schema
 
-**ทำไม:** Final project ต้อง maintain ผ่านหลาย AI session — ต้องมี "หลักฐานความเข้าใจ" เป็นเอกสารกลาง
+**ทำไม:** Final project ต้อง maintain ผ่านหลาย session — ต้องมี "หลักฐานความเข้าใจ" เป็นเอกสารกลาง
 
 **ไฟล์สำคัญ:**
 

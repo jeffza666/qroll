@@ -38,6 +38,8 @@ PRP นี้เป็น implemented spec ของ Phase 4.6 หลังท�
 - Import match user ด้วย `studentId`
 - ถ้าเจอ user เดิม: enroll เข้า course เท่านั้น ไม่ update name/email/role
 - ถ้าไม่เจอ user: create `User` ใหม่ด้วย `studentId`, `name`, `email=null`, `role=STUDENT`
+  - `email=null` เป็นสถานะชั่วคราวสำหรับ pre-imported student เพราะ roster ไม่มี email
+  - เมื่อ student login TU ครั้งแรก ระบบจะเติม email จาก TU API กลับเข้า user เดิมผ่าน fallback by `studentId`
 - รองรับ metadata rows ก่อนตารางจริง โดยหา header row จาก column variants
 - รองรับ column variants เช่น `เลขทะเบียน`, `รหัสนักศึกษา`, `studentId`, `ชื่อ`, `ชื่อ-นามสกุล`, `name`
 - Import summary แสดง `สร้างใหม่`, `ลงทะเบียน`, `ข้าม`, `ผิดพลาด`
