@@ -12,7 +12,7 @@
 | ชื่อ                  | **Qroll** (คิวโรล)                 |
 | ประเภท                | ระบบเช็คอินเข้าเรียนอัจฉริยะ       |
 | สถาบัน                | มหาวิทยาลัยธรรมศาสตร์              |
-| Domain อีเมลที่อนุญาต | `@dome.tu.ac.th` เท่านั้น          |
+| Auth identity / email | Login ใช้ TU API `username/password`; role มาจาก TU API `type` (`student`/`employee`), email ใช้ผูกบัญชีและตรวจ domain เสริม (`@dome.tu.ac.th` สำหรับ student, `@tu.ac.th` สำหรับ employee; nullable สำหรับ pre-imported students ดู PRP 06) |
 | เป้าหมาย              | MVP production-grade ส่งอาจารย์ได้ |
 
 ---
@@ -95,7 +95,7 @@
 | Layer               | ที่                                              | หน้าที่                                             | เชื่อถือได้แค่ไหน           |
 | ------------------- | ------------------------------------------------ | --------------------------------------------------- | --------------------------- |
 | 1. Optimistic       | `src/middleware.ts`                              | redirect ถ้าไม่มี cookie session                    | **ต่ำ** — แค่ UX, ห้ามเชื่อ |
-| 2. Session callback | `lib/auth.ts` (NextAuth `signIn`)                | reject ถ้า email ≠ `@dome.tu.ac.th`                 | กลาง                        |
+| 2. TU auth callback  | `lib/auth.ts` (NextAuth Credentials provider)    | role จาก TU API `type`, ตรวจ email domain เป็น sanity check เสริม | กลาง                        |
 | 3. Authoritative    | Server Action / Route Handler / Server Component | `await auth()` + DB query ด้วย `userId` จาก session | **สูง — ของจริง**           |
 
 **กฎเหล็ก:** Server Action ถูกเรียกผ่าน HTTP POST ตรงๆ ได้เสมอ ไม่ว่า form จะอยู่หลัง login UI หรือไม่ก็ตาม **attacker ส่ง POST ตรงได้** ทุก Server Action ต้องขึ้นต้นด้วย:
@@ -118,13 +118,26 @@ export async function createCourse(formData: FormData) {
 | #   | ช่องโหว่                       | วิธีกัน                                                                   |
 | --- | ------------------------------ | ------------------------------------------------------------------------- |
 | 1   | Replay attack (ใช้ token ซ้ำ)  | Token one-time + unique constraint `(sessionId, studentId)` ใน Attendance |
-| 2   | QR screenshot ส่งต่อ           | Dynamic QR refresh ทุก 30s + token `expiresAt` ใน DB                      |
+| 2   | QR screenshot ส่งต่อ           | ⚠️ **Deprecated** (PRP 06): Dynamic QR rotation ถูกลบออก — ป้องกัน screenshot sharing ไม่ได้จริง (เพื่อนสแกนทันใน 30s) → จะใช้ **location-based check** เป็น primary defense ในอนาคต |
 | 3   | Login bypass                   | middleware ครอบทุก route ยกเว้น `/login`, `/api/auth/*`                   |
-| 4   | Email อื่นเข้าได้              | Validate `@dome.tu.ac.th` ใน `signIn callback` + DB constraint            |
+| 4   | Account type/domain ไม่ตรงกัน  | ใช้ TU API `type` เป็น source of truth สำหรับ role + validate email domain เป็น defense-in-depth |
 | 5   | CSRF บน mutation               | NextAuth จัดการ + เช็ค `Origin` header ใน sensitive Route Handlers        |
 | 6   | เช็คอินวิชาที่ไม่ได้ลง         | JOIN `Enrollment` ก่อนเขียน `Attendance`                                  |
 | 7   | Time skew (client เปลี่ยนเวลา) | เช็คเวลาที่ server เท่านั้น อย่าเชื่อ client timestamp                    |
 | 8   | Race condition (กดเร็วๆ)       | DB unique constraint + `prisma.attendance.upsert`                         |
+
+### Current Product Rules After Phase 4.6
+
+- `studentId` คือ identity หลักของนักศึกษาใน roster/import/auth linking; email ไม่ใช่ key หลักของ roster
+- `User.email` เป็น nullable โดยตั้งใจ เพื่อรองรับนักศึกษาที่ pre-import จาก roster ก่อน login TU ครั้งแรก
+- Roster import และ manual add ต้อง match ด้วย `studentId`
+- ถ้าเจอ user เดิมระหว่าง import/manual add ให้ enroll เข้า course เท่านั้น **ห้าม overwrite** `name`, `email`, หรือ `role`
+- TU login จริงใช้ `username/password`; role ต้องมาจาก TU API `type` (`student`/`employee`) ไม่ใช่ email domain
+- Email domain check (`@dome.tu.ac.th`, `@tu.ac.th`) เป็น sanity check / defense-in-depth เท่านั้น
+- ชื่อจาก TU API ให้ใช้ `displayname_th` ก่อน `displayname_en`
+- QR token และ entry code เป็น static ต่อหนึ่ง open session; ไม่ rotate และไม่เปลี่ยนตอน “เลยเวลา”
+- เมื่อปิด session ต้อง clear `qrToken` และ `entryCode`
+- Session ที่ค้างเปิดให้ lazy auto-close หลัง `endsAt + 30 นาที`; ไม่ต้องเพิ่ม cron/background worker สำหรับกฎนี้
 
 ### Naming Convention
 
@@ -147,11 +160,14 @@ qroll/
 ├── .env.local                ← ของจริง (gitignored)
 ├── docs/
 │   └── prps/                 ← Plan-Research-Pattern เชิงลึก
+│       ├── 00-security-model.md
 │       ├── 01-database-schema.md
 │       ├── 02-auth-tu-api.md
-│       ├── 03-dynamic-qr.md
-│       ├── 04-checkin-flow.md
-│       └── 05-teacher-dashboard.md
+│       ├── 03-teacher-courses.md
+│       ├── 03.5-schedule-session.md
+│       ├── 04-dynamic-qr.md
+│       ├── 05-checkin-flow.md
+│       └── 06-roster-and-session-overhaul.md
 ├── prisma/
 │   └── schema.prisma
 ├── public/
@@ -159,8 +175,13 @@ qroll/
 │   ├── middleware.ts         ← Auth gate (optimistic redirect — ห้ามใช้เป็น auth solution หลัก)
 │   ├── app/                  ← App Router
 │   │   ├── (auth)/           ← Login pages
-│   │   ├── (teacher)/        ← Teacher routes
-│   │   ├── (student)/        ← Student routes
+│   │   ├── (app)/            ← Authenticated routes (teacher + student)
+│   │   ├── actions/          ← Server Actions ('use server' ทุกไฟล์)
+│   │   │   ├── course.ts
+│   │   │   ├── session.ts
+│   │   │   ├── roster.ts
+│   │   │   ├── checkin.ts
+│   │   │   └── export.ts
 │   │   └── api/              ← Route Handlers (เฉพาะ external client)
 │   ├── components/
 │   │   ├── ui/               ← Reusable primitives
@@ -168,12 +189,11 @@ qroll/
 │   ├── lib/
 │   │   ├── auth.ts           ← NextAuth config + export `auth()` helper
 │   │   ├── db.ts             ← Prisma client singleton (กัน hot-reload connection leak)
-│   │   ├── actions/          ← Server Actions ('use server' ทุกไฟล์)
-│   │   │   ├── course-actions.ts
-│   │   │   ├── session-actions.ts
-│   │   │   └── checkin-actions.ts
+│   │   ├── session-helpers.ts← session lifecycle helpers
 │   │   ├── validations/      ← Zod schemas (reuse client+server)
-│   │   └── qr/               ← gen + verify QR token logic
+│   │   ├── qr-config.ts      ← QR/static entry-code constants
+│   │   ├── qr-token.ts       ← generate QR token + entry code
+│   │   └── qr-verify.ts      ← verify QR token / entry code server-side
 │   ├── hooks/                ← Custom React hooks
 │   └── types/                ← Shared TS types
 └── tests/                    ← (Phase ภายหลัง)
@@ -183,13 +203,17 @@ qroll/
 
 ## 5. Database Schema (เบื้องต้น — ดู PRP 01 สำหรับรายละเอียด)
 
-หลัก ๆ จะมี 5 tables:
+หลัก ๆ มี 7 tables (+ NextAuth tables):
 
-1. **User** — อาจารย์ + นักศึกษา (มี `role: "TEACHER" | "STUDENT"`)
+1. **User** — อาจารย์ + นักศึกษา (มี `role: "TEACHER" | "STUDENT"`, `email` nullable หลัง PRP 06)
 2. **Course** — รายวิชาที่อาจารย์สร้าง
 3. **Enrollment** — เชื่อม Student กับ Course (M:N)
-4. **Session** — คาบเรียนแต่ละครั้ง (มี QR code ที่ active)
-5. **Attendance** — บันทึกการเข้าเรียนต่อ session ต่อ student
+4. **Schedule** — ตารางสอนของแต่ละ Course (วัน/เวลาประจำ)
+5. **ClassSession** — คาบเรียนแต่ละครั้ง (มี QR token + entryCode active)
+6. **Attendance** — บันทึกการเข้าเรียนต่อ session ต่อ student
+7. **DemoCheckIn** — สำหรับ demo flow
+
+**NextAuth tables** (managed by adapter): `Account`, `Session`, `VerificationToken`
 
 > รายละเอียด field ทั้งหมดดูใน `docs/prps/01-database-schema.md`
 
@@ -245,7 +269,7 @@ qroll/
 - [ ] Database schema + migration
 - [ ] Auth via TU API
 - [ ] Teacher: สร้างวิชา, import นักศึกษา (CSV)
-- [ ] Teacher: สร้าง session + Dynamic QR (refresh ทุก 30s)
+- [ ] Teacher: สร้าง session + QR (static ตลอด session — rotation ถูก deprecate ใน PRP 06)
 - [ ] Student: สแกน QR → login → บันทึก attendance
 - [ ] Teacher Dashboard: ดูสรุปการเข้าเรียน
 
@@ -285,8 +309,11 @@ npm run format
 
 ---
 
-**Version:** 1.1
-**Last updated:** 2026-04-27
+**Version:** 1.4
+**Last updated:** 2026-05-05
 **Changelog:**
 
+- v1.4 — เพิ่ม Current Product Rules After Phase 4.6: `studentId` เป็น identity หลัก, email nullable, import/manual add ห้าม overwrite, role จาก TU API `type`, ชื่อไทยก่อนอังกฤษ, static QR/entryCode และ lazy auto-close หลัง `endsAt + 30 นาที`
+- v1.3 — sync folder tree กับ repo จริงหลัง Phase 4.6: เพิ่ม PRP 00/03/03.5/06 ใน index และแก้ QR helper path จาก `lib/qr/` เป็น `qr-config.ts`, `qr-token.ts`, `qr-verify.ts`
+- v1.2 — sync กับ PRP 06: email nullable note, deprecate QR rotation (ช่องโหว่ #2 + Milestone A), แก้ folder structure (`app/actions/` ไม่ใช่ `lib/actions/`, route groups `(app)`), อัปเดต DB tables 5 → 7 (+ NextAuth)
 - v1.1 — ระบุ Next.js 15.5 (downgrade จาก 16) + React 19 + Tailwind v4, เพิ่ม 3-Layer Auth Defense + Security Checklist 8 ช่องโหว่, ปรับ folder structure (เพิ่ม `middleware.ts`, `lib/auth.ts`, `lib/db.ts`, `lib/actions/`, `lib/validations/`, `lib/qr/`)
