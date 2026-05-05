@@ -1,5 +1,13 @@
 # PRP 00 — Security Model
 
+> **Implementation update (Phase 4.6 / PRP 06):** เอกสารนี้ยังใช้เป็นกรอบ security หลักได้ แต่รายละเอียดบางส่วนถูกตัดสินใจใหม่แล้วใน PRP 06 และโค้ดจริงปัจจุบัน:
+>
+> - Login จริงใช้ TU API `username/password`; role ใช้ `type` จาก TU API (`student` → `STUDENT`, `employee` → `TEACHER`) เป็น source of truth
+> - Email ไม่ใช่ตัวแยก role และไม่ใช่ username สำหรับ TU login; ใช้เป็นข้อมูลประกอบหลัง auth สำเร็จ, ผูกบัญชี, audit/debug, notification ในอนาคต และตรวจ domain เป็น sanity check / defense-in-depth
+> - นักศึกษาที่ import จาก roster ล่วงหน้าอาจมี `email = null` จนกว่าจะ login TU ครั้งแรก แล้วระบบ link กลับด้วย `studentId`
+> - Dynamic QR rotation 30s ถูก deprecate แล้ว เพราะกัน screenshot sharing ไม่ได้จริง; session ที่เปิดอยู่ใช้ static `qrToken` + `entryCode` ชุดเดียวจนปิด session
+> - การป้องกัน screenshot/relay หลักย้ายไป Phase ถัดไป เช่น location-based check-in; ตอนนี้ server ยัง enforce auth, enrollment, session open/closed, unique attendance และ auto-close ที่ `endsAt + 30 นาที`
+
 > **PRP = Plan-Research-Pattern** — เอกสาร security เชิงลึกของโปรเจกต์ Qroll
 > เป็น **single source of truth** เรื่อง security — PRP อื่น ๆ ทุกตัวต้องอ้างอิงไฟล์นี้แทนการเขียน security pattern ใหม่เอง
 

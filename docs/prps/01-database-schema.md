@@ -1,5 +1,13 @@
 # PRP 01 — Database Schema (Prisma + PostgreSQL)
 
+> **Implementation update (Phase 4.6 / PRP 06):** schema blueprint ด้านล่างเป็นประวัติการออกแบบ Phase 1 แต่ schema จริงปัจจุบันให้ยึด `prisma/schema.prisma` และ migration `roster_overhaul` เป็นหลัก
+>
+> - `User.email` เป็น nullable (`String? @unique`) เพื่อรองรับ student ที่ pre-import จาก roster โดยยังไม่เคย login
+> - `User.studentId` เป็น identity หลักของนักศึกษา และใช้ link TU login ครั้งแรกกลับไปหา user ที่ import ไว้
+> - `ClassSession` ใช้ static `qrToken` + static `entryCode` ต่อหนึ่ง open session; ไม่มี `qrTokenExpiresAt`, `qrRefreshedAt`, `qrPrevToken`, `entryCodePrev`
+> - มี `Schedule`, `ClassSession.scheduleId`, `ClassSession.closedAt`, และ `DemoCheckIn` ใน schema จริงหลัง phase ต่อ ๆ มา
+> - ถ้าข้อความใน PRP นี้ขัดกับ PRP 06 หรือ `prisma/schema.prisma` ให้ถือว่า PRP นี้เป็น historical context ไม่ใช่ source of truth ล่าสุด
+
 > **PRP = Plan-Research-Pattern** — เอกสารเชิงลึกสำหรับ feature นี้
 > อ่านก่อน implement ทุกครั้ง
 
