@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users, CalendarDays, Clock, MapPin } from "lucide-react";
+import AddStudentDialog from "@/components/import/AddStudentDialog";
 import RosterImport from "@/components/import/RosterImport";
 import ScheduleForm from "@/components/courses/ScheduleForm";
 import ScheduleDeleteButton from "@/components/courses/ScheduleDeleteButton";
@@ -51,7 +52,10 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
           </div>
         </div>
         {isRoster ? (
-          <RosterImport courseId={course.id} />
+          <div className="flex items-center gap-2">
+            <RosterImport courseId={course.id} />
+            <AddStudentDialog courseId={course.id} />
+          </div>
         ) : (
           <ScheduleForm courseId={course.id} />
         )}
@@ -109,7 +113,7 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
                       <th className="px-7 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
                       <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">รหัสนักศึกษา</th>
                       <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">ชื่อ-สกุล</th>
-                      <th className="px-7 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">อีเมล</th>
+                      <th className="w-48 px-7 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">สถานะ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -120,7 +124,17 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
                           {enrollment.student.studentId ?? "—"}
                         </td>
                         <td className="px-4 py-4 text-sm font-medium text-slate-900">{enrollment.student.name}</td>
-                        <td className="px-7 py-4 text-sm text-slate-500">{enrollment.student.email}</td>
+                        <td className="w-48 px-7 py-4 text-center text-sm">
+                          {enrollment.student.email ? (
+                            <span className="inline-flex min-w-28 items-center justify-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                              เชื่อมบัญชีแล้ว
+                            </span>
+                          ) : (
+                            <span className="inline-flex min-w-28 items-center justify-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
+                              ยังไม่เข้าสู่ระบบ
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
