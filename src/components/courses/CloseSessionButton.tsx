@@ -6,9 +6,12 @@ import { XCircle } from "lucide-react";
 
 import { closeSession } from "@/app/actions/session";
 
-type Props = { sessionId: string };
+type Props = {
+  sessionId: string;
+  onClosed?: () => void;
+};
 
-export default function CloseSessionButton({ sessionId }: Props) {
+export default function CloseSessionButton({ sessionId, onClosed }: Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -19,6 +22,7 @@ export default function CloseSessionButton({ sessionId }: Props) {
 
     startTransition(async () => {
       await closeSession(sessionId);
+      onClosed?.();
       router.refresh();
     });
   }

@@ -23,12 +23,7 @@ export async function autoCloseIfExpired(
       isOpen: false,
       closedAt: expiresAt,
       qrToken: null,
-      qrTokenExpiresAt: null,
-      qrRefreshedAt: null,
-      qrPrevToken: null,
-      qrPrevTokenExpiresAt: null,
       entryCode: null,
-      entryCodePrev: null,
     },
   });
   return updated;
