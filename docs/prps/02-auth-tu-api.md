@@ -293,7 +293,7 @@ npm run build
 
 ## 10. Decision Log Candidates
 
-เพิ่มใน `STATE.md` หลัง implement:
+เพิ่มในบันทึกสถานะโปรเจกต์หลัง implement:
 
 - JWT session strategy ไม่ใช้ PrismaAdapter เพราะ middleware อ่าน claims ได้ตรงและลด moving parts
 - `authorize()` upsert ไม่ update role เพื่อกัน privilege drift

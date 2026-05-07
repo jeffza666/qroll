@@ -785,8 +785,8 @@ Port 3000 is in use by process 25756, using available port 3001 instead.
 
 ### 12.6 Documentation
 
-- `INSTRUCTIONS.md`
-- `STATE.md`
+- เอกสารข้อกำหนดโปรเจกต์
+- บันทึกสถานะโปรเจกต์
 - `docs/prps/00-security-model.md`
 - `docs/prps/01-database-schema.md`
 - `docs/prps/02-auth-tu-api.md`
@@ -834,9 +834,9 @@ Port 3000 is in use by process 25756, using available port 3001 instead.
 - countdown/session behavior
 - out-of-scope ที่ย้ายไป Phase ถัดไป
 
-### 13.3 INSTRUCTIONS.md
+### 13.3 Project Requirements Notes
 
-ปรับให้กฎหลักของ session ถัดไปไม่พาเข้าใจผิด:
+ปรับให้กฎหลักของรอบพัฒนาถัดไปไม่พาเข้าใจผิด:
 
 - auth identity/email ใหม่
 - role จาก TU API `type`
@@ -846,7 +846,7 @@ Port 3000 is in use by process 25756, using available port 3001 instead.
 - PRP index ใน tree ตรงไฟล์จริง
 - QR helper path ตรงไฟล์จริง
 
-### 13.4 STATE.md
+### 13.4 Project Status Notes
 
 อัปเดต:
 

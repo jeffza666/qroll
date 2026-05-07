@@ -440,15 +440,15 @@ ON "ClassSession"("courseId") WHERE "isOpen" = true;
 
 - สร้าง Next.js 16.2.4 → downgrade เป็น 15.5.15 เพื่อ stability
 - Fix ESLint config สำหรับ Next 15 (ESM resolver)
-- เขียน [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md), [`STATE.md`](../../STATE.md), [`docs/prps/`](../prps/) — เพื่อให้ session ถัดไปไม่หลงทาง
+- เขียนเอกสารข้อกำหนดโปรเจกต์, บันทึกสถานะ, และ [`docs/prps/`](../prps/) — เพื่อให้รอบพัฒนาถัดไปไม่หลงทาง
 - เขียน PRP 01 เป็น blueprint สำหรับ DB schema
 
 **ทำไม:** Final project ต้อง maintain ผ่านหลาย session — ต้องมี "หลักฐานความเข้าใจ" เป็นเอกสารกลาง
 
 **ไฟล์สำคัญ:**
 
-- [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md) — กฎเหล็กของโปรเจกต์
-- [`STATE.md`](../../STATE.md) — handoff tracker
+- เอกสารข้อกำหนดโปรเจกต์ — กฎเหล็กของโปรเจกต์
+- บันทึกสถานะโปรเจกต์ — current status และ decision log
 
 ### Phase 1 — Database ✅
 
@@ -1010,7 +1010,7 @@ DEMO_CHECKIN_ENABLED=true      # showcase: เปิด demo lane
 
 ## 13. เกณฑ์ "เสร็จ 100%"
 
-> อ้างอิง [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md) section 8
+> อ้างอิง phase roadmap ของโปรเจกต์
 
 ### Milestone A — Core MVP (ต้องเสร็จเป็นอย่างน้อย)
 
@@ -1082,15 +1082,15 @@ password ใส่อะไรก็ได้ถ้า `BYPASS_TU_AUTH=true`
 
 ### Workflow ทุก session
 
-1. อ่าน [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md) → [`STATE.md`](../../STATE.md) → PRP ของฟีเจอร์ที่ทำ
-2. Summarize "done so far / about to do"
+1. อ่านเอกสารข้อกำหนดโปรเจกต์ → บันทึกสถานะโปรเจกต์ → PRP ของฟีเจอร์ที่ทำ
+2. สรุปสิ่งที่ทำเสร็จแล้วและสิ่งที่จะทำต่อ
 3. ทำงาน
-4. อัปเดต [`STATE.md`](../../STATE.md) (mark done, update next step, add Decision Log entry ถ้ามี)
+4. อัปเดตบันทึกสถานะโปรเจกต์ (mark done, update next step, add Decision Log entry ถ้ามี)
 
 ### ไฟล์ที่ควรเปิดอ่านก่อนใคร (ถ้าเพิ่งเข้ามาในโปรเจกต์)
 
-1. [`INSTRUCTIONS.md`](../../INSTRUCTIONS.md) — กฎเหล็ก
-2. [`STATE.md`](../../STATE.md) — สถานะปัจจุบัน + decision log
+1. เอกสารข้อกำหนดโปรเจกต์ — กฎเหล็ก
+2. บันทึกสถานะโปรเจกต์ — สถานะปัจจุบัน + decision log
 3. [`prisma/schema.prisma`](../../prisma/schema.prisma) — DB เป็นหัวใจของระบบ
 4. [`src/lib/auth-helpers.ts`](../../src/lib/auth-helpers.ts) — pattern ของ auth
 5. [`src/app/actions/checkin.ts`](../../src/app/actions/checkin.ts) — pattern ของ Server Action ที่ครบ flow
@@ -1111,4 +1111,4 @@ password ใส่อะไรก็ได้ถ้า `BYPASS_TU_AUTH=true`
 
 ถ้าจะส่งโปรเจกต์จบ ขั้นต่ำคือทำ Phase 5 ให้จบ + บางส่วนของ Phase 6 (export CSV) — ทั้งสองอย่างไม่ต้องแก้ schema เลย แค่เพิ่ม UI + query
 
-> "การออกแบบที่ดีต้องอธิบายได้ว่าทำไม" — ทุก Decision Log ใน STATE.md และทุก reason ในเอกสารนี้คือสิ่งที่จะใช้ตอบอาจารย์ตอน defense
+> "การออกแบบที่ดีต้องอธิบายได้ว่าทำไม" — ทุก Decision Log และทุก reason ในเอกสารนี้คือสิ่งที่จะใช้ตอบอาจารย์ตอน defense

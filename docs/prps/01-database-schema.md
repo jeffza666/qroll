@@ -13,7 +13,7 @@
 
 **Status:** Ready to implement
 **Owner:** Phase 1
-**Prerequisites:** [INSTRUCTIONS.md](../../INSTRUCTIONS.md) §3 (Coding Rules + Security), §5 (DB overview)
+**Prerequisites:** เอกสารข้อกำหนดโปรเจกต์ส่วน Coding Rules, Security และ DB overview
 
 ---
 
@@ -25,7 +25,7 @@
 2. **Course Structure** — วิชา + ใครลงทะเบียน
 3. **Attendance Event** — ใครเช็คอินคาบไหนเมื่อไหร่ + กันโกง
 
-Schema ต้องตอบโจทย์ Security Checklist 8 ข้อ จาก [INSTRUCTIONS.md §3](../../INSTRUCTIONS.md):
+Schema ต้องตอบโจทย์ Security Checklist 8 ข้อของโปรเจกต์:
 
 - ❗ #1 Replay attack — DB unique constraint กันบันทึกซ้ำ
 - ❗ #2 QR screenshot — Token + expiresAt ใน DB
@@ -37,7 +37,7 @@ Schema ต้องตอบโจทย์ Security Checklist 8 ข้อ จ�
 
 ## 2. ⚠️ Naming Conflict Decision
 
-[INSTRUCTIONS.md §5](../../INSTRUCTIONS.md) ระบุ table ชื่อ **"Session"** แต่ **NextAuth.js v5 adapter ใช้ชื่อ `Session` เป็นมาตรฐาน** (database session strategy) → จะชนกัน
+เอกสารออกแบบเดิมระบุ table ชื่อ **"Session"** แต่ **NextAuth.js v5 adapter ใช้ชื่อ `Session` เป็นมาตรฐาน** (database session strategy) → จะชนกัน
 
 **ตัดสินใจใน PRP นี้:**
 
@@ -45,7 +45,7 @@ Schema ต้องตอบโจทย์ Security Checklist 8 ข้อ จ�
 - ปล่อย `Session` ให้ NextAuth ใช้ (ถ้า config ใช้ database strategy)
 - หรือถ้าใช้ JWT strategy ก็ไม่มี `Session` table แต่เราใช้ชื่อ `ClassSession` อยู่ดีเพื่อ clarity
 
-→ ต้องอัปเดต [INSTRUCTIONS.md §5](../../INSTRUCTIONS.md) ตอน Phase 2 (auth) ให้ระบุ `ClassSession`
+→ ต้องอัปเดตเอกสารออกแบบตอน Phase 2 (auth) ให้ระบุ `ClassSession`
 
 ---
 
@@ -391,7 +391,7 @@ npx prisma studio
 
 เปิด GUI ดู table ครบ 8 ตัว: User, Course, Enrollment, ClassSession, Attendance, Account, Session, VerificationToken
 
-### Step 9 — Update STATE.md
+### Step 9 — Update Project Status Notes
 
 เปลี่ยน Phase 1 status เป็น ✅ Done, set Next Step → Phase 2 (Auth via TU API), เริ่มเขียน `docs/prps/02-auth-tu-api.md`
 
@@ -407,7 +407,7 @@ npx prisma studio
 | 2   | `@@unique([studentId, courseId])` ใน Enrollment                                                 | กันลงทะเบียนซ้ำ                                                                                                |
 | 3   | `qrToken @unique` ใน ClassSession                                                               | ถ้าไม่ unique ตอน lookup จะเจอหลาย session = chaos                                                             |
 | 4   | `studentId` ใน User เป็น `String? @unique`                                                      | nullable + unique → PostgreSQL อนุญาต null ซ้ำได้ (สำหรับ teacher)                                             |
-| 5   | ทุก model มี `id, createdAt, updatedAt`                                                         | ตรงตามกฎใน [INSTRUCTIONS.md §3](../../INSTRUCTIONS.md)                                                         |
+| 5   | ทุก model มี `id, createdAt, updatedAt`                                                         | ตรงตามกฎ coding/security ของโปรเจกต์                                                                           |
 | 6   | ใช้ `cuid()` ไม่ใช่ `uuid()` หรือ autoincrement                                                 | ตรงตามกฎ                                                                                                       |
 | 7   | `onDelete` ที่ใช้ `Restrict` กับ historical data (Attendance.student, Course.teacher)           | ลบ user ไม่ได้ถ้ายังมี attendance/course → กันข้อมูลย้อนหลังหาย                                                |
 | 8   | `onDelete: Cascade` เฉพาะ child ที่ตายไปกับ parent (Enrollment.course, Attendance.classSession) | ลบวิชา → enrollment + session ทั้งสายตายตาม สมเหตุสมผล                                                         |
@@ -416,7 +416,7 @@ npx prisma studio
 
 | #   | Don't                                                                | Why                                                                                               |
 | --- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 1   | ห้ามใช้ `Int @default(autoincrement())` เป็น primary key             | INSTRUCTIONS.md กำหนด `cuid()` + ทำให้ enumeration attack ง่าย                                    |
+| 1   | ห้ามใช้ `Int @default(autoincrement())` เป็น primary key             | กฎโปรเจกต์กำหนด `cuid()` + ทำให้ enumeration attack ง่าย                                          |
 | 2   | ห้ามตั้งชื่อ table ของเราว่า `Session`                               | ชนกับ NextAuth → ใช้ `ClassSession`                                                               |
 | 3   | ห้ามใช้ `String` แทน `DateTime`                                      | ทำให้เปรียบเทียบเวลา/index ห่วย + timezone bug                                                    |
 | 4   | ห้ามเก็บ `qrToken` แบบ plain text predictable (เช่น sequence number) | ต้อง random secure (`crypto.randomBytes(32).toString('hex')` ตอน generate) — ดู PRP 03            |
@@ -497,8 +497,8 @@ await db.attendance.create({
 
 ## 7. References
 
-- [INSTRUCTIONS.md §3](../../INSTRUCTIONS.md) — Coding Rules (cuid, indexes, security)
-- [INSTRUCTIONS.md §5](../../INSTRUCTIONS.md) — Database Schema overview
+- Project Coding Rules — cuid, indexes, security
+- Project Database Schema overview
 - [Prisma Schema Reference](https://www.prisma.io/docs/orm/reference/prisma-schema-reference)
 - [Auth.js Prisma Adapter](https://authjs.dev/getting-started/adapters/prisma)
 - [Supabase + Prisma guide](https://supabase.com/partners/integrations/prisma)

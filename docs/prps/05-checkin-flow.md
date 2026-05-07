@@ -473,4 +473,4 @@ Recommended layout:
 - [ ] Teacher session screen shows real attendance and demo check-ins separately.
 - [ ] Student/demo pages are usable on phone-width screens.
 - [ ] `npm run build` passes.
-- [ ] `STATE.md` is updated with Phase 4.5 result and next step.
+- [ ] Project status notes are updated with Phase 4.5 result and next step.

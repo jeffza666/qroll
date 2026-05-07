@@ -13,7 +13,7 @@
 
 **Status:** Ready to use as reference
 **Owner:** ครอบทุก Phase (โดยเฉพาะ Phase 2 Auth, Phase 4 Dynamic QR, Phase 5 Check-in)
-**Prerequisites:** [INSTRUCTIONS.md §3 Security](../../INSTRUCTIONS.md) (ตารางสรุป) + [PRP 01 §1](01-database-schema.md) (schema constraint)
+**Prerequisites:** เอกสารข้อกำหนดด้าน Security (ตารางสรุป) + [PRP 01 §1](01-database-schema.md) (schema constraint)
 
 ---
 
@@ -24,7 +24,7 @@
 ### สิ่งที่ PRP นี้ครอบคลุม
 
 - Threat model: ใครจะโจมตี โจมตีอะไร โจมตียังไง
-- Auth defense pattern: ขยายจาก [INSTRUCTIONS.md §3.3-Layer Auth](../../INSTRUCTIONS.md) แบบมีโค้ดตัวอย่าง
+- Auth defense pattern: ขยายจากแนวทาง 3-layer auth defense แบบมีโค้ดตัวอย่าง
 - Security checklist 8 ข้อ: เจาะลึกแต่ละข้อพร้อม attack scenario + control + verify steps
 - Token / QR security policy
 - CSRF, secret management, logging
@@ -70,7 +70,7 @@
 
 ## 3. 3-Layer Auth Defense (รายละเอียด)
 
-ขยายจากตารางใน [INSTRUCTIONS.md §3](../../INSTRUCTIONS.md)
+ขยายจากตาราง security checklist ของโปรเจกต์
 
 ### Layer 1 — Optimistic Middleware
 
@@ -192,7 +192,7 @@ export async function createClassSession(input: unknown) {
 
 ## 4. Security Checklist 8 ช่องโหว่ (เจาะลึก)
 
-อ้างอิงจาก [INSTRUCTIONS.md §3.Security Checklist](../../INSTRUCTIONS.md)
+อ้างอิงจาก security checklist ของโปรเจกต์
 
 ### #1 — Replay attack (ใช้ token ซ้ำ)
 

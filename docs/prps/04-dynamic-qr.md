@@ -638,12 +638,12 @@ return <SessionView sessionId={session.id} />; // client fetch /api เอง
 - [ ] เพิ่ม `NEXTAUTH_URL` (หรือ `APP_URL`) ใน `.env.example` ถ้ายังไม่มี — ใช้ build URL ใน QR (Phase 4 ใช้ `window.location.origin` พอ)
 - [ ] `npm run build` ผ่าน 100% (TypeScript + ESLint clean)
 - [ ] Smoke test A/B/C ข้างบนผ่าน
-- [ ] อัปเดต `STATE.md` (mark Phase 4 done, set Phase 4.5 next)
+- [ ] อัปเดตบันทึกสถานะโปรเจกต์ (mark Phase 4 done, set Phase 4.5 next)
 - [ ] เพิ่ม Decision Log entries: "Polling vs SSE", "DB-backed token vs JWT", "Grace window 1 round", "No pause/resume in v1"
 
 ---
 
-## Open Questions (สำหรับ codex / next session)
+## Open Questions (สำหรับรอบพัฒนาถัดไป)
 
 1. **`window.location.origin` vs `NEXTAUTH_URL`** ใน QR payload URL — Phase 4 ใช้ `window.location.origin` พอ (client-side build URL) เพราะ student จะ scan QR แล้วไปหน้า `/checkin` ซึ่ง Phase 4.5 จะสร้าง. ถ้า production deploy ไปที่ domain ต่าง student จะถูก redirect ตาม `window.location` — ปลอดภัยพอ. เปลี่ยนเป็น env var ทีหลังได้
 2. **Visual countdown drift** — ถ้า client clock drift กับ server หลายวินาที, countdown อาจ visual ไม่ตรง expiry จริง. แก้: refresh ฝั่ง client คำนวณจาก `qrTokenExpiresAt - Date.now()` ทุก tick (ทำแล้วใน SessionView) — drift มากสุด = client clock skew + หลังถัด poll
