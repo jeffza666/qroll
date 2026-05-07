@@ -1,6 +1,6 @@
 # Phase 2 Auth Session Summary — Qroll
 
-> ไฟล์นี้สรุปสิ่งที่ทำในแชทนี้แบบอธิบายเหตุผล เหมาะสำหรับอ่านทบทวนเองหรือใช้อธิบายให้อาจารย์ที่ปรึกษาฟัง  
+> ไฟล์นี้สรุปสิ่งที่ทำใน Phase 2 แบบอธิบายเหตุผล เหมาะสำหรับอ่านทบทวนเองหรือใช้อธิบายให้อาจารย์ที่ปรึกษาฟัง
 > วันที่ทำงาน: 2026-04-28  
 > สถานะสุดท้าย: **Phase 2 เสร็จสมบูรณ์และทดสอบผ่านแล้ว**
 
@@ -29,15 +29,15 @@ Phase 2 คือการเพิ่มระบบ login ให้ Qroll โ�
 
 ก่อนเขียน code มีการอ่านไฟล์หลักของโปรเจกต์:
 
-- `INSTRUCTIONS.md`
-- `STATE.md`
+- เอกสารข้อกำหนดโปรเจกต์
+- บันทึกสถานะโปรเจกต์
 - `docs/prps/00-security-model.md`
 - `docs/prps/01-database-schema.md`
 
 เหตุผลที่ต้องอ่านก่อน:
 
-- `INSTRUCTIONS.md` เป็นกฎของโปรเจกต์ เช่น tech stack, security model, ห้าม commit `.env`
-- `STATE.md` บอกว่าทำถึง Phase ไหนแล้ว
+- เอกสารข้อกำหนดโปรเจกต์ระบุ tech stack, security model, และข้อห้าม commit `.env`
+- บันทึกสถานะโปรเจกต์บอกว่าทำถึง Phase ไหนแล้ว
 - PRP 00 บอก security model โดยเฉพาะ 3-layer auth defense
 - PRP 01 บอก schema database และ seed users ที่ใช้ใน BYPASS mode
 
@@ -142,7 +142,7 @@ TU_API_KEY=""
 - `.env.local` เป็นของจริง ห้าม commit
 - `TU_API_KEY` ต้องอยู่ใน `.env.local` เท่านั้น เพราะเป็น secret
 
-ในแชทนี้เคยพบว่า `TU_API_KEY` จริงถูกใส่ใน `.env.example` แล้วจึงล้างออกให้ทันที เพราะ `.env.example` เป็นไฟล์ที่มีโอกาสถูก commit
+ระหว่าง Phase 2 เคยพบว่า `TU_API_KEY` จริงถูกใส่ใน `.env.example` แล้วจึงล้างออกให้ทันที เพราะ `.env.example` เป็นไฟล์ที่มีโอกาสถูก commit
 
 ---
 
@@ -536,12 +536,12 @@ npm.cmd run lint
 
 ---
 
-## 18. STATE.md
+## 18. Project Status Notes
 
 แก้ไฟล์:
 
 ```text
-STATE.md
+Project status notes
 ```
 
 อัปเดตว่า:
@@ -557,7 +557,7 @@ STATE.md
 
 ความสำคัญ:
 
-session ถัดไปหรือคนอื่นมาอ่านจะรู้ทันทีว่า Phase 2 จบแล้ว และ Phase 3 ต้องทำอะไรต่อ
+รอบพัฒนาถัดไปหรือคนอื่นมาอ่านจะรู้ทันทีว่า Phase 2 จบแล้ว และ Phase 3 ต้องทำอะไรต่อ
 
 ---
 
@@ -566,8 +566,8 @@ session ถัดไปหรือคนอื่นมาอ่านจะร
 ### อ่าน/สำรวจไฟล์
 
 ```powershell
-Get-Content -Raw -LiteralPath .\INSTRUCTIONS.md
-Get-Content -Raw -LiteralPath .\STATE.md
+Get-ChildItem -Force -LiteralPath .\docs\prps
+Get-ChildItem -Force -LiteralPath .\docs\reviews
 Get-ChildItem -Force -LiteralPath .\docs\prps
 Get-Content -Raw -Encoding UTF8 -LiteralPath .\docs\prps\00-security-model.md
 Get-Content -Raw -Encoding UTF8 -LiteralPath .\docs\prps\01-database-schema.md

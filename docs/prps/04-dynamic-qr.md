@@ -1,5 +1,13 @@
 # PRP 04 — Teacher: Dynamic QR Display
 
+> **Superseded by PRP 06 / Phase 4.6:** เอกสารนี้เป็น historical design ของ dynamic QR rotation 30s แต่โค้ดจริงปัจจุบันตัด rotation ออกแล้ว
+>
+> - Session ที่เปิดอยู่ใช้ static `qrToken` + static `entryCode` ชุดเดียวจนกว่าจะปิด session
+> - ไม่มี `qrTokenExpiresAt`, `qrRefreshedAt`, previous token/code หรือ generation number ใน schema/UX ปัจจุบัน
+> - Countdown ฝั่งอาจารย์แสดงเวลาเหลือจนถึง `endsAt`; ถ้าเลยเวลาแล้วจะแสดง overtime และ auto-close lazy ที่ `endsAt + 30 นาที`
+> - UI ปัจจุบันใช้วง countdown สี QRoll red รอบ QR และ fullscreen presenter mode ที่เน้น QR กับข้อมูลจำเป็นเท่านั้น
+> - เหตุผลที่เปลี่ยน: rotation ลด screenshot sharing ได้ไม่จริงพอ แต่เพิ่ม complexity; defense หลักของ screenshot/relay ย้ายไป location-based check-in ใน Phase ถัดไป
+
 > **Phase:** 4 (after Phase 3.5 — Schedule + ClassSession lifecycle)
 > **Demo gate:** teacher login → /teacher → "ตารางสอนวันนี้" → กด "เปิด session" → redirect `/teacher/sessions/[id]` → เห็น **QR ใหญ่กลางจอ + countdown ring + Entry Code 6 หลัก + Generation #** → รอ 30s → QR/Code/Generation เปลี่ยนพร้อมกัน → กดปุ่ม Fullscreen → QR เต็มจอ ฉาย projector ได้ → กด ESC ออก → กด "ปิด Session" → status เปลี่ยนเป็นปิด
 
@@ -630,12 +638,12 @@ return <SessionView sessionId={session.id} />; // client fetch /api เอง
 - [ ] เพิ่ม `NEXTAUTH_URL` (หรือ `APP_URL`) ใน `.env.example` ถ้ายังไม่มี — ใช้ build URL ใน QR (Phase 4 ใช้ `window.location.origin` พอ)
 - [ ] `npm run build` ผ่าน 100% (TypeScript + ESLint clean)
 - [ ] Smoke test A/B/C ข้างบนผ่าน
-- [ ] อัปเดต `STATE.md` (mark Phase 4 done, set Phase 4.5 next)
+- [ ] อัปเดตบันทึกสถานะโปรเจกต์ (mark Phase 4 done, set Phase 4.5 next)
 - [ ] เพิ่ม Decision Log entries: "Polling vs SSE", "DB-backed token vs JWT", "Grace window 1 round", "No pause/resume in v1"
 
 ---
 
-## Open Questions (สำหรับ codex / next session)
+## Open Questions (สำหรับรอบพัฒนาถัดไป)
 
 1. **`window.location.origin` vs `NEXTAUTH_URL`** ใน QR payload URL — Phase 4 ใช้ `window.location.origin` พอ (client-side build URL) เพราะ student จะ scan QR แล้วไปหน้า `/checkin` ซึ่ง Phase 4.5 จะสร้าง. ถ้า production deploy ไปที่ domain ต่าง student จะถูก redirect ตาม `window.location` — ปลอดภัยพอ. เปลี่ยนเป็น env var ทีหลังได้
 2. **Visual countdown drift** — ถ้า client clock drift กับ server หลายวินาที, countdown อาจ visual ไม่ตรง expiry จริง. แก้: refresh ฝั่ง client คำนวณจาก `qrTokenExpiresAt - Date.now()` ทุก tick (ทำแล้วใน SessionView) — drift มากสุด = client clock skew + หลังถัด poll

@@ -32,7 +32,7 @@ enum AttendanceStatus {
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique // ❗ STUDENT = @dome.tu.ac.th, TEACHER = @tu.ac.th — validate ที่ signIn callback
+  email     String?  @unique // STUDENT pre-import can be null until first TU login links email
   name      String
   studentId String?  @unique // null สำหรับ TEACHER, unique สำหรับ STUDENT
   role      Role
@@ -101,9 +101,9 @@ model Enrollment {
 model Schedule {
   id        String  @id @default(cuid())
   courseId  String
-  dayOfWeek Int     // 0=Sun, 1=Mon, ..., 6=Sat (ตรงกับ JS Date.getDay())
-  startTime String  // "HH:MM" 24h เช่น "09:00"
-  endTime   String  // "HH:MM" 24h เช่น "12:00"
+  dayOfWeek Int // 0=Sun, 1=Mon, ..., 6=Sat (ตรงกับ JS Date.getDay())
+  startTime String // "HH:MM" 24h เช่น "09:00"
+  endTime   String // "HH:MM" 24h เช่น "12:00"
   room      String? // optional เช่น "SC-3001"
 
   createdAt DateTime @default(now())
@@ -123,40 +123,32 @@ model Schedule {
 model ClassSession {
   id         String    @id @default(cuid())
   courseId   String
-  scheduleId String    // ❗ must bind — ห้าม nullable (ดู PRP 03.5)
-  startsAt   DateTime  // เวลาเริ่มคาบ (server time — คำนวณจาก Schedule)
-  endsAt     DateTime  // เวลาจบคาบ
+  scheduleId String // ❗ must bind — ห้าม nullable (ดู PRP 03.5)
+  startsAt   DateTime // เวลาเริ่มคาบ (server time — คำนวณจาก Schedule)
+  endsAt     DateTime // เวลาจบคาบ
   lateAfter  DateTime? // Phase 4: หลังเวลานี้ถือว่ามาสาย
 
-  // ❗ Dynamic QR fields — refresh ทุก 30s (Phase 4)
-  qrToken              String?   @unique
-  qrTokenExpiresAt     DateTime?
-  qrRefreshedAt        DateTime?
-  qrPrevToken          String?
-  qrPrevTokenExpiresAt DateTime?
-
-  // Entry code fallback - rotates with QR token
-  entryCode     String?
-  entryCodePrev String?
+  // Static check-in token and fallback code for the whole open session.
+  qrToken   String? @unique
+  entryCode String?
 
   isOpen    Boolean   @default(true) // false = ปิดคาบ ไม่รับ check-in อีก
   closedAt  DateTime? // เวลาปิดจริง (manual หรือ auto-close)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  schedule    Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
-  attendances Attendance[]
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  schedule     Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  attendances  Attendance[]
   demoCheckIns DemoCheckIn[]
+  // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
+  // CREATE UNIQUE INDEX "ClassSession_one_open_per_course" ON "ClassSession"("courseId") WHERE "isOpen" = true;
 
   @@index([courseId])
   @@index([scheduleId])
   @@index([startsAt])
   @@index([qrToken])
-  @@index([qrPrevToken])
   @@index([entryCode])
-  // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
-  // CREATE UNIQUE INDEX "ClassSession_one_open_per_course" ON "ClassSession"("courseId") WHERE "isOpen" = true;
 }
 
 // ============================================

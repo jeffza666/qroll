@@ -1,5 +1,14 @@
 # PRP 02 — Auth via TU API + NextAuth v5
 
+> **Implementation update (Phase 4.6 / PRP 06):** auth flow ปัจจุบันยังยึด TU API + NextAuth v5 ตาม PRP นี้ แต่มี decision ที่ปรับแล้วเพื่อให้ตรงกับ TU response จริง:
+>
+> - ผู้ใช้ login ด้วย TU `username/password`; email ไม่ใช่ username สำหรับ TU login
+> - Role ใช้ TU API `type` เป็น source of truth (`student` → `STUDENT`, `employee` → `TEACHER`)
+> - Email ใช้เป็นข้อมูลประกอบหลัง auth สำเร็จและตรวจ domain เป็น sanity check / defense-in-depth ไม่ได้ใช้แยก role
+> - Name priority ใช้ `displayname_th` ก่อน `displayname_en` เพื่อให้ UI ภาษาไทยตรงกับข้อมูล TU
+> - First login ของนักศึกษาจะหา user ด้วย email ก่อน แล้ว fallback ไปหา `studentId` เพื่อ link กับ pre-imported roster ที่ `email = null`
+> - BYPASS dev mode ยังใช้ seed email เพื่อความสะดวกในการทดสอบ local เท่านั้น ไม่ใช่พฤติกรรม production
+
 > **PRP = Plan-Research-Pattern** — เอกสารก่อน implement สำหรับ Phase 2
 > เป้าหมายคือทำ auth ให้ใช้งานได้จริง แต่ยังอธิบาย decision ได้ว่าไม่ได้ทำแบบสุ่มหรือ copy boilerplate มาเฉย ๆ
 
@@ -128,9 +137,11 @@ session: { strategy: "jwt" }
 ### User source of truth
 
 - TU API เป็น source of truth สำหรับการพิสูจน์ตัวตน
-- Qroll `User` table เป็น source of truth สำหรับ role ในระบบ
-- เมื่อ login จริงครั้งแรกให้ `upsert` user จาก email
-- ถ้า user มีอยู่แล้ว ห้าม update `role` เพื่อกัน privilege drift
+- TU API `type` เป็น source of truth สำหรับ role (`student` / `employee`)
+- Qroll `User` table เก็บ local user state เช่น enrollment relation, persisted role, email, name, studentId
+- เมื่อ login จริงให้หา user ด้วย email ก่อน แล้ว fallback ด้วย `studentId` สำหรับ student ที่ pre-import จาก roster (`email = null`)
+- ถ้าสร้าง user ใหม่ ให้ derive role จาก TU API `type`
+- ถ้า user มีอยู่แล้ว ไม่ใช้ email domain เพื่อเปลี่ยน role; email domain เป็น sanity check เท่านั้น
 
 ---
 
@@ -167,8 +178,8 @@ session: { strategy: "jwt" }
 
 Name priority:
 
-1. `displayname_en`
-2. `displayname_th`
+1. `displayname_th`
+2. `displayname_en`
 3. `email`
 
 Email domain whitelist:
@@ -282,9 +293,8 @@ npm run build
 
 ## 10. Decision Log Candidates
 
-เพิ่มใน `STATE.md` หลัง implement:
+เพิ่มในบันทึกสถานะโปรเจกต์หลัง implement:
 
 - JWT session strategy ไม่ใช้ PrismaAdapter เพราะ middleware อ่าน claims ได้ตรงและลด moving parts
 - `authorize()` upsert ไม่ update role เพื่อกัน privilege drift
 - Phase 2 helper scope จำกัดที่ auth/role; ownership/enrollment ค่อยเพิ่มตอนมี feature ใช้จริง
-

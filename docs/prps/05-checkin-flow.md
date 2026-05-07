@@ -1,5 +1,12 @@
 # PRP 05 - Student Check-in Flow
 
+> **Implementation update (Phase 4.6 / PRP 06):** check-in flow ยังเป็น mobile-first และ server-verified ตาม PRP นี้ แต่ QR token semantics เปลี่ยนแล้ว
+>
+> - `/checkin?t=<token>` ยังเป็น real student route และต้อง verify auth, enrollment, session status, และ duplicate attendance ฝั่ง server
+> - Token ใน QR เป็น static ต่อ open session ไม่ใช่ dynamic/expiring ทุก 30 วินาที
+> - ถ้า session เลย `endsAt` ยังแสดง overtime ได้ แต่ระบบจะ auto-close lazy ที่ `endsAt + 30 นาที`
+> - การกัน screenshot/relay ไม่อาศัย QR rotation แล้ว; ย้ายไป location-based check-in หรือ defense อื่นใน Phase ถัดไป
+
 > **Phase:** 4.5 (after Phase 4 - Dynamic QR Display)
 > **Status:** Approved scope
 > **Demo gate:** teacher opens a class session -> QR appears on the projector -> student scans with phone -> if not logged in, login and return to the same check-in URL -> student confirms attendance -> `Attendance` appears in Supabase. For public showcase, visitors use a separate demo route and write to `DemoCheckIn`, never to real attendance.
@@ -10,7 +17,7 @@
 
 Phase 4.5 completes the first end-to-end attendance loop:
 
-1. Teacher opens a class session and displays the dynamic QR from Phase 4.
+1. Teacher opens a class session and displays the static QR for that open session.
 2. Student scans the QR with a phone.
 3. System verifies the QR token, student login, and course enrollment.
 4. System records attendance in Supabase using server time.
@@ -466,4 +473,4 @@ Recommended layout:
 - [ ] Teacher session screen shows real attendance and demo check-ins separately.
 - [ ] Student/demo pages are usable on phone-width screens.
 - [ ] `npm run build` passes.
-- [ ] `STATE.md` is updated with Phase 4.5 result and next step.
+- [ ] Project status notes are updated with Phase 4.5 result and next step.

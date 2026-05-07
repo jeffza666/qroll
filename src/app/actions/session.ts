@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
-import { LATE_AFTER_MIN, QR_REFRESH_INTERVAL_MS } from "@/lib/qr-config";
+import { LATE_AFTER_MIN } from "@/lib/qr-config";
 import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 
 // แปลง "HH:MM" Bangkok time + Bangkok date → UTC Date
@@ -33,7 +33,6 @@ export async function openSession(scheduleId: string) {
   });
   const startsAt = buildBangkokDateTime(bangkokDateStr, schedule.startTime);
   const endsAt = buildBangkokDateTime(bangkokDateStr, schedule.endTime);
-  const now = new Date();
   const lateAfter = new Date(startsAt.getTime() + LATE_AFTER_MIN * 60 * 1000);
 
   const existingOpenSession = await db.classSession.findFirst({
@@ -54,8 +53,6 @@ export async function openSession(scheduleId: string) {
         endsAt,
         lateAfter,
         qrToken: generateQrToken(),
-        qrTokenExpiresAt: new Date(now.getTime() + QR_REFRESH_INTERVAL_MS),
-        qrRefreshedAt: now,
         entryCode: generateEntryCode(),
         isOpen: true,
       },
@@ -110,12 +107,7 @@ export async function closeSession(sessionId: string) {
       isOpen: false,
       closedAt: new Date(),
       qrToken: null,
-      qrTokenExpiresAt: null,
-      qrRefreshedAt: null,
-      qrPrevToken: null,
-      qrPrevTokenExpiresAt: null,
       entryCode: null,
-      entryCodePrev: null,
     },
   });
 

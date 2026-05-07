@@ -2,80 +2,115 @@ import { Loader2, QrCode } from "lucide-react";
 
 type Props = {
   qrDataUrl: string | null;
-  secondsLeft: number;
-  generation: number;
+  timeLeftSeconds: number;
+  totalSeconds: number;
   isLoading: boolean;
+  presenterMode?: boolean;
 };
 
 export default function QrDisplay({
   qrDataUrl,
-  secondsLeft,
-  generation,
+  timeLeftSeconds,
+  totalSeconds,
   isLoading,
+  presenterMode = false,
 }: Props) {
-  const progress = Math.max(0, Math.min(1, secondsLeft / 30));
-  const dashOffset = 283 - 283 * progress;
+  const isOverTime = timeLeftSeconds < 0;
+  const displaySeconds = Math.abs(timeLeftSeconds);
+  const progress = isOverTime
+    ? 1
+    : Math.max(0, Math.min(1, timeLeftSeconds / Math.max(1, totalSeconds)));
+  const dashOffset = 1 - progress;
+  const timeLabel = formatDuration(displaySeconds);
 
   return (
     <div className="flex w-full flex-col items-center">
-      <div className="relative flex aspect-square w-full max-w-[min(68vh,520px)] items-center justify-center rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        {qrDataUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={qrDataUrl}
-            alt="Dynamic check-in QR code"
-            className="h-full w-full object-contain"
+      <div
+        className={`relative flex aspect-square w-full items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 ${
+          presenterMode
+            ? "max-w-[min(76vh,760px)] p-20"
+            : "max-w-[min(68vh,560px)] p-16"
+        }`}
+      >
+        <svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          aria-hidden="true"
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="46"
+            fill="none"
+            stroke="#fee2e2"
+            strokeWidth="3"
           />
-        ) : (
-          <div className="flex flex-col items-center gap-3 text-slate-400">
-            {isLoading ? (
-              <Loader2 className="h-12 w-12 animate-spin" />
-            ) : (
-              <QrCode className="h-14 w-14" />
-            )}
-            <span className="text-sm font-semibold">กำลังโหลด QR</span>
-          </div>
-        )}
+          <circle
+            cx="50"
+            cy="50"
+            r="46"
+            fill="none"
+            stroke="#cc0000"
+            strokeWidth="3"
+            strokeLinecap="round"
+            pathLength="1"
+            strokeDasharray="1"
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 50 50)"
+            className="transition-[stroke-dashoffset] duration-500"
+          />
+        </svg>
+
+        <div className="relative z-10 flex aspect-square w-full max-w-[78%] items-center justify-center rounded-[1.5rem] bg-white p-1">
+          {qrDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={qrDataUrl}
+              alt="QR code สำหรับเช็คอิน"
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-3 text-slate-400">
+              {isLoading ? (
+                <Loader2 className="h-12 w-12 animate-spin" />
+              ) : (
+                <QrCode className="h-14 w-14" />
+              )}
+              <span className="text-sm font-semibold">กำลังโหลด QR</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-5">
-        <div className="relative h-20 w-20">
-          <svg viewBox="0 0 100 100" className="-rotate-90">
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="#e2e8f0"
-              strokeWidth="10"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="#cc0000"
-              strokeLinecap="round"
-              strokeWidth="10"
-              strokeDasharray="283"
-              strokeDashoffset={dashOffset}
-              className="transition-[stroke-dashoffset] duration-500"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-xl font-black tabular-nums text-slate-900">
-            {Math.max(0, secondsLeft)}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            รอบที่
-          </p>
-          <p className="text-4xl font-black tabular-nums text-slate-950">
-            #{generation || 1}
-          </p>
-        </div>
+      <div className={presenterMode ? "mt-5 text-center" : "mt-6 text-center"}>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#cc0000]">
+          {isOverTime ? "เลยเวลา" : "เวลาเหลือ"}
+        </p>
+        <p
+          className={`font-black tabular-nums text-slate-950 ${
+            presenterMode ? "text-5xl" : "text-4xl"
+          }`}
+        >
+          {isOverTime ? `+${timeLabel}` : timeLabel}
+        </p>
       </div>
     </div>
   );
+}
+
+function formatDuration(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hh = Math.floor(seconds / 3600);
+  const mm = Math.floor((seconds % 3600) / 60);
+  const ss = seconds % 60;
+
+  if (hh > 0) {
+    return `${hh.toString().padStart(2, "0")}:${mm
+      .toString()
+      .padStart(2, "0")}:${ss.toString().padStart(2, "0")}`;
+  }
+
+  return `${mm.toString().padStart(2, "0")}:${ss
+    .toString()
+    .padStart(2, "0")}`;
 }

@@ -37,14 +37,24 @@ type QrollAuthUser = AuthUser & {
 
 type TuAuthResponse = z.infer<typeof tuAuthResponseSchema>;
 
+const authUserSelect = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+  studentId: true,
+} as const;
+
 function mapTuRole(tuUser: TuAuthResponse) {
+  // TU API `type` is the source of truth for role.
+  // Email domain is only a sanity check in isAcceptableTuUser().
   return tuUser.type === "student" ? Role.STUDENT : Role.TEACHER;
 }
 
 function getTuDisplayName(tuUser: TuAuthResponse) {
   return (
-    tuUser.displayname_en?.trim() ||
     tuUser.displayname_th?.trim() ||
+    tuUser.displayname_en?.trim() ||
     normalizeEmail(tuUser.email)
   );
 }
@@ -53,6 +63,8 @@ function isAcceptableTuUser(tuUser: TuAuthResponse) {
   if (!tuUser.status) return false;
   if (!isAllowedEmail(tuUser.email)) return false;
 
+  // Role does not come from email. These domain checks are defense-in-depth
+  // after TU API has already identified the account type.
   const domain = getEmailDomain(tuUser.email);
   if (tuUser.type === "student") {
     return domain === "dome.tu.ac.th" && tuUser.tu_status === "ปกติ";
@@ -88,16 +100,10 @@ async function callTuApi(username: string, password: string) {
 async function authorizeBypass(username: string): Promise<QrollAuthUser | null> {
   const user = await db.user.findUnique({
     where: { email: normalizeEmail(username) },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      studentId: true,
-    },
+    select: authUserSelect,
   });
 
-  if (!user || !isAllowedEmail(user.email)) return null;
+  if (!user?.email || !isAllowedEmail(user.email)) return null;
 
   return {
     id: user.id,
@@ -121,23 +127,48 @@ async function authorizeTuUser(
   const name = getTuDisplayName(tuUser);
   const studentId = role === Role.STUDENT ? tuUser.username : null;
 
-  const user = await db.user.upsert({
+  const byEmail = await db.user.findUnique({
     where: { email },
-    update: { name },
-    create: {
-      email,
-      name,
-      role,
-      studentId,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      studentId: true,
-    },
+    select: authUserSelect,
   });
+
+  let user = byEmail
+    ? await db.user.update({
+        where: { id: byEmail.id },
+        data: {
+          name,
+          studentId: role === Role.STUDENT ? studentId : null,
+        },
+        select: authUserSelect,
+      })
+    : null;
+
+  if (!user && studentId) {
+    const byStudentId = await db.user.findUnique({
+      where: { studentId },
+      select: authUserSelect,
+    });
+
+    if (byStudentId) {
+      user = await db.user.update({
+        where: { id: byStudentId.id },
+        data: { email, name },
+        select: authUserSelect,
+      });
+    }
+  }
+
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        email,
+        name,
+        role,
+        studentId,
+      },
+      select: authUserSelect,
+    });
+  }
 
   return {
     id: user.id,

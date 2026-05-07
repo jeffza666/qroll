@@ -1,7 +1,7 @@
 # Code Review — Phase 3.5: Schedule + ClassSession Lifecycle
 
 **วันที่:** 2026-04-29
-**ผู้ review:** Claude (AI pair programmer)
+**ผู้ review:** Project review pass
 **Build status:** ✅ ผ่าน — TypeScript + ESLint clean
 **Migration status:** ✅ Applied to Supabase production DB
 
