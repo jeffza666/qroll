@@ -42,3 +42,13 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# local-only AI/internal workflow files
+AGENTS.md
+AI_INSTRUCTIONS.md
+CLAUDE.md
+STATE-SHORT.md
+STATE.md
+INSTRUCTIONS.md
+.vscode/
+
