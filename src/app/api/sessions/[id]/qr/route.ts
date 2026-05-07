@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 import { AuthError, requireCourseOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { QR_REFRESH_INTERVAL_MS } from "@/lib/qr-config";
-import { rotateIfExpired } from "@/lib/qr-rotate";
+import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 import { autoCloseIfExpired } from "@/lib/session-helpers";
 
 export const dynamic = "force-dynamic";
@@ -41,15 +40,22 @@ export async function GET(_request: Request, { params }: Params) {
       });
     }
 
-    const rotated = await rotateIfExpired(current);
+    const currentWithToken =
+      current.qrToken && current.entryCode
+        ? current
+        : await db.classSession.update({
+            where: { id: current.id },
+            data: {
+              qrToken: current.qrToken ?? generateQrToken(),
+              entryCode: current.entryCode ?? generateEntryCode(),
+            },
+          });
 
     return noStoreJson({
-      isOpen: rotated.isOpen,
-      token: rotated.qrToken,
-      entryCode: rotated.entryCode,
-      expiresAt: rotated.qrTokenExpiresAt?.toISOString() ?? null,
-      refreshedAt: rotated.qrRefreshedAt?.toISOString() ?? null,
-      refreshIntervalMs: QR_REFRESH_INTERVAL_MS,
+      isOpen: currentWithToken.isOpen,
+      token: currentWithToken.qrToken,
+      entryCode: currentWithToken.entryCode,
+      endsAt: currentWithToken.endsAt.toISOString(),
     });
   } catch (error) {
     if (error instanceof AuthError) {

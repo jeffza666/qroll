@@ -6,19 +6,22 @@ import { Maximize2, Minimize2 } from "lucide-react";
 
 type Props = {
   targetRef: RefObject<HTMLElement | null>;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 };
 
-export default function FullscreenButton({ targetRef }: Props) {
+export default function FullscreenButton({ targetRef, onFullscreenChange }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     function handleChange() {
-      setIsFullscreen(document.fullscreenElement === targetRef.current);
+      const next = document.fullscreenElement === targetRef.current;
+      setIsFullscreen(next);
+      onFullscreenChange?.(next);
     }
 
     document.addEventListener("fullscreenchange", handleChange);
     return () => document.removeEventListener("fullscreenchange", handleChange);
-  }, [targetRef]);
+  }, [onFullscreenChange, targetRef]);
 
   async function toggleFullscreen() {
     if (document.fullscreenElement) {

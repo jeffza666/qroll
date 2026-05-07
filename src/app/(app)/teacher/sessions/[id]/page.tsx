@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import CloseSessionButton from "@/components/courses/CloseSessionButton";
 import SessionView from "@/components/sessions/SessionView";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { isDemoCheckInEnabled } from "@/lib/checkin";
@@ -65,7 +64,7 @@ export default async function SessionDetailPage({ params }: Props) {
           </Link>
           <div className="min-w-0">
             <h1 className="truncate text-xl font-black text-slate-900">
-              Dynamic QR
+              Session QR
             </h1>
             <p className="truncate text-sm text-slate-500">
               {raw.course.code} · {raw.course.name}
@@ -73,7 +72,6 @@ export default async function SessionDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {session.isOpen && <CloseSessionButton sessionId={session.id} />}
       </header>
 
       <SessionView
@@ -103,6 +101,8 @@ export default async function SessionDetailPage({ params }: Props) {
           timeLabel: `${raw.schedule.startTime} - ${raw.schedule.endTime}`,
           room: raw.schedule.room,
           openedAtLabel: formatBangkokTime(raw.startsAt),
+          startsAtIso: raw.startsAt.toISOString(),
+          endsAtIso: raw.endsAt.toISOString(),
         }}
       />
     </>
