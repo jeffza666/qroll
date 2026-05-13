@@ -12,11 +12,11 @@ import {
   EyeOff,
   LayoutGrid,
   Lock,
-  ScanFace,
   ShieldCheck,
   User,
   Users,
 } from "lucide-react";
+import QRollLogo from "@/components/brand/QRollLogo";
 
 const GENERIC_ERROR =
   "Username หรือ password ไม่ถูกต้อง / บัญชีไม่อยู่ในสถานะปกติ";
@@ -26,24 +26,6 @@ type LoginFormProps = {
   redirectTo: string;
   isDevMode: boolean;
 };
-
-function QRollLogo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#990000] text-white shadow-[0_6px_16px_rgba(127,29,29,0.20)]">
-        <ScanFace size={22} strokeWidth={2.2} />
-      </div>
-      <div>
-        <div className="font-sans text-2xl font-extrabold leading-none text-slate-900">
-          QRoll<span className="text-[#990000]">.</span>
-        </div>
-        <div className="-mt-0.5 text-[10px] font-semibold uppercase text-slate-500">
-          Smart Attendance
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function Spinner() {
   return (
