@@ -105,7 +105,7 @@ export default function CheckedInSidebar({
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [sessionId]);
+  }, [sessionId, onAttendanceCountChange]);
 
   return (
     <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-l border-slate-200 bg-white/80 px-6 py-8">
