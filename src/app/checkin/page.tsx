@@ -114,7 +114,7 @@ export default async function CheckInPage({ searchParams }: Props) {
         courseName={context.session.course.name}
         semester={context.session.course.semester}
         timeLabel={`${formatBangkokDateTime(context.session.startsAt)} - ${formatBangkokDateTime(context.session.endsAt)}`}
-        room={context.session.schedule?.room ?? null}
+        room={context.session.room}
       />
       <StudentCheckInForm
         token={token}

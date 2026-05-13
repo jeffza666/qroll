@@ -52,7 +52,7 @@ export default function FilterTabs({ rows }: Props) {
           </button>
         ))}
       </div>
-      <RosterTable rows={rows} filter={filter} />
+      <RosterTable rows={rows} filter={filter} searchQuery="" />
     </div>
   );
 }
