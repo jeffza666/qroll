@@ -1,4 +1,4 @@
-import { ScanFace } from "lucide-react";
+import QRollLogo from "@/components/brand/QRollLogo";
 
 type Props = {
   eyebrow?: string;
@@ -12,19 +12,7 @@ export default function CheckInShell({ eyebrow, title, subtitle, children }: Pro
     <main className="min-h-screen bg-[#F7F8FC] px-4 py-6 text-slate-900 sm:px-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-[520px] flex-col gap-6">
         <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#990000] text-white shadow-[0_10px_24px_rgba(127,29,29,0.18)]">
-              <ScanFace className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-black leading-none text-slate-950">
-                QRoll<span className="text-[#990000]">.</span>
-              </p>
-              <p className="mt-0.5 text-[11px] font-bold uppercase text-slate-500">
-                Smart Attendance
-              </p>
-            </div>
-          </div>
+          <QRollLogo />
           {eyebrow && (
             <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500">
               {eyebrow}

@@ -21,11 +21,12 @@ export type CheckInContext =
           name: string;
           semester: string;
         };
+        /** ห้อง — มาจาก roomSnapshot ที่ freeze ตอนเปิด session, fallback ไป schedule.room */
+        room: string | null;
         schedule: {
-          room: string | null;
           startTime: string;
           endTime: string;
-        };
+        } | null;
       };
     }
   | {
@@ -66,6 +67,10 @@ export async function getCheckInContext(token?: string | null): Promise<CheckInC
   const session = await autoCloseIfExpired(raw);
   if (!session.isOpen) return { ok: false, reason: "closed" };
 
+  // room: ใช้ snapshot ที่ freeze ตอนเปิด session ก่อน — fallback ไป schedule.room
+  // (สำหรับ session ที่เปิดก่อน snapshot pattern จะถูก backfill โดย migration)
+  const room = session.roomSnapshot ?? raw.schedule?.room ?? null;
+
   return {
     ok: true,
     session: {
@@ -75,7 +80,10 @@ export async function getCheckInContext(token?: string | null): Promise<CheckInC
       lateAfter: session.lateAfter,
       isOpen: session.isOpen,
       course: raw.course,
-      schedule: raw.schedule,
+      room,
+      schedule: raw.schedule
+        ? { startTime: raw.schedule.startTime, endTime: raw.schedule.endTime }
+        : null,
     },
   };
 }

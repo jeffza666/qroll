@@ -15,7 +15,7 @@ import { demoCheckInSchema, qrTokenSchema } from "@/lib/validations/checkin";
 export type CheckInActionResult =
   | {
       ok: true;
-      status: "PRESENT" | "LATE" | "ABSENT";
+      status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
       checkedInAt: string;
       duplicate: boolean;
     }
