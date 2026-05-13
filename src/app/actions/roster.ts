@@ -6,24 +6,17 @@ import { z } from "zod";
 
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { rowsFromCells, type RawCell, type RosterRow } from "@/lib/roster-import";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_ROWS = 500;
 
 const rosterRowSchema = z.object({
-  studentId: z
-    .string()
-    .regex(/^\d{10}$/, "รหัสนักศึกษาต้องเป็นตัวเลข 10 หลัก"),
+  studentId: z.string().regex(/^\d{10}$/, "รหัสนักศึกษาต้องเป็นตัวเลข 10 หลัก"),
   name: z.string().trim().min(1, "กรุณาระบุชื่อ"),
 });
 
 const manualStudentSchema = rosterRowSchema;
-
-type RosterRow = z.infer<typeof rosterRowSchema> & {
-  sourceRow: number;
-};
-
-type RawCell = string | number | boolean | null | undefined;
 
 export type ImportResult = {
   created: number;
@@ -36,89 +29,66 @@ export type AddStudentResult =
   | { ok: true; status: "created" | "enrolled_existing" | "already_enrolled" }
   | { ok: false; message: string };
 
-function normalizeHeaderKey(value: RawCell): string {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_.\-()]/g, "");
-}
+async function parseCsv(buffer: ArrayBuffer): Promise<RosterRow[]> {
+  const Papa = (await import("papaparse")).default;
+  const candidates = ["utf-8", "windows-874"];
+  let lastError: Error | null = null;
 
-function normalizeCell(value: RawCell): string {
-  if (typeof value === "number" && Number.isInteger(value)) {
-    return value.toFixed(0);
-  }
+  for (const encoding of candidates) {
+    try {
+      const text = new TextDecoder(encoding).decode(buffer);
+      const result = Papa.parse<RawCell[]>(text, {
+        header: false,
+        skipEmptyLines: true,
+      });
 
-  return String(value ?? "").trim().replace(/\.0$/, "");
-}
-
-function columnKind(value: RawCell): "studentId" | "name" | null {
-  const key = normalizeHeaderKey(value);
-
-  if (
-    [
-      "studentid",
-      "id",
-      "รหัสนักศึกษา",
-      "เลขทะเบียน",
-      "เลขที่",
-      "รหัสประจำตัว",
-      "รหัสประจำตัวนักศึกษา",
-    ].includes(key)
-  ) {
-    return "studentId";
-  }
-
-  if (
-    [
-      "name",
-      "fullname",
-      "studentname",
-      "ชื่อ",
-      "ชื่อสกุล",
-      "ชื่อนามสกุล",
-      "ชื่อ-นามสกุล",
-    ].includes(key)
-  ) {
-    return "name";
-  }
-
-  return null;
-}
-
-function findHeader(cells: RawCell[][]) {
-  for (let rowIndex = 0; rowIndex < cells.length; rowIndex++) {
-    const mapping = new Map<"studentId" | "name", number>();
-
-    cells[rowIndex].forEach((cell, colIndex) => {
-      const kind = columnKind(cell);
-      if (kind && !mapping.has(kind)) mapping.set(kind, colIndex);
-    });
-
-    const studentIdColumn = mapping.get("studentId");
-    const nameColumn = mapping.get("name");
-
-    if (studentIdColumn !== undefined && nameColumn !== undefined) {
-      return { rowIndex, studentIdColumn, nameColumn };
+      return rowsFromCells(result.data);
+    } catch (error) {
+      lastError =
+        error instanceof Error ? error : new Error("ไม่สามารถอ่านไฟล์ CSV ได้");
     }
   }
 
-  return null;
+  throw (
+    lastError ??
+    new Error("ไม่สามารถอ่านไฟล์ CSV ได้ กรุณาบันทึกไฟล์เป็น UTF-8 หรือใช้ Excel")
+  );
 }
 
-function rowsFromCells(cells: RawCell[][]): RosterRow[] {
-  const header = findHeader(cells);
-  if (!header) {
-    throw new Error("ไม่พบคอลัมน์รหัสนักศึกษาและชื่อในไฟล์");
+async function parseExcel(buffer: ArrayBuffer): Promise<RosterRow[]> {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.read(buffer, {
+    type: "array",
+    cellText: true,
+    cellDates: false,
+  });
+
+  let lastError: Error | null = null;
+
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName];
+    if (!worksheet) continue;
+
+    try {
+      const cells = XLSX.utils.sheet_to_json<RawCell[]>(worksheet, {
+        header: 1,
+        defval: "",
+        blankrows: false,
+        raw: false,
+      });
+
+      const rows = rowsFromCells(cells);
+      if (rows.length > 0) return rows;
+    } catch (error) {
+      lastError =
+        error instanceof Error ? error : new Error("ไม่สามารถอ่านไฟล์ Excel ได้");
+    }
   }
 
-  return cells
-    .slice(header.rowIndex + 1)
-    .map((row, index) => ({
-      studentId: normalizeCell(row[header.studentIdColumn]),
-      name: normalizeCell(row[header.nameColumn]),
-      sourceRow: header.rowIndex + index + 2,
-    }))
-    .filter((row) => row.studentId || row.name);
+  throw (
+    lastError ??
+    new Error("ไม่พบข้อมูลรายชื่อที่ใช้งานได้ในทุก sheet ของไฟล์ Excel")
+  );
 }
 
 async function parseFile(
@@ -128,25 +98,11 @@ async function parseFile(
   const lower = filename.toLowerCase();
 
   if (lower.endsWith(".csv")) {
-    const Papa = (await import("papaparse")).default;
-    const text = new TextDecoder("utf-8").decode(buffer);
-    const result = Papa.parse<RawCell[]>(text, {
-      header: false,
-      skipEmptyLines: true,
-    });
-    return rowsFromCells(result.data);
+    return parseCsv(buffer);
   }
 
   if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.read(buffer, { type: "array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const cells = XLSX.utils.sheet_to_json<RawCell[]>(ws, {
-      header: 1,
-      defval: "",
-      blankrows: false,
-    });
-    return rowsFromCells(cells);
+    return parseExcel(buffer);
   }
 
   throw new Error("รองรับเฉพาะไฟล์ .csv, .xlsx และ .xls");
@@ -201,7 +157,7 @@ export async function importRoster(
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("กรุณาเลือกไฟล์");
-  if (file.size > MAX_FILE_SIZE) throw new Error("ไฟล์ต้องมีขนาดไม่เกิน 1MB");
+  if (file.size > MAX_FILE_SIZE) throw new Error("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
 
   const rawRows = await parseFile(await file.arrayBuffer(), file.name);
   if (rawRows.length > MAX_ROWS) {
@@ -240,6 +196,50 @@ export async function importRoster(
 
   revalidatePath(`/teacher/courses/${courseId}`);
   return result;
+}
+
+const updateStudentSchema = z.object({
+  name: z.string().trim().min(1, "กรุณาระบุชื่อ").max(200),
+});
+
+export type UpdateStudentResult =
+  | { ok: true }
+  | { ok: false; reason: "not_found" | "forbidden" | "invalid"; message: string };
+
+export async function updateStudentName(
+  enrollmentId: string,
+  input: z.infer<typeof updateStudentSchema>
+): Promise<UpdateStudentResult> {
+  const parsed = updateStudentSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      reason: "invalid",
+      message: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง",
+    };
+  }
+
+  const enrollment = await db.enrollment.findUnique({
+    where: { id: enrollmentId },
+    select: { courseId: true, studentId: true },
+  });
+  if (!enrollment) {
+    return { ok: false, reason: "not_found", message: "ไม่พบนักศึกษา" };
+  }
+
+  try {
+    await requireCourseOwner(enrollment.courseId);
+  } catch {
+    return { ok: false, reason: "forbidden", message: "ไม่มีสิทธิ์แก้ไข" };
+  }
+
+  await db.user.update({
+    where: { id: enrollment.studentId },
+    data: { name: parsed.data.name },
+  });
+
+  revalidatePath(`/teacher/courses/${enrollment.courseId}/students`);
+  return { ok: true };
 }
 
 export async function addStudentManually(
