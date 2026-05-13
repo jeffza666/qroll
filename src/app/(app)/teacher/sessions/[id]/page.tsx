@@ -115,7 +115,6 @@ export default async function SessionDetailPage({ params, searchParams }: Props)
   });
 
   const showLiveView = session.isOpen || forceLiveView;
-  const headerTitle = showLiveView ? "Session QR" : "รายงาน Session";
 
   return (
     <>

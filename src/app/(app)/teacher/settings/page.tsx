@@ -1,9 +1,7 @@
 import { requireTeacher } from "@/lib/auth-helpers";
 import {
-  Bell,
   Camera,
   ChevronDown,
-  Settings,
   SlidersHorizontal,
   UserRound,
 } from "lucide-react";

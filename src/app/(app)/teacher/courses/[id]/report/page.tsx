@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, PieChart, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users } from "lucide-react";
 import type { AttendanceStatus } from "@prisma/client";
 
 import ReportClient from "@/components/report/ReportClient";
