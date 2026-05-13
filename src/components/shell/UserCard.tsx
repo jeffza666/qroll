@@ -19,7 +19,7 @@ export default function UserCard({ name, email }: { name: string; email: string 
       </div>
       <button
         onClick={() => signOut({ callbackUrl: "/login" })}
-        className="mt-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-slate-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
+        className="mt-5 w-full flex items-center justify-center gap-2 text-sm font-medium text-slate-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
       >
         <LogOut className="w-4 h-4" />
         ออกจากระบบ
