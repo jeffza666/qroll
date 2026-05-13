@@ -3,55 +3,91 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
-import { LATE_AFTER_MIN } from "@/lib/qr-config";
 import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 
-// แปลง "HH:MM" Bangkok time + Bangkok date → UTC Date
-function buildBangkokDateTime(bangkokDateStr: string, hhmm: string): Date {
-  const BANGKOK_OFFSET_MS = 7 * 60 * 60 * 1000;
-  const [year, month, day] = bangkokDateStr.split("-").map(Number);
-  const [h, m] = hhmm.split(":").map(Number);
-  // Date.UTC ใช้ year/month/day จาก Bangkok date + h/m จาก Bangkok clock
-  // แล้วลบ offset 7h เพื่อได้ UTC จริง
-  return new Date(Date.UTC(year, month - 1, day, h, m) - BANGKOK_OFFSET_MS);
+const openSessionSchema = z.object({
+  courseId: z.string().min(1),
+  durationMinutes: z.number().int().min(1).max(180),
+  graceMinutes: z.number().int().min(0).max(180).nullable(),
+});
+
+export type OpenSessionInput = z.infer<typeof openSessionSchema>;
+
+// หา Schedule ของ courseId ที่ตรงกับ "วันนี้" (Bangkok) — คืน id + room
+// room ถูก snapshot ลง ClassSession.roomSnapshot เพื่อไม่ให้เปลี่ยนแม้แก้ Schedule ทีหลัง
+async function findTodaySchedule(
+  courseId: string
+): Promise<{ id: string; room: string | null } | null> {
+  const bangkokNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
+  );
+  const match = await db.schedule.findFirst({
+    where: { courseId, dayOfWeek: bangkokNow.getDay() },
+    select: { id: true, room: true },
+  });
+  return match ?? null;
 }
 
-export async function openSession(scheduleId: string) {
-  const schedule = await db.schedule.findUnique({
-    where: { id: scheduleId },
-    select: { id: true, courseId: true, startTime: true, endTime: true },
-  });
-  if (!schedule) return { error: "ไม่พบตารางสอน" };
+export async function openSession(input: OpenSessionInput) {
+  const parsed = openSessionSchema.safeParse(input);
+  if (!parsed.success) return { error: "ข้อมูลไม่ถูกต้อง" };
 
-  await requireCourseOwner(schedule.courseId);
+  const { courseId, durationMinutes, graceMinutes } = parsed.data;
 
-  // คำนวณ server-side — ห้ามรับจาก client (anti-tampering)
-  const bangkokDateStr = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Asia/Bangkok",
+  if (graceMinutes !== null && graceMinutes >= durationMinutes) {
+    return { error: "เวลาแยกผู้มาสายต้องน้อยกว่าเวลาเปิด" };
+  }
+
+  await requireCourseOwner(courseId);
+
+  // กัน archived course เปิด session ใหม่ — archive = read-only
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { archivedAt: true },
   });
-  const startsAt = buildBangkokDateTime(bangkokDateStr, schedule.startTime);
-  const endsAt = buildBangkokDateTime(bangkokDateStr, schedule.endTime);
-  const lateAfter = new Date(startsAt.getTime() + LATE_AFTER_MIN * 60 * 1000);
+  if (course?.archivedAt) {
+    return {
+      error: "รายวิชานี้ถูก archive แล้ว ต้อง unarchive ก่อนเปิด session ใหม่",
+    };
+  }
 
   const existingOpenSession = await db.classSession.findFirst({
-    where: { courseId: schedule.courseId, isOpen: true },
+    where: { courseId, isOpen: true },
     select: { id: true },
   });
   if (existingOpenSession) {
     redirect(`/teacher/sessions/${existingOpenSession.id}`);
   }
 
+  const now = new Date();
+  const startsAt = now;
+  const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
+  const lateAfter =
+    graceMinutes !== null
+      ? new Date(now.getTime() + graceMinutes * 60 * 1000)
+      : null;
+  const todaySchedule = await findTodaySchedule(courseId);
+
+  // ถ้าไม่มีตารางวันนี้ ยังดึง room จาก schedule แรกมาใช้เป็น snapshot
+  const fallbackRoom = todaySchedule?.room
+    ?? (await db.schedule.findFirst({ where: { courseId }, select: { room: true } }))?.room
+    ?? null;
+
   let sessionId: string;
   try {
     const session = await db.classSession.create({
       data: {
-        courseId: schedule.courseId,
-        scheduleId: schedule.id,
+        courseId,
+        scheduleId: todaySchedule?.id ?? null,
+        roomSnapshot: fallbackRoom,
         startsAt,
         endsAt,
+        durationMinutes,
         lateAfter,
+        graceMinutes,
         qrToken: generateQrToken(),
         entryCode: generateEntryCode(),
         isOpen: true,
@@ -65,7 +101,7 @@ export async function openSession(scheduleId: string) {
       err.code === "P2002"
     ) {
       const activeSession = await db.classSession.findFirst({
-        where: { courseId: schedule.courseId, isOpen: true },
+        where: { courseId, isOpen: true },
         select: { id: true },
       });
 
@@ -77,18 +113,35 @@ export async function openSession(scheduleId: string) {
         error: "มี session ของวิชานี้ที่เปิดอยู่แล้ว กรุณาปิดก่อนเปิดใหม่",
       };
     }
-
-    const msg = err instanceof Error ? err.message : "";
-    // Prisma P2002 = unique constraint violation = partial unique index hit = double-open
-    if (msg.includes("P2002") || msg.includes("unique constraint")) {
-      return {
-        error: "มี session ของวิชานี้ที่เปิดอยู่แล้ว — กรุณาปิดก่อนเปิดใหม่",
-      };
-    }
     throw err;
   }
 
   redirect(`/teacher/sessions/${sessionId}`);
+}
+
+/**
+ * Hard delete session — ลบ ClassSession + cascade attendances + demoCheckIns
+ * Cascade ตั้งไว้ใน schema แล้ว (onDelete: Cascade) — ลบตัว parent ตัวเดียวพอ
+ *
+ * ไม่ใช้ soft delete เพราะ:
+ * - ลด complexity (ไม่ต้อง filter `deletedAt IS NULL` ทุก query)
+ * - Scope ของโปรเจกต์ไม่ต้องการ audit trail ของ session ที่ลบ
+ * - User เห็น type-to-confirm แล้ว = ตัดสินใจ deliberate พอ
+ */
+export async function deleteSession(sessionId: string) {
+  const session = await db.classSession.findUnique({
+    where: { id: sessionId },
+    select: { courseId: true },
+  });
+  if (!session) return { error: "ไม่พบ session" };
+
+  await requireCourseOwner(session.courseId);
+
+  await db.classSession.delete({ where: { id: sessionId } });
+
+  revalidatePath("/teacher");
+  revalidatePath(`/teacher/courses/${session.courseId}`);
+  return { success: true, courseId: session.courseId };
 }
 
 export async function closeSession(sessionId: string) {
@@ -100,7 +153,6 @@ export async function closeSession(sessionId: string) {
 
   await requireCourseOwner(session.courseId);
 
-  // idempotent — ถ้าปิดไปแล้วก็ no-op
   await db.classSession.updateMany({
     where: { id: sessionId, isOpen: true },
     data: {
@@ -113,6 +165,7 @@ export async function closeSession(sessionId: string) {
 
   revalidatePath("/teacher");
   revalidatePath(`/teacher/courses/${session.courseId}`);
-  revalidatePath(`/teacher/sessions/${sessionId}`);
+  // ไม่ revalidate หน้า session ปัจจุบัน — ปล่อยให้ client (SessionView) ค้างที่ empty state
+  // user จะกดปุ่ม "ดูประวัติคาบนี้" เองทีหลัง (เรียก router.refresh ที่ฝั่ง client)
   return { success: true };
 }

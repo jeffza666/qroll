@@ -86,7 +86,7 @@ export default async function DemoCheckInPage({ searchParams }: Props) {
         courseName={context.session.course.name}
         semester={context.session.course.semester}
         timeLabel={`${formatBangkokDateTime(context.session.startsAt)} - ${formatBangkokDateTime(context.session.endsAt)}`}
-        room={context.session.schedule.room}
+        room={context.session.room}
       />
       <DemoCheckInForm token={token} />
     </CheckInShell>

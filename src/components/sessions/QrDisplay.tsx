@@ -6,6 +6,8 @@ type Props = {
   totalSeconds: number;
   isLoading: boolean;
   presenterMode?: boolean;
+  /** true = อยู่ใน "สาย" window → วงแหวนเหลือง; false/undefined = ทันเวลา → วงแหวนเขียว */
+  isLate?: boolean;
 };
 
 export default function QrDisplay({
@@ -14,6 +16,7 @@ export default function QrDisplay({
   totalSeconds,
   isLoading,
   presenterMode = false,
+  isLate = false,
 }: Props) {
   const isOverTime = timeLeftSeconds < 0;
   const displaySeconds = Math.abs(timeLeftSeconds);
@@ -37,27 +40,29 @@ export default function QrDisplay({
           className="pointer-events-none absolute inset-0 h-full w-full"
           aria-hidden="true"
         >
+          {/* track */}
           <circle
             cx="50"
             cy="50"
             r="46"
             fill="none"
-            stroke="#fee2e2"
+            stroke={isLate ? "#fef9c3" : "#bbf7d0"}
             strokeWidth="3"
           />
+          {/* progress */}
           <circle
             cx="50"
             cy="50"
             r="46"
             fill="none"
-            stroke="#cc0000"
+            stroke={isLate ? "#f59e0b" : "#059669"}
             strokeWidth="3"
             strokeLinecap="round"
             pathLength="1"
             strokeDasharray="1"
             strokeDashoffset={dashOffset}
             transform="rotate(-90 50 50)"
-            className="transition-[stroke-dashoffset] duration-500"
+            className="transition-[stroke-dashoffset,stroke] duration-500"
           />
         </svg>
 
@@ -83,8 +88,8 @@ export default function QrDisplay({
       </div>
 
       <div className={presenterMode ? "mt-5 text-center" : "mt-6 text-center"}>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#cc0000]">
-          {isOverTime ? "เลยเวลา" : "เวลาเหลือ"}
+        <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isLate ? "text-amber-500" : "text-emerald-600"}`}>
+          {isOverTime ? "เลยเวลา" : isLate ? "ช่วงสาย" : "เวลาเหลือ"}
         </p>
         <p
           className={`font-black tabular-nums text-slate-950 ${

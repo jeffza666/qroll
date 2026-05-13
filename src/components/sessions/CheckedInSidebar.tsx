@@ -8,7 +8,7 @@ export type AttendanceListItem = {
   id: string;
   name: string;
   studentId: string | null;
-  status: "PRESENT" | "LATE" | "ABSENT";
+  status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
   checkedInAt: string;
 };
 
@@ -27,6 +27,7 @@ type Props = {
   demoEnabled: boolean;
   demoUrl: string | null;
   demoQrDataUrl: string | null;
+  onAttendanceCountChange?: (count: number) => void;
 };
 
 type CheckInsResponse = {
@@ -46,13 +47,15 @@ function formatTime(value: string) {
 }
 
 function StatusBadge({ status }: { status: AttendanceListItem["status"] }) {
-  const label = status === "LATE" ? "สาย" : status === "ABSENT" ? "ขาด" : "ทันเวลา";
+  const label =
+    status === "LATE" ? "สาย" :
+    status === "ABSENT" ? "ขาด" :
+    status === "EXCUSED" ? "ลา" : "ทันเวลา";
   const tone =
-    status === "LATE"
-      ? "bg-amber-50 text-amber-700 ring-amber-200"
-      : status === "ABSENT"
-        ? "bg-red-50 text-red-700 ring-red-200"
-        : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+    status === "LATE" ? "bg-amber-50 text-amber-700 ring-amber-200" :
+    status === "ABSENT" ? "bg-red-50 text-red-700 ring-red-200" :
+    status === "EXCUSED" ? "bg-blue-50 text-blue-700 ring-blue-200" :
+    "bg-emerald-50 text-emerald-700 ring-emerald-200";
 
   return (
     <span className={`rounded-md px-2 py-1 text-[11px] font-bold ring-1 ${tone}`}>
@@ -70,6 +73,7 @@ export default function CheckedInSidebar({
   demoEnabled,
   demoUrl,
   demoQrDataUrl,
+  onAttendanceCountChange,
 }: Props) {
   const [attendanceCount, setAttendanceCount] = useState(initialAttendanceCount);
   const [demoCount, setDemoCount] = useState(initialDemoCount);
@@ -87,6 +91,7 @@ export default function CheckedInSidebar({
 
       const data = (await response.json()) as CheckInsResponse;
       setAttendanceCount(data.attendanceCount);
+      onAttendanceCountChange?.(data.attendanceCount);
       setDemoCount(data.demoCount);
       setAttendances(data.attendances);
       setDemoCheckIns(data.demoCheckIns);
