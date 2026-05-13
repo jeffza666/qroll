@@ -24,6 +24,7 @@ enum AttendanceStatus {
   PRESENT // เช็คอินทันเวลา
   LATE // เช็คอินสายตามเกณฑ์ที่อาจารย์กำหนด
   ABSENT // ไม่ได้เช็คอินจนคาบเรียนปิด (สร้างโดย system job)
+  EXCUSED // ลาป่วย/ลากิจ — กรอกโดยอาจารย์เท่านั้น ไม่ auto-mark
 }
 
 // ============================================
@@ -58,12 +59,16 @@ model User {
 
 model Course {
   id        String   @id @default(cuid())
-  code      String // เช่น "CS101 Sec1" — ไม่ unique global เผื่อข้ามเทอม
+  code      String // เช่น "CS101" — ไม่ unique global เผื่อข้ามเทอม
+  section   String? // เช่น "650001" — section/sec ของวิชา (optional)
   name      String
   semester  String // เช่น "1/2026"
   teacherId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // archivedAt: ถ้า not null = วิชาถูก archive (ซ่อนจาก default view + เปิด session ใหม่ไม่ได้)
+  // ใช้ DateTime แทน boolean เพื่อเก็บ audit trail ว่า archive เมื่อไหร่
+  archivedAt DateTime?
 
   teacher       User           @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
   enrollments   Enrollment[]
@@ -73,6 +78,7 @@ model Course {
   @@unique([code, semester, teacherId]) // กันสร้างวิชาซ้ำต่อเทอมต่ออาจารย์
   @@index([teacherId])
   @@index([semester])
+  @@index([archivedAt])
 }
 
 // ============================================
@@ -80,11 +86,12 @@ model Course {
 // ============================================
 
 model Enrollment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   studentId String
   courseId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  droppedAt DateTime? // null = active, value = ถอนออกเมื่อเวลานั้น (soft delete)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   student User   @relation(fields: [studentId], references: [id], onDelete: Restrict)
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -92,6 +99,7 @@ model Enrollment {
   @@unique([studentId, courseId]) // ❗ กันลงทะเบียนซ้ำ
   @@index([courseId])
   @@index([studentId])
+  @@index([droppedAt])
 }
 
 // ============================================
@@ -121,12 +129,15 @@ model Schedule {
 // ============================================
 
 model ClassSession {
-  id         String    @id @default(cuid())
-  courseId   String
-  scheduleId String // ❗ must bind — ห้าม nullable (ดู PRP 03.5)
-  startsAt   DateTime // เวลาเริ่มคาบ (server time — คำนวณจาก Schedule)
-  endsAt     DateTime // เวลาจบคาบ
-  lateAfter  DateTime? // Phase 4: หลังเวลานี้ถือว่ามาสาย
+  id              String    @id @default(cuid())
+  courseId        String
+  scheduleId      String? // Phase 6: nullable — รองรับ ad-hoc session + รองรับการลบ schedule (SetNull)
+  startsAt        DateTime // เวลาเริ่มคาบ (server time = ตอนกดเปิด)
+  endsAt          DateTime // เวลาจบคาบ = startsAt + durationMinutes
+  durationMinutes Int       @default(0) // Phase 6: ระยะเวลาเปิด QR (นาที) — audit
+  lateAfter       DateTime? // ถ้า null = ไม่แยก LATE (ทันเวลาทุกคนใน duration)
+  graceMinutes    Int? // Phase 6: ถ้า null = ไม่แยก LATE; ถ้ามีค่า = นาทีที่ยังถือว่าทันเวลา
+  roomSnapshot    String? // ห้องที่ snapshot ตอนเปิด session — ไม่เปลี่ยนแม้แก้ Schedule ภายหลัง (historical truth)
 
   // Static check-in token and fallback code for the whole open session.
   qrToken   String? @unique
@@ -138,7 +149,7 @@ model ClassSession {
   updatedAt DateTime  @updatedAt
 
   course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  schedule     Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  schedule     Schedule?     @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
   attendances  Attendance[]
   demoCheckIns DemoCheckIn[]
   // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
