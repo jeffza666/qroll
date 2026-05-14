@@ -27,6 +27,9 @@ const courseSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อวิชา").max(200),
   semester: z.string().min(1, "กรุณาระบุภาคการศึกษา").max(20),
   schedules: z.array(scheduleRowSchema).default([]),
+  // Phase 6: optional ตอนสร้าง — ถ้ายังไม่อยู่ห้องจริง ให้ข้ามแล้วตั้งทีหลังในหน้า edit
+  geofenceLat: z.number().min(-90).max(90).optional().nullable(),
+  geofenceLng: z.number().min(-180).max(180).optional().nullable(),
 });
 
 function parseCourseFormData(formData: FormData) {
@@ -41,6 +44,17 @@ function parseCourseFormData(formData: FormData) {
     }
   }
 
+  // Phase 6: geofenceLat/Lng เป็น optional — empty string → null, ไม่งั้นแปลงเป็น float
+  const rawLat = formData.get("geofenceLat");
+  const rawLng = formData.get("geofenceLng");
+  const parseCoord = (raw: FormDataEntryValue | null) => {
+    if (raw === null) return null;
+    const s = String(raw).trim();
+    if (s === "") return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  };
+
   const parsed = courseSchema.safeParse({
     code: formData.get("code"),
     section:
@@ -48,6 +62,8 @@ function parseCourseFormData(formData: FormData) {
     name: formData.get("name"),
     semester: formData.get("semester"),
     schedules: schedulesParsed,
+    geofenceLat: parseCoord(rawLat),
+    geofenceLng: parseCoord(rawLng),
   });
 
   if (!parsed.success) {
@@ -58,8 +74,11 @@ function parseCourseFormData(formData: FormData) {
 
 export async function createCourse(formData: FormData) {
   const user = await requireTeacher();
-  const { code, section, name, semester, schedules } =
+  const { code, section, name, semester, schedules, geofenceLat, geofenceLng } =
     parseCourseFormData(formData);
+
+  // กัน partial geofence (ต้องมาคู่กันเสมอ) — ถ้าขาดอันใดอันหนึ่ง = ไม่บันทึก anchor
+  const hasAnchor = geofenceLat != null && geofenceLng != null;
 
   const course = await db.course.create({
     data: {
@@ -68,6 +87,8 @@ export async function createCourse(formData: FormData) {
       name,
       semester,
       teacherId: user.id,
+      geofenceLat: hasAnchor ? geofenceLat : null,
+      geofenceLng: hasAnchor ? geofenceLng : null,
       schedules: {
         create: schedules.map((s) => ({
           dayOfWeek: s.dayOfWeek,
@@ -213,5 +234,54 @@ export async function unarchiveCourse(courseId: string) {
   revalidatePath("/teacher/courses");
   revalidatePath(`/teacher/courses/${courseId}`);
   revalidatePath("/teacher");
+  return { success: true };
+}
+
+// ============================================
+// Phase 6 — Course geofence anchor
+// ดีไซน์: docs/prps/08-geofence.md
+// ============================================
+
+const courseGeofenceSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
+/**
+ * บันทึก anchor ของห้องเรียน — อาจารย์ตั้งครั้งเดียวด้วยมือถือในห้องจริง
+ * ไม่ตรวจ accuracy ฝั่ง server เพราะ accuracy ตรวจที่ client (UI เตือน/บล็อก) — server เก็บแค่พิกัด
+ */
+export async function saveCourseGeofence(
+  courseId: string,
+  input: { lat: number; lng: number }
+) {
+  await requireCourseOwner(courseId);
+
+  const parsed = courseGeofenceSchema.safeParse(input);
+  if (!parsed.success) return { error: "พิกัดไม่ถูกต้อง" };
+
+  await db.course.update({
+    where: { id: courseId },
+    data: {
+      geofenceLat: parsed.data.lat,
+      geofenceLng: parsed.data.lng,
+    },
+  });
+
+  revalidatePath(`/teacher/courses/${courseId}/edit`);
+  revalidatePath(`/teacher/courses/${courseId}`);
+  return { success: true };
+}
+
+export async function clearCourseGeofence(courseId: string) {
+  await requireCourseOwner(courseId);
+
+  await db.course.update({
+    where: { id: courseId },
+    data: { geofenceLat: null, geofenceLng: null },
+  });
+
+  revalidatePath(`/teacher/courses/${courseId}/edit`);
+  revalidatePath(`/teacher/courses/${courseId}`);
   return { success: true };
 }
