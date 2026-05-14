@@ -12,6 +12,10 @@ import {
   FileText,
   PieChart,
   ChevronRight,
+  CheckCircle2,
+  AlarmClock,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -143,12 +147,20 @@ export default async function TeacherDashboard() {
     latestCounted > 0
       ? Math.round(((latestStats.PRESENT + latestStats.LATE * 0.5) / latestCounted) * 100)
       : null;
-  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
-  const segments = [
-    { id: "present", label: "มาเรียน", count: latestStats.PRESENT, color: "#10B981", bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-700" },
-    { id: "late", label: "มาสาย", count: latestStats.LATE, color: "#F59E0B", bg: "bg-amber-50", border: "border-amber-100", text: "text-amber-700" },
-    { id: "excused", label: "ลา", count: latestStats.EXCUSED, color: "#3B82F6", bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-700" },
-    { id: "absent", label: "ขาดเรียน", count: latestStats.ABSENT, color: "#EF4444", bg: "bg-red-50", border: "border-red-100", text: "text-red-700" },
+  const segments: Array<{
+    id: string;
+    label: string;
+    count: number;
+    color: string;
+    bg: string;
+    border: string;
+    text: string;
+    icon: LucideIcon;
+  }> = [
+    { id: "present", label: "มาเรียน", count: latestStats.PRESENT, color: "#10B981", bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-700", icon: CheckCircle2 },
+    { id: "late", label: "มาสาย", count: latestStats.LATE, color: "#F59E0B", bg: "bg-amber-50", border: "border-amber-100", text: "text-amber-700", icon: AlarmClock },
+    { id: "excused", label: "ลา", count: latestStats.EXCUSED, color: "#3B82F6", bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-700", icon: FileText },
+    { id: "absent", label: "ขาดเรียน", count: latestStats.ABSENT, color: "#EF4444", bg: "bg-red-50", border: "border-red-100", text: "text-red-700", icon: XCircle },
   ];
 
   const dashArray = 251.2;
@@ -496,8 +508,8 @@ export default async function TeacherDashboard() {
                 <h3 className="text-2xl font-black text-white relative z-10 tracking-wide flex items-center gap-2">
                   <PieChart className="w-5 h-5 text-red-200" /> สรุปคลาสเรียนล่าสุด
                 </h3>
-                <p className="text-[16px] font-medium text-red-100/80 mt-1.5 flex items-center gap-1.5 relative z-10">
-                  <Clock className="w-3.5 h-3.5" /> {latestDateLabel ?? "ยังไม่มีคาบที่ปิดแล้ว"}
+                <p className="text-[16px] font-medium text-red-100/80 mt-1.5 relative z-10">
+                  {latestDateLabel ?? "ยังไม่มีคาบที่ปิดแล้ว"}
                 </p>
               </div>
               <div className="p-6 flex flex-col flex-1 bg-white relative">
@@ -543,81 +555,89 @@ export default async function TeacherDashboard() {
                 )}
 
                 <div className="flex-1 flex flex-col items-center justify-center">
-                  {latestTotal === 0 ? (
-                    <div className="w-full">
-                      <div className="mb-5 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-center">
-                        <p className="text-base font-black text-slate-700">
-                          {latestClosedSession ? "คาบล่าสุดยังไม่มีข้อมูลเช็คชื่อ" : "ยังไม่มีคาบที่ปิดแล้ว"}
-                        </p>
-                        <p className="mx-auto mt-1 max-w-[280px] text-sm leading-5 text-slate-400">
-                          {latestClosedSession
-                            ? "ระบบจะแสดงสัดส่วนเข้าเรียนเมื่อมีรายการเช็คชื่อในคาบนี้"
-                            : "เริ่มเปิดรับเช็คชื่อและปิดคาบแรกเพื่อดูสรุปการเข้าเรียนล่าสุด"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
-                          <p className="font-inter text-3xl font-black text-slate-800">
+                  <div className="relative w-48 h-48 mb-8 drop-shadow-sm">
+                    <svg className="w-full h-full" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" strokeWidth="16" />
+                      {donutSegments.map((s) =>
+                        s.count > 0 ? (
+                          <circle
+                            key={s.id}
+                            cx="50"
+                            cy="50"
+                            r="40"
+                            fill="transparent"
+                            stroke={s.color}
+                            strokeWidth="16"
+                            strokeDasharray={s.dashArray}
+                            strokeDashoffset={s.dashOffset}
+                            transform={`rotate(${s.angle} 50 50)`}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000"
+                          />
+                        ) : null
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] border border-slate-50">
+                      {latestTotal === 0 ? (
+                        <>
+                          <PieChart className="w-9 h-9 text-slate-200 mb-1" strokeWidth={1.5} />
+                          <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                            ไม่มีข้อมูล
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-4xl font-black font-inter text-slate-800 leading-none">
                             {latestTotal}
-                            {latestClosedSession && (
-                              <span className="text-base font-bold text-slate-400">/{latestEnrolled}</span>
-                            )}
-                          </p>
-                          <p className="mt-1 text-[14px] font-bold text-slate-500">เช็คชื่อแล้ว</p>
-                        </div>
-                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
-                          <p className="font-inter text-3xl font-black text-slate-800">
-                            {latestPct !== null ? `${latestPct}%` : "—"}
-                          </p>
-                          <p className="mt-1 text-[14px] font-bold text-slate-500">เข้าเรียน</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="relative w-48 h-48 mb-8 drop-shadow-sm">
-                        <svg className="w-full h-full" viewBox="0 0 100 100">
-                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" strokeWidth="16" />
-                          {donutSegments.map((s) =>
-                            s.count > 0 ? (
-                              <circle
-                                key={s.id}
-                                cx="50"
-                                cy="50"
-                                r="40"
-                                fill="transparent"
-                                stroke={s.color}
-                                strokeWidth="16"
-                                strokeDasharray={s.dashArray}
-                                strokeDashoffset={s.dashOffset}
-                                transform={`rotate(${s.angle} 50 50)`}
-                                strokeLinecap="round"
-                                className="transition-all duration-1000"
-                              />
-                            ) : null
-                          )}
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] border border-slate-50">
-                          <span className="text-4xl font-black text-slate-800 font-inter">{latestTotal}</span>
-                          <span className="text-[14px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">
                             คนทั้งหมด
                           </span>
-                        </div>
-                      </div>
-                      <div className="w-full grid grid-cols-2 gap-3">
-                        {segments.map((s) => (
-                          <div
-                            key={s.id}
-                            className={`${s.bg} rounded-2xl p-3 ${s.border} border flex flex-col items-center text-center transition-transform hover:scale-105 cursor-default shadow-sm`}
-                          >
-                            <span className={`text-2xl font-black ${s.text} mb-0.5 font-inter drop-shadow-sm leading-none`}>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="w-full grid grid-cols-2 gap-3">
+                    {segments.map((s) => {
+                      const Icon = s.icon;
+                      const isEmpty = latestTotal === 0;
+                      return (
+                        <div
+                          key={s.id}
+                          className="bg-white border-slate-100 rounded-2xl px-3 py-3 border flex items-center gap-3 transition-all hover:scale-[1.03] hover:shadow-md cursor-default shadow-sm"
+                        >
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-50 border border-slate-100">
+                            <Icon
+                              className={`w-[18px] h-[18px] ${isEmpty ? "text-slate-300" : "text-slate-500"}`}
+                              strokeWidth={2.25}
+                            />
+                          </div>
+                          <div className="flex flex-col items-start leading-tight">
+                            <span
+                              className={`text-xl font-black font-inter leading-none ${
+                                isEmpty ? "text-slate-300" : "text-slate-800"
+                              }`}
+                            >
                               {s.count}
                             </span>
-                            <span className={`text-[11px] font-bold ${s.text} opacity-80 mt-1`}>{s.label}</span>
+                            <span
+                              className={`text-[11px] font-bold mt-1 ${
+                                isEmpty ? "text-slate-400" : "text-slate-500"
+                              }`}
+                            >
+                              {s.label}
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    </>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {latestTotal === 0 && (
+                    <p className="mt-5 text-center text-sm text-slate-400 leading-5 max-w-[280px]">
+                      {latestClosedSession
+                        ? "คาบล่าสุดยังไม่มีรายการเช็คชื่อ — สรุปจะแสดงเมื่อมีข้อมูล"
+                        : "ยังไม่มีคาบที่ปิดแล้ว — เปิดและปิดคาบแรกเพื่อดูสรุปการเข้าเรียน"}
+                    </p>
                   )}
                 </div>
               </div>
