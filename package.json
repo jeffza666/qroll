@@ -6,7 +6,9 @@
   "dev": "next dev",
   "build": "prisma generate && next build",
   "start": "next start",
-  "lint": "next lint"
+  "lint": "next lint",
+  "seed:demo": "ts-node --project tsconfig.seed.json scripts/seed-demo.ts",
+  "seed:demo:clean": "ts-node --project tsconfig.seed.json scripts/seed-demo.ts --clean"
 },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
