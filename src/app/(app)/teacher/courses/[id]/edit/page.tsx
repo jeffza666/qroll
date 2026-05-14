@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireTeacher } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import CourseForm from "@/components/courses/CourseForm";
+import CourseGeofenceSection from "@/components/courses/CourseGeofenceSection";
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditCoursePage({ params }: Props) {
@@ -32,8 +33,8 @@ export default async function EditCoursePage({ params }: Props) {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-slate-900">รายละเอียดรายวิชา</h1>
-            <p className="text-sm text-slate-500">{course.name} • เทอม {course.semester}</p>
+            <h1 className="text-xl font-bold text-slate-800">แก้ไขรายวิชา</h1>
+            <p className="text-sm text-slate-500">{course.code}{course.section ? ` • ${course.section}` : ""} • {course.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -72,8 +73,16 @@ export default async function EditCoursePage({ params }: Props) {
                 room: s.room ?? "",
               })),
             }}
+            belowFields={
+              <CourseGeofenceSection
+                courseId={id}
+                initial={{
+                  lat: course.geofenceLat ?? null,
+                  lng: course.geofenceLng ?? null,
+                }}
+              />
+            }
           />
-
         </div>
       </div>
     </>
