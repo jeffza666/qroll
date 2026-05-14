@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import type { AttendanceStatus } from "@prisma/client";
-import { Check, ChevronDown, Clock, FileText, Minus, X } from "lucide-react";
+import { Check, ChevronDown, Clock, FileText, MapPin, Minus, X } from "lucide-react";
 import { updateAttendanceStatus } from "@/actions/attendance";
 import type { StatusFilter } from "@/components/sessions/FilterButtonGroup";
 
@@ -14,6 +14,8 @@ export type SessionReportRow = {
     id: string;
     status: AttendanceStatus;
     checkedInAtLabel: string;
+    /** Phase 6: null = session ไม่เปิด geofence หรือเป็นการเช็คก่อนเปิด feature */
+    locationVerified?: { distanceM: number } | null;
   } | null;
 };
 
@@ -159,7 +161,18 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
                     )}
                   </td>
                   <td className="border-r border-slate-100 px-6 py-4 text-center font-inter font-medium text-slate-500">
-                    {row.attendance?.checkedInAtLabel ?? "—"}
+                    <div className="flex items-center justify-center gap-2">
+                      <span>{row.attendance?.checkedInAtLabel ?? "—"}</span>
+                      {row.attendance?.locationVerified && (
+                        <span
+                          title={`ตรวจตำแหน่งแล้ว ห่างห้อง ~${row.attendance.locationVerified.distanceM}m`}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-100"
+                        >
+                          <MapPin className="h-3 w-3" />
+                          {row.attendance.locationVerified.distanceM}m
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     {row.attendance ? (
