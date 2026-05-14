@@ -11,14 +11,8 @@ import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 // Phase 6: anchor choice ตอนเปิด session
 // - none        = ไม่เปิด geofence (opt-out)
 // - course_saved = ใช้ Course.geofenceLat/Lng (server lookup เอง)
-//
-// หมายเหตุดีไซน์: ตัด "teacher_current" ทิ้งหลังลองใช้จริง — มี source of truth
-// เดียวสำหรับ anchor = หน้า edit course เท่านั้น. ถ้าอาจารย์ต้องการเปลี่ยน
-// anchor (เช่นย้ายห้อง) ให้ไปแก้ที่หน้า edit course แทนการ override per-session
-// → ผู้ใช้ mental model ตรงกัน, code path น้อยลง.
-//
-// AnchorSource.TEACHER_CURRENT ใน DB enum ยังคงไว้เพื่อไม่ต้อง migrate
-// (รองรับ session เก่าที่เคยใช้, แต่จะไม่ถูก write ใหม่อีก).
+// Source of truth สำหรับ anchor = หน้า edit course เท่านั้น
+// (ถ้าอาจารย์ต้องการเปลี่ยน เช่นย้ายห้อง ให้ไปแก้ที่หน้า edit course)
 const anchorInputSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("none") }),
   z.object({ kind: z.literal("course_saved") }),

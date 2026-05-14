@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -67,16 +66,6 @@ export type DemoCheckInActionResult =
       reason: "disabled" | "invalid" | "expired" | "closed" | "validation";
       message?: string;
     };
-
-async function getRequestInfo() {
-  const headerList = await headers();
-  const forwardedFor = headerList.get("x-forwarded-for");
-
-  return {
-    ipAddress: forwardedFor?.split(",")[0]?.trim() || headerList.get("x-real-ip"),
-    userAgent: headerList.get("user-agent"),
-  };
-}
 
 function mapContextFailure(reason: "missing_token" | "invalid" | "expired" | "closed") {
   if (reason === "expired") return "expired";
@@ -178,7 +167,6 @@ export async function checkInWithQrToken(
 
   const now = new Date();
   const status = getAttendanceStatus(now, context.session.lateAfter);
-  const requestInfo = await getRequestInfo();
 
   try {
     const attendance = await db.attendance.create({
@@ -187,8 +175,6 @@ export async function checkInWithQrToken(
         studentId: user.id,
         status,
         checkedInAt: now,
-        ipAddress: requestInfo.ipAddress,
-        userAgent: requestInfo.userAgent,
         distanceM: verifiedDistanceM,
         accuracyM: verifiedAccuracyM,
       },
@@ -252,15 +238,12 @@ export async function demoCheckInWithQrToken(
   }
 
   const now = new Date();
-  const requestInfo = await getRequestInfo();
 
   const demoCheckIn = await db.demoCheckIn.create({
     data: {
       classSessionId: context.session.id,
       displayName: parsed.data.displayName,
       checkedInAt: now,
-      ipAddress: requestInfo.ipAddress,
-      userAgent: requestInfo.userAgent,
     },
     select: { displayName: true, checkedInAt: true },
   });
