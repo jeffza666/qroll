@@ -1,14 +1,28 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, Play, QrCode, X } from "lucide-react";
+import { ChevronDown, MapPin, Play, QrCode, X } from "lucide-react";
 import { openSession } from "@/app/actions/session";
+import { GEOFENCE_RADIUS_M } from "@/lib/geo/constants";
 
-type Props = { courseId: string; variant?: "default" | "large" };
+type Props = {
+  courseId: string;
+  variant?: "default" | "large";
+  /** Phase 6: true ถ้า Course มี saved geofence anchor */
+  hasCourseAnchor?: boolean;
+};
 
 const QUICK_OPTIONS = [5, 10, 15];
 
-export default function OpenSessionButton({ courseId, variant = "default" }: Props) {
+// Phase 6: anchor choice — ตัดสินเฉพาะ on/off ตอนเปิด session
+// ถ้าจะเปลี่ยน anchor → ไปแก้ที่หน้า edit course (single source of truth)
+type AnchorChoice = "none" | "course_saved";
+
+export default function OpenSessionButton({
+  courseId,
+  variant = "default",
+  hasCourseAnchor = false,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [duration, setDuration] = useState(10);
   // "quick" = ใช้ปุ่มลัด, "custom" = พิมพ์เอง
@@ -21,6 +35,11 @@ export default function OpenSessionButton({ courseId, variant = "default" }: Pro
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  // default = course_saved ถ้ามี anchor, ไม่งั้น none
+  const [anchorChoice, setAnchorChoice] = useState<AnchorChoice>(
+    hasCourseAnchor ? "course_saved" : "none"
+  );
+
   function resetAndClose() {
     if (isPending) return;
     setOpen(false);
@@ -32,6 +51,7 @@ export default function OpenSessionButton({ courseId, variant = "default" }: Pro
     setSplitLate(false);
     setGrace(5);
     setGraceInput("5");
+    setAnchorChoice(hasCourseAnchor ? "course_saved" : "none");
   }
 
   function selectQuick(m: number) {
@@ -111,11 +131,17 @@ export default function OpenSessionButton({ courseId, variant = "default" }: Pro
     const graceMinutes = splitLate ? getValidatedGraceMinutes() : null;
     if (splitLate && graceMinutes === null) return;
 
+    const anchorPayload =
+      anchorChoice === "course_saved"
+        ? ({ kind: "course_saved" } as const)
+        : ({ kind: "none" } as const);
+
     startTransition(async () => {
       const result = await openSession({
         courseId,
         durationMinutes: duration,
         graceMinutes,
+        anchor: anchorPayload,
       });
       if (result?.error) setError(result.error);
     });
@@ -275,6 +301,61 @@ export default function OpenSessionButton({ courseId, variant = "default" }: Pro
                   )}
                 </div>
               )}
+
+              {/* Phase 6: anchor choice — เปิด/ปิด geofence เท่านั้น
+                  ถ้าจะเปลี่ยน anchor → ไปแก้ที่หน้า edit course */}
+              <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                <p className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-emerald-600" />
+                  การตรวจสอบตำแหน่ง
+                </p>
+
+                {hasCourseAnchor ? (
+                  <>
+                    <label className="flex items-start gap-2 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name="anchor"
+                        className="mt-0.5 h-4 w-4"
+                        checked={anchorChoice === "course_saved"}
+                        onChange={() => setAnchorChoice("course_saved")}
+                      />
+                      <span className="flex-1">
+                        <span className="font-semibold text-emerald-700">
+                          ตรวจตำแหน่ง
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          นักศึกษาต้องอยู่ในรัศมี ~{GEOFENCE_RADIUS_M}m ของห้อง
+                        </span>
+                      </span>
+                    </label>
+
+                    <label className="flex items-start gap-2 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name="anchor"
+                        className="mt-0.5 h-4 w-4"
+                        checked={anchorChoice === "none"}
+                        onChange={() => setAnchorChoice("none")}
+                      />
+                      <span className="flex-1">
+                        <span className="font-semibold text-slate-700">ไม่ตรวจตำแหน่ง</span>
+                        <span className="block text-xs text-slate-500">
+                          นักศึกษาเช็คชื่อจากที่ไหนก็ได้
+                        </span>
+                      </span>
+                    </label>
+                  </>
+                ) : (
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+                    วิชานี้ยังไม่ได้ตั้งตำแหน่งห้องเรียน — จะเปิดคาบโดยไม่ตรวจตำแหน่ง
+                    <br />
+                    <span className="text-slate-500">
+                      หากต้องการตรวจตำแหน่ง: ไปที่ &ldquo;แก้ไขรายวิชา&rdquo; เพื่อบันทึกตำแหน่งห้องก่อน
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {error && (
                 <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

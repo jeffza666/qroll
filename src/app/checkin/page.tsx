@@ -118,6 +118,7 @@ export default async function CheckInPage({ searchParams }: Props) {
       />
       <StudentCheckInForm
         token={token}
+        requiresLocation={context.session.anchor !== null}
         student={{
           name: session.user.name ?? session.user.email ?? "Student",
           email: session.user.email ?? "-",

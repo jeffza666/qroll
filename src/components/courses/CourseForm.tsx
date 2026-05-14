@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Clock, MapPin, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, MapPin, Plus, Trash2 } from "lucide-react";
 import { createCourse, updateCourse } from "@/app/actions/course";
+import {
+  GEOLOCATION_OPTIONS,
+  TEACHER_ACCURACY_GOOD_M,
+  TEACHER_ACCURACY_POOR_M,
+} from "@/lib/geo/constants";
 
 const DAYS = [
   { value: 0, label: "อาทิตย์" },
@@ -36,6 +41,8 @@ type Props = {
   mode: "create" | "edit";
   courseId?: string; // required เมื่อ mode = edit
   initial?: CourseFormInitial;
+  // edit mode: slot สำหรับ CourseGeofenceSection ระหว่าง form-card กับปุ่ม action
+  belowFields?: React.ReactNode;
 };
 
 const EMPTY_SCHEDULE: ScheduleRow = {
@@ -45,7 +52,7 @@ const EMPTY_SCHEDULE: ScheduleRow = {
   room: "",
 };
 
-export default function CourseForm({ mode, courseId, initial }: Props) {
+export default function CourseForm({ mode, courseId, initial, belowFields }: Props) {
   const [code, setCode] = useState(initial?.code ?? "");
   const [section, setSection] = useState(initial?.section ?? "");
   const [name, setName] = useState(initial?.name ?? "");
@@ -57,6 +64,71 @@ export default function CourseForm({ mode, courseId, initial }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Phase 6: pending anchor — เฉพาะ create mode (edit mode ใช้ CourseGeofenceSection แยก)
+  const [pendingLat, setPendingLat] = useState<number | null>(null);
+  const [pendingLng, setPendingLng] = useState<number | null>(null);
+  const [pendingAccuracy, setPendingAccuracy] = useState<number | null>(null);
+  const [requestingLocation, setRequestingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  async function handleCaptureLocation() {
+    setLocationError(null);
+    setRequestingLocation(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (typeof window === "undefined" || !navigator.geolocation) {
+          reject(new Error("เบราว์เซอร์นี้ไม่รองรับการขอตำแหน่ง"));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, GEOLOCATION_OPTIONS);
+      });
+      const acc = Math.round(position.coords.accuracy);
+
+      // กัน laptop GPS เพี้ยน — ถ้า accuracy แย่เกินไป → block (anchor ผิด = ห้องโดน block ทั้งห้อง)
+      if (acc > TEACHER_ACCURACY_POOR_M) {
+        setLocationError(
+          `ความแม่นยำต่ำเกินไป (~${acc}m) — แนะนำตั้งจากมือถือในห้องเรียนจริง หรือข้ามขั้นนี้แล้วตั้งทีหลังที่หน้าแก้ไข`
+        );
+        return;
+      }
+
+      if (acc > TEACHER_ACCURACY_GOOD_M) {
+        const confirmed = window.confirm(
+          `ความแม่นยำของ GPS อยู่ที่ ~${acc}m (แนะนำ ≤${TEACHER_ACCURACY_GOOD_M}m)\n\n` +
+            `ถ้าทำบนมือถือในห้องจริงควรแม่นกว่านี้ ต้องการใช้พิกัดนี้หรือไม่?`
+        );
+        if (!confirmed) return;
+      }
+
+      setPendingLat(position.coords.latitude);
+      setPendingLng(position.coords.longitude);
+      setPendingAccuracy(acc);
+    } catch (err) {
+      if (err instanceof GeolocationPositionError) {
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError("ไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง — กรุณาเปิด permission ในเบราว์เซอร์");
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setLocationError("ไม่สามารถระบุตำแหน่งได้ — ลองอีกครั้งใกล้หน้าต่างหรือกลางแจ้ง");
+        } else if (err.code === err.TIMEOUT) {
+          setLocationError("ระบบขอตำแหน่งนานเกินไป — ลองใหม่อีกครั้ง");
+        } else {
+          setLocationError("เกิดข้อผิดพลาดขณะขอตำแหน่ง");
+        }
+      } else {
+        setLocationError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      }
+    } finally {
+      setRequestingLocation(false);
+    }
+  }
+
+  function handleClearLocation() {
+    setPendingLat(null);
+    setPendingLng(null);
+    setPendingAccuracy(null);
+    setLocationError(null);
+  }
 
   function updateRow<K extends keyof ScheduleRow>(
     idx: number,
@@ -95,6 +167,12 @@ export default function CourseForm({ mode, courseId, initial }: Props) {
     fd.set("semester", semester);
     fd.set("schedules", JSON.stringify(schedules));
 
+    // Phase 6: send pending anchor (create mode เท่านั้น) — edit mode ใช้ standalone section
+    if (mode === "create" && pendingLat !== null && pendingLng !== null) {
+      fd.set("geofenceLat", String(pendingLat));
+      fd.set("geofenceLng", String(pendingLng));
+    }
+
     startTransition(async () => {
       try {
         if (mode === "edit" && courseId) {
@@ -113,8 +191,10 @@ export default function CourseForm({ mode, courseId, initial }: Props) {
   }
 
   return (
+    <div className="space-y-4">
     <form
       onSubmit={handleSubmit}
+      id="course-form"
       className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-6"
     >
       {/* code + section */}
@@ -252,26 +332,115 @@ export default function CourseForm({ mode, courseId, initial }: Props) {
           {error}
         </p>
       )}
-
-      <div className="flex gap-3 pt-2">
-        <a
-          href={mode === "edit" && courseId ? `/teacher/courses/${courseId}` : "/teacher/courses"}
-          className="flex-1 py-3 text-center text-sm font-semibold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
-        >
-          ยกเลิก
-        </a>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 py-3 text-sm font-semibold !text-white bg-[#990000] rounded-xl hover:bg-red-800 shadow-lg shadow-red-900/20 transition-all disabled:opacity-60"
-        >
-          {isPending
-            ? "กำลังบันทึก..."
-            : mode === "edit"
-            ? "บันทึกการแก้ไข"
-            : "สร้างวิชา"}
-        </button>
-      </div>
     </form>
+
+    {/* Phase 6: geofence anchor card (create mode only — edit mode ใช้ CourseGeofenceSection แยก) */}
+    {mode === "create" && (
+      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-4">
+        <header>
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-emerald-600" />
+            ตำแหน่งห้องเรียน (Geofence anchor)
+            <span className="text-xs font-normal text-slate-400">— ไม่บังคับ</span>
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            บันทึกพิกัดเพื่อตรวจว่านักศึกษาอยู่ในห้องจริงตอนเช็คชื่อ —
+            <strong className="text-amber-600"> แนะนำตั้งจากมือถือในห้องเรียนจริง</strong>
+            {" "}ถ้าตอนนี้ยังไม่อยู่ห้อง ข้ามขั้นนี้แล้วตั้งทีหลังในหน้าแก้ไขได้
+          </p>
+        </header>
+
+        <div
+          className={
+            pendingLat !== null && pendingLng !== null
+              ? "rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              : "rounded-2xl border border-amber-200 bg-amber-50 p-4"
+          }
+        >
+          {pendingLat !== null && pendingLng !== null ? (
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-sm">
+                <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  พร้อมบันทึก
+                  {pendingAccuracy !== null && (
+                    <span className="text-xs font-normal text-slate-500">
+                      (ความแม่นยำ ~{pendingAccuracy}m)
+                    </span>
+                  )}
+                </p>
+                <p className="font-inter text-slate-600 mt-1">
+                  {pendingLat.toFixed(6)}, {pendingLng.toFixed(6)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearLocation}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-red-700 bg-white border border-red-200 hover:bg-red-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                ลบ
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-amber-800 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              ยังไม่ได้บันทึกตำแหน่ง — จะสร้างวิชาโดยไม่มี geofence
+            </p>
+          )}
+        </div>
+
+        {locationError && (
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-100">
+            {locationError}
+          </p>
+        )}
+
+        <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleCaptureLocation}
+          disabled={requestingLocation}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 !text-white text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-900/20 transition-colors disabled:opacity-60"
+        >
+          {requestingLocation ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              กำลังขอตำแหน่ง...
+            </>
+          ) : (
+            <>
+              <MapPin className="w-4 h-4" />
+              {pendingLat !== null ? "บันทึกตำแหน่งใหม่" : "ใช้ตำแหน่งปัจจุบัน"}
+            </>
+          )}
+        </button>
+        </div>
+      </section>
+    )}
+
+    {belowFields}
+
+    <div className="flex gap-3 pt-2">
+      <a
+        href={mode === "edit" && courseId ? `/teacher/courses/${courseId}` : "/teacher/courses"}
+        className="flex-1 py-3 text-center text-sm font-semibold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+      >
+        ยกเลิก
+      </a>
+      <button
+        type="submit"
+        form="course-form"
+        disabled={isPending}
+        className="flex-1 py-3 text-sm font-semibold !text-white bg-[#990000] rounded-xl hover:bg-red-800 shadow-lg shadow-red-900/20 transition-all disabled:opacity-60"
+      >
+        {isPending
+          ? "กำลังบันทึก..."
+          : mode === "edit"
+          ? "บันทึกการแก้ไข"
+          : "สร้างวิชา"}
+      </button>
+    </div>
+    </div>
   );
 }

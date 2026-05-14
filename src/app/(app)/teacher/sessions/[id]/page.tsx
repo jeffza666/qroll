@@ -109,6 +109,8 @@ export default async function SessionDetailPage({ params, searchParams }: Props)
             id: att.id,
             status: att.status,
             checkedInAtLabel: formatBangkokTime(att.checkedInAt),
+            locationVerified:
+              att.distanceM !== null ? { distanceM: att.distanceM } : null,
           }
         : null,
     };

@@ -27,6 +27,11 @@ export type CheckInContext =
           startTime: string;
           endTime: string;
         } | null;
+        /** Phase 6: ถ้า null = session ไม่เปิด geofence (backward compat) */
+        anchor: {
+          lat: number;
+          lng: number;
+        } | null;
       };
     }
   | {
@@ -84,6 +89,10 @@ export async function getCheckInContext(token?: string | null): Promise<CheckInC
       schedule: raw.schedule
         ? { startTime: raw.schedule.startTime, endTime: raw.schedule.endTime }
         : null,
+      anchor:
+        session.anchorLat !== null && session.anchorLng !== null
+          ? { lat: session.anchorLat, lng: session.anchorLng }
+          : null,
     },
   };
 }
