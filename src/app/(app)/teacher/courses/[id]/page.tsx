@@ -244,7 +244,11 @@ export default async function CourseDetailPage({ params }: Props) {
                   <span className="text-2xl tracking-wide !text-white">แสดง QR ขึ้นจอ</span>
                 </Link>
               ) : (
-                <OpenSessionButton courseId={id} variant="large" />
+                <OpenSessionButton
+                  courseId={id}
+                  variant="large"
+                  hasCourseAnchor={course.geofenceLat !== null && course.geofenceLng !== null}
+                />
               )}
             </div>
           </div>

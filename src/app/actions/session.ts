@@ -2,16 +2,33 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
+import { AnchorSource, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 
+// Phase 6: anchor choice ตอนเปิด session
+// - none        = ไม่เปิด geofence (opt-out)
+// - course_saved = ใช้ Course.geofenceLat/Lng (server lookup เอง)
+//
+// หมายเหตุดีไซน์: ตัด "teacher_current" ทิ้งหลังลองใช้จริง — มี source of truth
+// เดียวสำหรับ anchor = หน้า edit course เท่านั้น. ถ้าอาจารย์ต้องการเปลี่ยน
+// anchor (เช่นย้ายห้อง) ให้ไปแก้ที่หน้า edit course แทนการ override per-session
+// → ผู้ใช้ mental model ตรงกัน, code path น้อยลง.
+//
+// AnchorSource.TEACHER_CURRENT ใน DB enum ยังคงไว้เพื่อไม่ต้อง migrate
+// (รองรับ session เก่าที่เคยใช้, แต่จะไม่ถูก write ใหม่อีก).
+const anchorInputSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("none") }),
+  z.object({ kind: z.literal("course_saved") }),
+]);
+
 const openSessionSchema = z.object({
   courseId: z.string().min(1),
   durationMinutes: z.number().int().min(1).max(180),
   graceMinutes: z.number().int().min(0).max(180).nullable(),
+  anchor: anchorInputSchema.default({ kind: "none" }),
 });
 
 export type OpenSessionInput = z.infer<typeof openSessionSchema>;
@@ -35,7 +52,7 @@ export async function openSession(input: OpenSessionInput) {
   const parsed = openSessionSchema.safeParse(input);
   if (!parsed.success) return { error: "ข้อมูลไม่ถูกต้อง" };
 
-  const { courseId, durationMinutes, graceMinutes } = parsed.data;
+  const { courseId, durationMinutes, graceMinutes, anchor } = parsed.data;
 
   if (graceMinutes !== null && graceMinutes >= durationMinutes) {
     return { error: "เวลาแยกผู้มาสายต้องน้อยกว่าเวลาเปิด" };
@@ -44,14 +61,31 @@ export async function openSession(input: OpenSessionInput) {
   await requireCourseOwner(courseId);
 
   // กัน archived course เปิด session ใหม่ — archive = read-only
+  // เก็บ geofence ไว้ใช้ใน anchor resolution ด้วย (lookup ครั้งเดียว)
   const course = await db.course.findUnique({
     where: { id: courseId },
-    select: { archivedAt: true },
+    select: { archivedAt: true, geofenceLat: true, geofenceLng: true },
   });
   if (course?.archivedAt) {
     return {
       error: "รายวิชานี้ถูก archive แล้ว ต้อง unarchive ก่อนเปิด session ใหม่",
     };
+  }
+
+  // Phase 6: resolve anchor ตาม choice
+  let anchorLat: number | null = null;
+  let anchorLng: number | null = null;
+  let anchorSource: AnchorSource | null = null;
+
+  if (anchor.kind === "course_saved") {
+    if (course?.geofenceLat == null || course.geofenceLng == null) {
+      return {
+        error: "วิชานี้ยังไม่ได้บันทึกตำแหน่งห้องเรียน กรุณาไปบันทึกที่หน้าแก้ไขรายวิชาก่อน",
+      };
+    }
+    anchorLat = course.geofenceLat;
+    anchorLng = course.geofenceLng;
+    anchorSource = AnchorSource.COURSE_SAVED;
   }
 
   const existingOpenSession = await db.classSession.findFirst({
@@ -91,6 +125,9 @@ export async function openSession(input: OpenSessionInput) {
         qrToken: generateQrToken(),
         entryCode: generateEntryCode(),
         isOpen: true,
+        anchorLat,
+        anchorLng,
+        anchorSource,
       },
       select: { id: true },
     });
