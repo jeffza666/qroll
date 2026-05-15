@@ -66,7 +66,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md lg:px-10">
+      <header className="sticky top-0 z-10 flex h-20 items-center justify-between gap-3 border-b border-slate-200 bg-white/80 pl-6 pr-16 backdrop-blur-md lg:px-10">
         <div className="flex items-center gap-4">
           <Link
             href="/student"

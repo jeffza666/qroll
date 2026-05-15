@@ -20,7 +20,7 @@ export default async function StudentHomePage() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md lg:px-10">
+      <header className="sticky top-0 z-10 flex h-20 items-center border-b border-slate-200 bg-white/80 pl-6 pr-16 backdrop-blur-md lg:px-10">
         <div>
           <h1 className="font-inter text-2xl font-black text-slate-900">วิชาที่ลงเรียน</h1>
           <p className="text-sm text-slate-500">{enrollments.length} รายวิชา</p>
