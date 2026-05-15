@@ -1,6 +1,7 @@
 import { BookOpen, ChevronRight, QrCode, Users } from "lucide-react";
 import Link from "next/link";
 
+import CheckInLauncher from "@/components/student/CheckInLauncher";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -28,6 +29,10 @@ export default async function StudentHomePage() {
 
       <main className="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10">
         <div className="animate-fade-in pb-8">
+          <div className="mb-8">
+            <CheckInLauncher />
+          </div>
+
           <div className="relative mb-6 ml-1 flex items-center gap-3">
             <div className="h-8 w-2 rounded-full bg-[#990000] shadow-md shadow-red-900/20" />
             <h2 className="font-inter text-xl font-black text-slate-800">

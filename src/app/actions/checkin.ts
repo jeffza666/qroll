@@ -217,6 +217,45 @@ export async function checkInWithQrToken(
   }
 }
 
+const entryCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "รหัสต้องเป็นตัวเลข 6 หลัก");
+
+export type ResolveEntryCodeResult =
+  | { ok: true; token: string }
+  | { ok: false; reason: "invalid" | "not_found" | "wrong_role" | "unauthorized" };
+
+/**
+ * นักศึกษากรอกรหัส 6 หลัก → หา open session ที่มี entryCode ตรง → คืน qrToken เพื่อ redirect ไป /checkin?t=...
+ * entryCode ไม่ unique ใน schema แต่ collision rate ต่ำมาก (1/1M ต่อคู่). findFirst เพียงพอ.
+ */
+export async function resolveEntryCode(rawCode: string): Promise<ResolveEntryCodeResult> {
+  const parsed = entryCodeSchema.safeParse(rawCode);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+
+  try {
+    await requireStudent();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return {
+        ok: false,
+        reason: error.code === "UNAUTHORIZED" ? "unauthorized" : "wrong_role",
+      };
+    }
+    throw error;
+  }
+
+  const session = await db.classSession.findFirst({
+    where: { entryCode: parsed.data, isOpen: true },
+    select: { qrToken: true },
+  });
+
+  if (!session?.qrToken) return { ok: false, reason: "not_found" };
+
+  return { ok: true, token: session.qrToken };
+}
+
 export async function demoCheckInWithQrToken(
   token: string,
   displayName: string
