@@ -18,9 +18,11 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
 function NavLink({ item }: { item: NavItem }) {
   const pathname = usePathname();
   const isActive =
-    item.href === "/teacher" || item.href === "/student"
-      ? pathname === item.href
-      : pathname.startsWith(item.href);
+    item.href === "/student"
+      ? pathname === "/student" || pathname.startsWith("/student/courses")
+      : item.href === "/teacher"
+        ? pathname === item.href
+        : pathname.startsWith(item.href);
 
   const Icon = iconMap[item.icon] ?? LayoutDashboard;
 

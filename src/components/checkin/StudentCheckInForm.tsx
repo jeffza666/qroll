@@ -194,9 +194,9 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-sm font-black text-[#990000]">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 text-sm font-black text-white shadow-lg shadow-red-900/20">
             {initials || <UserRound className="h-5 w-5" />}
           </div>
           <div className="min-w-0">
@@ -212,9 +212,9 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
       </div>
 
       {requiresLocation && (
-        <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-          <p>
+        <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
+          <MapPin className="h-5 w-5 shrink-0 mt-0.5" />
+          <p className="font-medium">
             คาบนี้ตรวจสอบตำแหน่ง — เมื่อกดยืนยัน เบราว์เซอร์จะขออนุญาตเข้าถึงตำแหน่งของคุณ
           </p>
         </div>
@@ -230,7 +230,7 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
         type="button"
         onClick={handleSubmit}
         disabled={busy || Boolean(result?.ok && !result.duplicate)}
-        className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-[0_14px_28px_rgba(127,29,29,0.20)] transition hover:-translate-y-px hover:bg-[#7F0000] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+        className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-red-800 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
       >
         {locating ? (
           <>

@@ -14,20 +14,23 @@ export default function CheckInShell({ eyebrow, title, subtitle, children }: Pro
         <header className="flex items-center justify-between">
           <QRollLogo />
           {eyebrow && (
-            <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500">
+            <span className="rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-[#990000]">
               {eyebrow}
             </span>
           )}
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:p-7">
-          <div className="mb-6">
-            <h1 className="text-[28px] font-black leading-tight text-slate-950">
-              {title}
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">{subtitle}</p>
+        <section className="animate-fade-in overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
+          <div className="h-1.5 w-full bg-[#990000]" />
+          <div className="p-5 sm:p-7">
+            <div className="mb-6">
+              <h1 className="font-inter text-2xl font-black leading-tight text-slate-900 sm:text-[28px]">
+                {title}
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-slate-500">{subtitle}</p>
+            </div>
+            {children}
           </div>
-          {children}
         </section>
       </div>
     </main>

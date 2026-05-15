@@ -11,7 +11,6 @@ export const TEACHER_NAV: NavItem[] = [
 ];
 
 export const STUDENT_NAV: NavItem[] = [
-  { label: "หน้าหลัก", href: "/student", icon: "layout-dashboard" },
-  { label: "วิชาที่ลงเรียน", href: "/student/courses", icon: "book-open" },
+  { label: "วิชาที่ลงเรียน", href: "/student", icon: "book-open" },
   { label: "ประวัติเข้าเรียน", href: "/student/history", icon: "clock" },
 ];
