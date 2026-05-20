@@ -1,9 +1,14 @@
+import Link from "next/link";
+
 import { requireTeacher } from "@/lib/auth-helpers";
+import { isFaceSeedEnabled } from "@/lib/face/constants";
 import {
   Camera,
   ChevronDown,
+  ScanFace,
   SlidersHorizontal,
   UserRound,
+  Wrench,
 } from "lucide-react";
 
 function ReadonlyField({
@@ -83,6 +88,7 @@ function Toggle({ checked, disabled = false }: { checked: boolean; disabled?: bo
 
 export default async function SettingsPage() {
   const user = await requireTeacher();
+  const faceSeedEnabled = isFaceSeedEnabled();
 
   return (
     <>
@@ -203,6 +209,28 @@ export default async function SettingsPage() {
               />
             </div>
           </section>
+
+          {faceSeedEnabled && (
+            <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/50 px-8 py-6">
+                <Wrench className="h-5 w-5 text-slate-500" />
+                <h3 className="text-lg font-bold text-slate-800">เครื่องมือ Admin (Dev)</h3>
+              </div>
+              <div className="space-y-4 p-8">
+                <p className="text-sm text-slate-500">
+                  ส่วนนี้เปิดผ่าน <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-bold">ENABLE_FACE_SEED=true</code> เฉพาะ dev/demo —
+                  ในระบบจริงรูปจะ sync ผ่าน TU API ไม่ใช่อัปโหลดเอง
+                </p>
+                <Link
+                  href="/teacher/face-seed"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#990000] px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800"
+                >
+                  <ScanFace className="h-4 w-4" />
+                  Face Seed (จำลอง TU Photo Sync)
+                </Link>
+              </div>
+            </section>
+          )}
 
         </div>
       </div>

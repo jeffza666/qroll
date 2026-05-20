@@ -6,6 +6,7 @@ import StatusPanel from "@/components/checkin/StatusPanel";
 import StudentCheckInForm from "@/components/checkin/StudentCheckInForm";
 import { auth } from "@/lib/auth";
 import { getCheckInContext } from "@/lib/checkin";
+import { db } from "@/lib/db";
 
 type Props = {
   searchParams: Promise<{ t?: string }>;
@@ -80,6 +81,12 @@ export default async function CheckInPage({ searchParams }: Props) {
     );
   }
 
+  const faceRow = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { faceDescriptor: true },
+  });
+  const hasFace = (faceRow?.faceDescriptor.length ?? 0) > 0;
+
   if (session.user.role !== Role.STUDENT) {
     return (
       <CheckInShell
@@ -119,6 +126,7 @@ export default async function CheckInPage({ searchParams }: Props) {
       <StudentCheckInForm
         token={token}
         requiresLocation={context.session.anchor !== null}
+        requiresFace={hasFace}
         student={{
           name: session.user.name ?? session.user.email ?? "Student",
           email: session.user.email ?? "-",

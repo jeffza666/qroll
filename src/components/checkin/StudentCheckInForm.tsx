@@ -1,20 +1,25 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { ArrowRight, CheckCircle2, Loader2, MapPin, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, MapPin, ScanFace, UserRound } from "lucide-react";
 
 import {
   checkInWithQrToken,
   type CheckInActionResult,
+  type CheckInFaceInput,
   type CheckInLocationInput,
 } from "@/app/actions/checkin";
 import StatusPanel from "@/components/checkin/StatusPanel";
+import FaceScanModal from "@/components/face/FaceScanModal";
 import { GEOLOCATION_OPTIONS } from "@/lib/geo/constants";
+import { FACE_MAX_RETRY } from "@/lib/face/constants";
 
 type Props = {
   token: string;
   /** Phase 6: ถ้า session เปิด geofence ต้องขอ browser geolocation ก่อน submit */
   requiresLocation: boolean;
+  /** user ที่ seed face แล้วต้องสแกนหน้าก่อน submit */
+  requiresFace: boolean;
   student: {
     name: string;
     email: string;
@@ -56,12 +61,13 @@ function ResultPanel({ result }: { result: CheckInActionResult }) {
     const locationLine = result.locationVerified
       ? ` • ตรวจตำแหน่งแล้ว (ห่างจากห้อง ~${result.locationVerified.distanceM}m)`
       : "";
+    const faceLine = result.faceVerified ? " • ยืนยันใบหน้าแล้ว" : "";
 
     return (
       <StatusPanel
         tone={result.status === "LATE" ? "warning" : "success"}
         title={title}
-        message={`${baseMessage}${locationLine}`}
+        message={`${baseMessage}${locationLine}${faceLine}`}
         meta={`เวลา ${formatBangkokTime(result.checkedInAt)} น.`}
       />
     );
@@ -124,17 +130,43 @@ function ResultPanel({ result }: { result: CheckInActionResult }) {
           : "เช็คชื่อได้เฉพาะในห้องเรียนเท่านั้น",
       tone: "danger",
     },
+    face_required: {
+      title: "ต้องยืนยันใบหน้าก่อน",
+      message: "บัญชีนี้เปิดยืนยันใบหน้า — กรุณาให้กล้องเห็นหน้าและทำตามคำสั่งบนจอ",
+      tone: "warning",
+    },
+    face_invalid: {
+      title: "ข้อมูลใบหน้าไม่ถูกต้อง",
+      message: "ระบบรับ descriptor ไม่ครบ ลองสแกนใหม่อีกครั้ง",
+      tone: "danger",
+    },
+    face_mismatch: {
+      title: "ใบหน้าไม่ตรงกับบัญชีนี้",
+      message:
+        result.faceDistance !== undefined
+          ? `distance=${result.faceDistance.toFixed(2)} (threshold สำหรับ tune) — ลองในแสงสว่างกว่าเดิม หรือ seed รูปใหม่`
+          : "หากคุณคือเจ้าของบัญชี กรุณาลองในแสงสว่างกว่าเดิม หรือติดต่ออาจารย์",
+      tone: "danger",
+    },
   };
 
   const selected = copy[result.reason];
   return <StatusPanel tone={selected.tone} title={selected.title} message={selected.message} />;
 }
 
-export default function StudentCheckInForm({ token, student, requiresLocation }: Props) {
+export default function StudentCheckInForm({
+  token,
+  student,
+  requiresLocation,
+  requiresFace,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<CheckInActionResult | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [faceModalOpen, setFaceModalOpen] = useState(false);
+  const [faceRetry, setFaceRetry] = useState(0);
+  const [pendingLocation, setPendingLocation] = useState<CheckInLocationInput | undefined>(undefined);
 
   const initials = useMemo(() => {
     return student.name
@@ -184,10 +216,33 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
       setLocating(false);
     }
 
+    if (requiresFace) {
+      // เปิด FaceScanModal → ได้ descriptor แล้วค่อย submit (handleFaceResult)
+      setPendingLocation(location);
+      setFaceModalOpen(true);
+      return;
+    }
+
     startTransition(async () => {
       const next = await checkInWithQrToken(token, location);
       setResult(next);
     });
+  }
+
+  function handleFaceResult(descriptor: number[]) {
+    setFaceModalOpen(false);
+    const location = pendingLocation;
+    startTransition(async () => {
+      const next = await checkInWithQrToken(token, location, descriptor as CheckInFaceInput);
+      setResult(next);
+      if (!next.ok && next.reason === "face_mismatch") {
+        setFaceRetry((n) => n + 1);
+      }
+    });
+  }
+
+  function handleFaceCancel() {
+    setFaceModalOpen(false);
   }
 
   const busy = isPending || locating;
@@ -218,6 +273,23 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
             คาบนี้ตรวจสอบตำแหน่ง — เมื่อกดยืนยัน เบราว์เซอร์จะขออนุญาตเข้าถึงตำแหน่งของคุณ
           </p>
         </div>
+      )}
+
+      {requiresFace && (
+        <div className="flex items-start gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-800">
+          <ScanFace className="h-5 w-5 shrink-0 mt-0.5" />
+          <p className="font-medium">
+            บัญชีนี้ตั้งค่ายืนยันใบหน้า — เมื่อกดยืนยัน เบราว์เซอร์จะขอเปิดกล้องเพื่อสแกนใบหน้า
+          </p>
+        </div>
+      )}
+
+      {faceRetry >= FACE_MAX_RETRY && (
+        <StatusPanel
+          tone="warning"
+          title="ลองหลายครั้งแล้วไม่ผ่าน"
+          message="กรุณาติดต่ออาจารย์เพื่อช่วยตรวจสอบตัวตน"
+        />
       )}
 
       {locationError && (
@@ -254,6 +326,14 @@ export default function StudentCheckInForm({ token, student, requiresLocation }:
           </>
         )}
       </button>
+
+      {faceModalOpen && (
+        <FaceScanModal
+          mode="verify"
+          onResult={(r) => handleFaceResult(r.descriptor)}
+          onCancel={handleFaceCancel}
+        />
+      )}
     </div>
   );
 }

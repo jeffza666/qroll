@@ -16,6 +16,11 @@ import {
   GEOFENCE_RADIUS_M,
   STUDENT_ACCURACY_MAX_M,
 } from "@/lib/geo/constants";
+import {
+  FACE_DESCRIPTOR_LENGTH,
+  FACE_MATCH_THRESHOLD,
+} from "@/lib/face/constants";
+import { euclideanDistance } from "@/lib/face/distance";
 
 // Phase 6: location payload จากนักศึกษา (optional — session ที่ไม่เปิด geofence ไม่ต้องส่ง)
 const locationInputSchema = z.object({
@@ -24,6 +29,12 @@ const locationInputSchema = z.object({
   accuracyM: z.number().int().min(0).max(100_000),
 });
 export type CheckInLocationInput = z.infer<typeof locationInputSchema>;
+
+// face descriptor optional — เฉพาะ user ที่ตั้ง face ไว้
+const faceInputSchema = z
+  .array(z.number().finite())
+  .length(FACE_DESCRIPTOR_LENGTH);
+export type CheckInFaceInput = z.infer<typeof faceInputSchema>;
 
 export type CheckInActionResult =
   | {
@@ -36,6 +47,8 @@ export type CheckInActionResult =
         distanceM: number;
         accuracyM: number;
       };
+      /** face verification ผ่าน (badge "ยืนยันใบหน้าแล้ว") */
+      faceVerified?: boolean;
     }
   | {
       ok: false;
@@ -49,10 +62,15 @@ export type CheckInActionResult =
         | "location_required"
         | "location_invalid"
         | "location_inaccurate"
-        | "out_of_range";
+        | "out_of_range"
+        | "face_required"
+        | "face_invalid"
+        | "face_mismatch";
       /** สำหรับ out_of_range → ระยะที่วัดได้จริงเอาไปโชว์ user ได้ */
       distanceM?: number;
       accuracyM?: number;
+      /** สำหรับ face_mismatch → distance ที่วัดได้ (debug/tune threshold) */
+      faceDistance?: number;
     };
 
 export type DemoCheckInActionResult =
@@ -75,7 +93,8 @@ function mapContextFailure(reason: "missing_token" | "invalid" | "expired" | "cl
 
 export async function checkInWithQrToken(
   token: string,
-  location?: CheckInLocationInput
+  location?: CheckInLocationInput,
+  faceDescriptor?: CheckInFaceInput
 ): Promise<CheckInActionResult> {
   const parsedToken = qrTokenSchema.safeParse(token);
   if (!parsedToken.success) return { ok: false, reason: "invalid" };
@@ -108,6 +127,30 @@ export async function checkInWithQrToken(
   });
 
   if (!enrollment) return { ok: false, reason: "not_enrolled" };
+
+  // user ที่ seed face แล้ว ต้องส่ง descriptor มาเทียบ
+  // ยังไม่ seed = ข้าม (backward compat)
+  const userFace = await db.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const hasStoredFace = (userFace?.faceDescriptor.length ?? 0) > 0;
+  let faceVerified = false;
+  if (hasStoredFace) {
+    if (!faceDescriptor) return { ok: false, reason: "face_required" };
+    const parsedFace = faceInputSchema.safeParse(faceDescriptor);
+    if (!parsedFace.success) return { ok: false, reason: "face_invalid" };
+    const dist = euclideanDistance(userFace!.faceDescriptor, parsedFace.data);
+    const passed = dist <= FACE_MATCH_THRESHOLD;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[face] distance=${dist.toFixed(4)} threshold=${FACE_MATCH_THRESHOLD} result=${passed ? "PASS" : "FAIL"}`,
+    );
+    if (!passed) {
+      return { ok: false, reason: "face_mismatch", faceDistance: dist };
+    }
+    faceVerified = true;
+  }
 
   // Phase 6: geofence verification (server-authoritative)
   // ถ้า session มี anchor → ต้องมี location จาก client + ผ่าน distance check
@@ -177,6 +220,7 @@ export async function checkInWithQrToken(
         checkedInAt: now,
         distanceM: verifiedDistanceM,
         accuracyM: verifiedAccuracyM,
+        faceVerified,
       },
       select: { status: true, checkedInAt: true },
     });
@@ -189,6 +233,7 @@ export async function checkInWithQrToken(
       ...(verifiedDistanceM !== null && verifiedAccuracyM !== null
         ? { locationVerified: { distanceM: verifiedDistanceM, accuracyM: verifiedAccuracyM } }
         : {}),
+      ...(faceVerified ? { faceVerified: true } : {}),
     };
   } catch (error) {
     if (

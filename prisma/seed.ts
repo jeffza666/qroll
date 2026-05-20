@@ -15,13 +15,26 @@ async function main() {
     },
   });
 
-  const student = await db.user.upsert({
-    where: { email: "test.student@dome.tu.ac.th" },
+    const teacher2 = await db.user.upsert({
+    where: { email: "teacher2@tu.ac.th" },
     update: {},
+    create: {
+      email: "teacher2@tu.ac.th",
+      name: "อาจารย์ทดสอบ 2",
+      role: "TEACHER",
+    },
+  });
+
+  const student = await db.user.upsert({
+    where: { studentId: "6500000001" },
+    update: {
+      email: "test.student@dome.tu.ac.th",
+      name: "นักศึกษาทดสอบ",
+    },
     create: {
       email: "test.student@dome.tu.ac.th",
       name: "นักศึกษาทดสอบ",
-      studentId: "0000000001",
+      studentId: "6500000001",
       role: "STUDENT",
     },
   });
@@ -39,7 +52,35 @@ async function main() {
     },
   });
 
-  console.log("Seeded:", { teacher, student, preImportedStudent });
+  const student2 = await db.user.upsert({
+    where: { studentId: "6500000002" },
+    update: {
+      email: "test.student2@dome.tu.ac.th",
+      name: "นักศึกษาทดสอบ2",
+    },
+    create: {
+      email: "test.student2@dome.tu.ac.th",
+      name: "นักศึกษาทดสอบ2",
+      studentId: "6500000002",
+      role: "STUDENT",
+    },
+  });
+
+  const student3 = await db.user.upsert({
+    where: { studentId: "6500000003" },
+    update: {
+      email: "test.student3@dome.tu.ac.th",
+      name: "นักศึกษาทดสอบ3",
+    },
+    create: {
+      email: "test.student3@dome.tu.ac.th",
+      name: "นักศึกษาทดสอบ3",
+      studentId: "6500000003",
+      role: "STUDENT",
+    },
+  });
+
+  console.log("Seeded:", { teacher, teacher2, student, preImportedStudent, student2, student3 });
 }
 
 main().catch(console.error).finally(() => db.$disconnect());
