@@ -43,9 +43,17 @@ export const FACE_MAX_RETRY = 3;
  */
 export const FACE_DESCRIPTOR_LENGTH = 1024;
 
+import { isProductionDeployment } from "@/lib/env";
+
 // admin seed page = mock layer แทน TU photo API
 // production จริงปิด flag — sync ผ่าน TU API ไม่ใช่อัพเอง
 // pattern เดียวกับ DEMO_CHECKIN_ENABLED
+//
+// Hard guard: production deployment จริงปิดเสมอ ไม่สนใจ ENABLE_FACE_SEED
+// (รวมถึง self-host / non-Vercel — ดู isProductionDeployment)
+// ป้องกัน env config รั่ว — แม้ตั้ง ENABLE_FACE_SEED=true โดยไม่ตั้งใจ
+// page จะไม่เปิด เพราะ guard อยู่ใน code ไม่ใช่ใน config
 export function isFaceSeedEnabled() {
+  if (isProductionDeployment()) return false;
   return process.env.ENABLE_FACE_SEED === "true";
 }

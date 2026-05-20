@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { authConfig, getEmailDomain, isAllowedEmail, normalizeEmail } from "@/lib/auth-config";
 import { db } from "@/lib/db";
+import { isProductionDeployment } from "@/lib/env";
 
 const DEFAULT_TU_API_URL = "https://restapi.tu.ac.th/api/v1/auth/Ad/verify";
 
@@ -214,6 +215,15 @@ export const {
         const { username, password } = parsed.data;
 
         if (process.env.BYPASS_TU_AUTH === "true") {
+          // Hard guard: BYPASS_TU_AUTH ห้ามทำงานบน production deployment จริง
+          // เด็ดขาด (รวม self-host / non-Vercel — ดู isProductionDeployment)
+          // ถ้า env config รั่ว (ตั้ง scope ผิด) ให้ login ล้มเหลวเสียงดัง
+          // ใน log แทนที่จะเงียบ ๆ ปล่อยให้ใครก็ได้สวมรอย user
+          if (isProductionDeployment()) {
+            throw new Error(
+              "BYPASS_TU_AUTH is not allowed in production deployment",
+            );
+          }
           return authorizeBypass(username);
         }
 
