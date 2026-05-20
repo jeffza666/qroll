@@ -59,6 +59,9 @@ export default async function CourseReportPage({ params }: Props) {
     label: sessionLabel(s.startsAt),
   }));
 
+  const totalSessions = sessions.length;
+  const totalEnrolled = enrollments.length;
+
   const matrixStudents = enrollments.map((en) => {
     const cells: (AttendanceStatus | null)[] = sessions.map((s) => {
       const att = s.attendances.find((a) => a.studentId === en.student.id);
@@ -69,7 +72,7 @@ export default async function CourseReportPage({ params }: Props) {
     const lateCount = cells.filter((c) => c === "LATE").length;
     const absentCount = cells.filter((c) => c === "ABSENT").length;
     const excusedCount = cells.filter((c) => c === "EXCUSED").length;
-    const counted = presentCount + lateCount + absentCount;
+    const counted = totalSessions - excusedCount;
 
     return {
       enrollmentId: en.id,
@@ -96,17 +99,18 @@ export default async function CourseReportPage({ params }: Props) {
     { safe: 0, warn: 0, danger: 0 }
   );
 
-  // Per-session pct using same formula as avgPct: (P + L*0.5) / counted
+  // Per-session pct — หารด้วย enrolled - EXCUSED (เคสนี้ session ใด)
+  // เพื่อให้สูตรเดียวกับ session report / dashboard
   const sessionStats = sessions.map((s) => {
     let p = 0;
     let l = 0;
-    let a = 0;
+    let e = 0;
     for (const att of s.attendances) {
       if (att.status === "PRESENT") p += 1;
       else if (att.status === "LATE") l += 1;
-      else if (att.status === "ABSENT") a += 1;
+      else if (att.status === "EXCUSED") e += 1;
     }
-    const counted = p + l + a;
+    const counted = totalEnrolled - e;
     return {
       label: sessionLabel(s.startsAt),
       pct: counted > 0 ? Math.round(((p + l * 0.5) / counted) * 100) : null,
@@ -116,14 +120,12 @@ export default async function CourseReportPage({ params }: Props) {
   const totalAbsent = matrixStudents.reduce((sum, s) => sum + s.absentCount, 0);
   const totalLate = matrixStudents.reduce((sum, s) => sum + s.lateCount, 0);
 
-  // Avg pct — overall
-  const allCounted = matrixStudents.flatMap((s) => {
-    const counted = s.presentCount + s.lateCount + s.absentCount;
-    if (counted === 0) return [];
-    return [(s.presentCount + s.lateCount * 0.5) / counted];
-  });
+  // Avg pct — overall เฉลี่ยจากเรท per-student (consistent กับสูตรใหม่)
+  const studentPcts = matrixStudents.flatMap((s) => (s.pct === null ? [] : [s.pct]));
   const avgPct =
-    allCounted.length > 0 ? Math.round((allCounted.reduce((x, y) => x + y, 0) / allCounted.length) * 100) : null;
+    studentPcts.length > 0
+      ? Math.round(studentPcts.reduce((x, y) => x + y, 0) / studentPcts.length)
+      : null;
 
   const csvFilename = `report-${course.code}${course.section ? `-sec${course.section}` : ""}-${course.semester}.csv`;
 
@@ -195,11 +197,41 @@ export default async function CourseReportPage({ params }: Props) {
                 </p>
               </div>
               <div className="text-center">
-                <div className="mb-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100">
-                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                <div
+                  className={`mb-2 inline-flex h-11 w-11 items-center justify-center rounded-full ${
+                    avgPct === null
+                      ? "bg-slate-200"
+                      : avgPct >= 80
+                        ? "bg-emerald-100"
+                        : avgPct >= 60
+                          ? "bg-amber-100"
+                          : "bg-red-100"
+                  }`}
+                >
+                  <TrendingUp
+                    className={`h-5 w-5 ${
+                      avgPct === null
+                        ? "text-slate-500"
+                        : avgPct >= 80
+                          ? "text-emerald-600"
+                          : avgPct >= 60
+                            ? "text-amber-600"
+                            : "text-red-600"
+                    }`}
+                  />
                 </div>
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">เข้าเรียนเฉลี่ย</p>
-                <p className={`font-inter text-3xl font-black ${avgPct !== null ? "text-emerald-600" : "text-slate-900"}`}>
+                <p
+                  className={`font-inter text-3xl font-black ${
+                    avgPct === null
+                      ? "text-slate-900"
+                      : avgPct >= 80
+                        ? "text-emerald-600"
+                        : avgPct >= 60
+                          ? "text-amber-600"
+                          : "text-red-600"
+                  }`}
+                >
                   {avgPct !== null ? `${avgPct}%` : "—"}
                 </p>
               </div>

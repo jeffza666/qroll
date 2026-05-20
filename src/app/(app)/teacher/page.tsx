@@ -34,7 +34,7 @@ export default async function TeacherDashboard() {
   const todayDow = bangkokNow.getDay();
   const todayLabel = `${DAYS[todayDow]}ที่ ${bangkokNow.getDate()} ${MONTHS_TH[bangkokNow.getMonth()]} ${bangkokNow.getFullYear() + 543}`;
 
-  const [courseCount, enrollmentCount, todaySchedules, offScheduleSessions, attendanceStats, latestClosedSession] =
+  const [courseCount, enrollmentCount, todaySchedules, offScheduleSessions, closedSessionsForAvg, latestClosedSession] =
     await Promise.all([
       // Filter เฉพาะ active courses (ไม่นับ archived) — archived = "จบเทอม" ไม่ควรเด้งใน today's schedule
       db.course.count({ where: { teacherId: user.id, archivedAt: null } }),
@@ -101,13 +101,21 @@ export default async function TeacherDashboard() {
           },
         },
       }),
-      db.attendance.groupBy({
-        by: ["status"],
-        where: { classSession: { course: { teacherId: user.id } } },
-        _count: { status: true },
+      // ดึง closed sessions ทุกคาบของอาจารย์ พร้อม enrolled count + attendance status
+      // archivedAt: null — ไม่นับคลาสที่ "จบเทอม" แล้ว เพราะ % ควรสะท้อนคลาสที่ active อยู่
+      db.classSession.findMany({
+        where: { isOpen: false, course: { teacherId: user.id, archivedAt: null } },
+        select: {
+          attendances: { select: { status: true } },
+          course: {
+            select: {
+              _count: { select: { enrollments: { where: { droppedAt: null } } } },
+            },
+          },
+        },
       }),
       db.classSession.findFirst({
-        where: { isOpen: false, course: { teacherId: user.id } },
+        where: { isOpen: false, course: { teacherId: user.id, archivedAt: null } },
         orderBy: { startsAt: "desc" },
         select: {
           id: true,
@@ -125,12 +133,25 @@ export default async function TeacherDashboard() {
       }),
     ]);
 
-  const statMap = Object.fromEntries(attendanceStats.map((s) => [s.status, s._count.status]));
-  const present = statMap["PRESENT"] ?? 0;
-  const late = statMap["LATE"] ?? 0;
-  const absent = statMap["ABSENT"] ?? 0;
-  const counted = present + late + absent;
-  const avgPct = counted > 0 ? Math.round(((present + late * 0.5) / counted) * 100) : null;
+  // อัตราเข้าเรียนเฉลี่ย overall: รวมทุก closed session ของอาจารย์
+  // numerator   = Σ (PRESENT + LATE×0.5)
+  // denominator = Σ (enrolled − EXCUSED) ต่อ session
+  let totalPresentish = 0;
+  let totalExpected = 0;
+  for (const s of closedSessionsForAvg) {
+    let p = 0;
+    let l = 0;
+    let e = 0;
+    for (const a of s.attendances) {
+      if (a.status === "PRESENT") p++;
+      else if (a.status === "LATE") l++;
+      else if (a.status === "EXCUSED") e++;
+    }
+    totalPresentish += p + l * 0.5;
+    totalExpected += s.course._count.enrollments - e;
+  }
+  const avgPct =
+    totalExpected > 0 ? Math.round((totalPresentish / totalExpected) * 100) : null;
   const activeScheduleCount = todaySchedules.filter((s) => s.classSessions.length > 0).length;
   const todayClassCount = todaySchedules.length + offScheduleSessions.length;
   const activeClassCount = activeScheduleCount + offScheduleSessions.length;
@@ -142,10 +163,11 @@ export default async function TeacherDashboard() {
   }
   const latestTotal =
     latestStats.PRESENT + latestStats.LATE + latestStats.ABSENT + latestStats.EXCUSED;
-  const latestCounted = latestStats.PRESENT + latestStats.LATE + latestStats.ABSENT;
+  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
+  const latestCheckedIn = latestStats.PRESENT + latestStats.LATE;
   const latestPct =
-    latestCounted > 0
-      ? Math.round(((latestStats.PRESENT + latestStats.LATE * 0.5) / latestCounted) * 100)
+    latestEnrolled > 0
+      ? Math.round(((latestStats.PRESENT + latestStats.LATE * 0.5) / latestEnrolled) * 100)
       : null;
   const segments: Array<{
     id: string;
@@ -166,7 +188,7 @@ export default async function TeacherDashboard() {
   const dashArray = 251.2;
   let cumulativePercent = 0;
   const donutSegments = segments.map((s) => {
-    const percent = latestTotal > 0 ? s.count / latestTotal : 0;
+    const percent = latestEnrolled > 0 ? s.count / latestEnrolled : 0;
     const dashOffset = dashArray - percent * dashArray;
     const angle = cumulativePercent * 360 - 90;
     cumulativePercent += percent;
@@ -251,7 +273,17 @@ export default async function TeacherDashboard() {
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <div
+                  className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg ${
+                    avgPct === null
+                      ? "from-slate-400 to-slate-500 shadow-slate-500/30"
+                      : avgPct >= 80
+                        ? "from-emerald-500 to-emerald-600 shadow-emerald-500/30"
+                        : avgPct >= 60
+                          ? "from-amber-500 to-amber-600 shadow-amber-500/30"
+                          : "from-red-500 to-red-600 shadow-red-500/30"
+                  }`}
+                >
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -263,7 +295,17 @@ export default async function TeacherDashboard() {
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 {avgPct !== null ? (
-                  <h2 className="text-4xl font-black text-emerald-600 font-inter">{avgPct}%</h2>
+                  <h2
+                    className={`text-4xl font-black font-inter ${
+                      avgPct >= 80
+                        ? "text-emerald-600"
+                        : avgPct >= 60
+                          ? "text-amber-600"
+                          : "text-red-600"
+                    }`}
+                  >
+                    {avgPct}%
+                  </h2>
                 ) : (
                   <h2 className="text-4xl font-black text-slate-400 font-inter">—</h2>
                 )}
@@ -578,7 +620,7 @@ export default async function TeacherDashboard() {
                       )}
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] border border-slate-50">
-                      {latestTotal === 0 ? (
+                      {latestEnrolled === 0 ? (
                         <>
                           <PieChart className="w-9 h-9 text-slate-200 mb-1" strokeWidth={1.5} />
                           <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
@@ -587,11 +629,12 @@ export default async function TeacherDashboard() {
                         </>
                       ) : (
                         <>
-                          <span className="text-4xl font-black font-inter text-slate-800 leading-none">
-                            {latestTotal}
+                          <span className="font-inter font-black text-slate-800 leading-none">
+                            <span className="text-4xl">{latestCheckedIn}</span>
+                            <span className="text-lg font-bold text-slate-400">/{latestEnrolled}</span>
                           </span>
                           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                            คนทั้งหมด
+                            เข้าเรียน
                           </span>
                         </>
                       )}

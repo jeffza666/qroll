@@ -87,10 +87,11 @@ export default async function CourseDetailPage({ params }: Props) {
     ? "/teacher/courses?show=archived"
     : "/teacher/courses";
 
+  const totalEnrolled = course._count.enrollments;
   const sessionRows = course.classSessions.map((s) => {
     const stats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
     for (const a of s.attendances) stats[a.status]++;
-    const counted = stats.PRESENT + stats.LATE + stats.ABSENT;
+    const counted = totalEnrolled - stats.EXCUSED;
     const presentPct =
       counted > 0
         ? Math.round(((stats.PRESENT + stats.LATE * 0.5) / counted) * 100)

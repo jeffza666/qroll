@@ -41,9 +41,7 @@ export default function SessionReport({ sessionId, sessionMeta, rows }: Props) {
 
   const totalEnrolled = rows.filter((r) => !r.isDropped).length;
 
-  // avgAttendancePct: นับ PRESENT + LATE*0.5 / (PRESENT + LATE + ABSENT)
-  // (EXCUSED ไม่นับเพราะลาอย่างมีเหตุผล) — null ถ้ายังไม่มีใครเช็คเลย
-  const counted = counts.PRESENT + counts.LATE + counts.ABSENT;
+  const counted = totalEnrolled - counts.EXCUSED;
   const avgAttendancePct =
     counted > 0
       ? Math.round(((counts.PRESENT + counts.LATE * 0.5) / counted) * 100)
