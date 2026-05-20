@@ -25,7 +25,10 @@ function parseTokenFromQrText(text: string): string | null {
 
 function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (token: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
+  const scannerRef = useRef<{
+    instance: { stop: () => Promise<void>; clear: () => void };
+    started: boolean;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
         containerRef.current.id = elementId;
 
         const instance = new Html5Qrcode(elementId, { verbose: false });
-        scannerRef.current = instance;
+        scannerRef.current = { instance, started: false };
 
         await instance.start(
           { facingMode: "environment" },
@@ -48,11 +51,14 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
           (decodedText) => {
             const token = parseTokenFromQrText(decodedText);
             if (!token) return;
+            const ref = scannerRef.current;
+            if (!ref || !ref.started) return;
+            ref.started = false;
             instance
               .stop()
               .catch(() => {})
               .finally(() => {
-                instance.clear();
+                try { instance.clear(); } catch { /* noop */ }
                 onResult(token);
               });
           },
@@ -60,6 +66,14 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
             // ignore decode errors per frame
           }
         );
+        if (cancelled) {
+          // unmounted ระหว่าง start — หยุดทันที
+          instance.stop().catch(() => {}).finally(() => {
+            try { instance.clear(); } catch { /* noop */ }
+          });
+          return;
+        }
+        if (scannerRef.current) scannerRef.current.started = true;
       } catch (err) {
         if (cancelled) return;
         setError(
@@ -72,13 +86,16 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
 
     return () => {
       cancelled = true;
-      const inst = scannerRef.current;
-      if (inst) {
-        inst
+      const ref = scannerRef.current;
+      scannerRef.current = null;
+      if (ref && ref.started) {
+        ref.started = false;
+        ref.instance
           .stop()
           .catch(() => {})
-          .finally(() => inst.clear());
-        scannerRef.current = null;
+          .finally(() => {
+            try { ref.instance.clear(); } catch { /* noop */ }
+          });
       }
     };
   }, [onResult]);
