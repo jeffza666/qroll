@@ -5,6 +5,7 @@ import type { AttendanceStatus } from "@prisma/client";
 
 import ReportClient from "@/components/report/ReportClient";
 import ExportCsvButton from "@/components/report/ExportCsvButton";
+import PageHeader from "@/components/shell/PageHeader";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -120,7 +121,7 @@ export default async function CourseReportPage({ params }: Props) {
   const totalAbsent = matrixStudents.reduce((sum, s) => sum + s.absentCount, 0);
   const totalLate = matrixStudents.reduce((sum, s) => sum + s.lateCount, 0);
 
-  // Avg pct — overall เฉลี่ยจากเรท per-student (consistent กับสูตรใหม่)
+  // Avg pct — เฉลี่ยจาก rate ของแต่ละ student (ไม่ใช่ของทั้ง session)
   const studentPcts = matrixStudents.flatMap((s) => (s.pct === null ? [] : [s.pct]));
   const avgPct =
     studentPcts.length > 0
@@ -131,8 +132,8 @@ export default async function CourseReportPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-200 bg-white/85 px-6 backdrop-blur-md lg:px-10">
-        <div className="flex min-w-0 items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={`/teacher/courses/${id}`}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -146,19 +147,20 @@ export default async function CourseReportPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href={`/teacher/courses/${id}/students`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="จัดการนักศึกษา"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <Users className="w-4 h-4" />
-            จัดการนักศึกษา
+            <span className="hidden lg:inline">จัดการนักศึกษา</span>
           </Link>
           <ExportCsvButton filename={csvFilename} sessions={matrixSessions} students={matrixStudents} />
         </div>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="mx-auto max-w-6xl">
           {/* CourseHeader card with inline stats */}
           <div className="mb-8 flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -170,7 +172,7 @@ export default async function CourseReportPage({ params }: Props) {
                 </h2>
               </div>
               <div className="mb-2 flex flex-wrap items-center gap-4">
-                <h3 className="font-inter text-4xl font-black leading-none tracking-tight text-slate-900 md:text-5xl">
+                <h3 className="font-inter text-3xl sm:text-4xl font-black leading-none tracking-tight text-slate-900 md:text-5xl">
                   {course.code}
                 </h3>
                 {course.section && (

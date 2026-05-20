@@ -4,6 +4,7 @@ import { ArrowLeft, PieChart, Users } from "lucide-react";
 
 import SessionReport from "@/components/sessions/SessionReport";
 import SessionView from "@/components/sessions/SessionView";
+import PageHeader from "@/components/shell/PageHeader";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { isDemoCheckInEnabled } from "@/lib/checkin";
 import { db } from "@/lib/db";
@@ -120,8 +121,8 @@ export default async function SessionDetailPage({ params, searchParams }: Props)
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-200 bg-white/85 px-6 backdrop-blur-md lg:px-10">
-        <div className="flex min-w-0 items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={`/teacher/courses/${raw.course.id}?tab=schedule`}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -134,23 +135,25 @@ export default async function SessionDetailPage({ params, searchParams }: Props)
             <p className="truncate text-sm text-slate-500">{raw.course.name} • เทอม {raw.course.semester}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href={`/teacher/courses/${raw.course.id}/students`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="จัดการนักศึกษา"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <Users className="w-4 h-4" />
-            จัดการนักศึกษา
+            <span className="hidden lg:inline">จัดการนักศึกษา</span>
           </Link>
           <Link
             href={`/teacher/courses/${raw.course.id}/report`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="ดูรายงานสรุป"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <PieChart className="w-4 h-4" />
-            ดูรายงานสรุป
+            <span className="hidden lg:inline">ดูรายงานสรุป</span>
           </Link>
         </div>
-      </header>
+      </PageHeader>
 
       {showLiveView ? (
         <SessionView

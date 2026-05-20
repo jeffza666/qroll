@@ -5,6 +5,7 @@ import { requireTeacher } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import CourseForm from "@/components/courses/CourseForm";
 import CourseGeofenceSection from "@/components/courses/CourseGeofenceSection";
+import PageHeader from "@/components/shell/PageHeader";
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditCoursePage({ params }: Props) {
@@ -24,38 +25,40 @@ export default async function EditCoursePage({ params }: Props) {
 
   return (
     <>
-      <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-10">
-        <div className="flex items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={`/teacher/courses/${id}`}
-            className="text-slate-500 hover:text-slate-900 transition-colors"
+            className="shrink-0 text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">แก้ไขรายวิชา</h1>
-            <p className="text-sm text-slate-500">{course.code}{course.section ? ` • ${course.section}` : ""} • {course.name}</p>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold text-slate-800">แก้ไขรายวิชา</h1>
+            <p className="truncate text-sm text-slate-500">{course.code}{course.section ? ` • ${course.section}` : ""} • {course.name}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href={`/teacher/courses/${id}/students`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="จัดการนักศึกษา"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <Users className="w-4 h-4" />
-            จัดการนักศึกษา
+            <span className="hidden lg:inline">จัดการนักศึกษา</span>
           </Link>
           <Link
             href={`/teacher/courses/${id}/report`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="ดูรายงานสรุป"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <PieChart className="w-4 h-4" />
-            ดูรายงานสรุป
+            <span className="hidden lg:inline">ดูรายงานสรุป</span>
           </Link>
         </div>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="max-w-2xl mx-auto">
           <CourseForm
             mode="edit"

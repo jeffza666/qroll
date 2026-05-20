@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import PageHeader from "@/components/shell/PageHeader";
 import { requireTeacher } from "@/lib/auth-helpers";
 import { isFaceSeedEnabled } from "@/lib/face/constants";
 import {
@@ -92,11 +93,11 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center border-b border-slate-200 bg-white/80 px-10 backdrop-blur-md">
+      <PageHeader>
         <h1 className="text-2xl font-black text-slate-900">ตั้งค่าระบบ</h1>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="mx-auto max-w-4xl animate-fade-in pb-12">
           <div className="mb-6 ml-1 flex items-center gap-3">
             <div className="h-8 w-2 rounded-full bg-[#990000] shadow-md" />

@@ -1,3 +1,4 @@
+import PageHeader from "@/components/shell/PageHeader";
 import { requireTeacher } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import {
@@ -70,7 +71,6 @@ export default async function TeacherDashboard() {
         },
         orderBy: { startTime: "asc" },
       }),
-      // open sessions ที่ไม่ได้อยู่ในตารางวันนี้ — เช่น เปิดวิชาพุธในวันจันทร์
       db.classSession.findMany({
         where: {
           isOpen: true,
@@ -101,8 +101,7 @@ export default async function TeacherDashboard() {
           },
         },
       }),
-      // ดึง closed sessions ทุกคาบของอาจารย์ พร้อม enrolled count + attendance status
-      // archivedAt: null — ไม่นับคลาสที่ "จบเทอม" แล้ว เพราะ % ควรสะท้อนคลาสที่ active อยู่
+      // archivedAt: null — ไม่นับคลาสจบเทอม เพราะ % ควรสะท้อนคลาส active
       db.classSession.findMany({
         where: { isOpen: false, course: { teacherId: user.id, archivedAt: null } },
         select: {
@@ -133,9 +132,6 @@ export default async function TeacherDashboard() {
       }),
     ]);
 
-  // อัตราเข้าเรียนเฉลี่ย overall: รวมทุก closed session ของอาจารย์
-  // numerator   = Σ (PRESENT + LATE×0.5)
-  // denominator = Σ (enrolled − EXCUSED) ต่อ session
   let totalPresentish = 0;
   let totalExpected = 0;
   for (const s of closedSessionsForAvg) {
@@ -156,7 +152,6 @@ export default async function TeacherDashboard() {
   const todayClassCount = todaySchedules.length + offScheduleSessions.length;
   const activeClassCount = activeScheduleCount + offScheduleSessions.length;
 
-  // Donut data = latest closed session breakdown (not overall)
   const latestStats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
   if (latestClosedSession) {
     for (const a of latestClosedSession.attendances) latestStats[a.status]++;
@@ -206,27 +201,28 @@ export default async function TeacherDashboard() {
   return (
     <>
       {/* Top header */}
-      <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-10">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900">ภาพรวมการเรียนการสอน</h1>
-          <p className="text-sm text-slate-500">มหาวิทยาลัยธรรมศาสตร์</p>
+      <PageHeader className="justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-black text-slate-900">ภาพรวมการเรียนการสอน</h1>
+          <p className="truncate text-sm text-slate-500">มหาวิทยาลัยธรรมศาสตร์</p>
         </div>
         <Link
           href="/teacher/courses/new"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#990000] px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000] whitespace-nowrap"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#990000] px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000] whitespace-nowrap"
         >
           <Plus className="h-4 w-4 !text-white" />
-          สร้างวิชาใหม่
+          <span className="hidden sm:inline">สร้างวิชาใหม่</span>
+          <span className="sm:hidden">วิชาใหม่</span>
         </Link>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="animate-fade-in pb-8">
           {/* Stat cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
             <Link
               href="/teacher/courses"
-              className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+              className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
             >
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
@@ -240,7 +236,7 @@ export default async function TeacherDashboard() {
               </div>
             </Link>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 flex items-center justify-center shadow-lg shadow-red-900/20">
                   <CalendarDays className="w-6 h-6 text-white" />
@@ -258,7 +254,7 @@ export default async function TeacherDashboard() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                   <Users className="w-6 h-6 text-white" />
@@ -271,7 +267,7 @@ export default async function TeacherDashboard() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-4 mb-3">
                 <div
                   className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg ${
@@ -314,10 +310,10 @@ export default async function TeacherDashboard() {
           </div>
 
           {/* Two-column: schedule table + attendance donut */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
             {/* Schedule table */}
             <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-8 py-7 border-b border-slate-100 flex justify-between items-center bg-white relative overflow-hidden">
+              <div className="px-5 py-5 sm:px-8 sm:py-7 border-b border-slate-100 flex justify-between items-center bg-white relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#990000]" />
                 <div>
                   <h3 className="text-xl font-black text-slate-800">
@@ -366,7 +362,7 @@ export default async function TeacherDashboard() {
                         const pct = totalEnrolled > 0 ? Math.round((checkedIn / totalEnrolled) * 100) : 0;
                         return (
                           <tr key={sess.id} className="bg-emerald-50/50 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300">
-                            <td className="px-6 py-5 border-l-4 border-l-emerald-500">
+                            <td className="px-3 py-4 sm:px-6 sm:py-5 border-l-4 border-l-emerald-500">
                               <div className="flex items-center gap-4">
                                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-white shadow-sm">
                                   <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
@@ -385,7 +381,7 @@ export default async function TeacherDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-5 align-middle">
+                            <td className="px-3 py-4 sm:px-4 sm:py-5 align-middle">
                               <p className="w-fit rounded-md bg-slate-100 px-2 py-0.5 font-inter text-base font-bold text-slate-700">
                                 {fmtBkk(sess.startsAt)}–{fmtBkk(sess.endsAt)}
                               </p>
@@ -395,7 +391,7 @@ export default async function TeacherDashboard() {
                                 </p>
                               )}
                             </td>
-                            <td className="px-4 py-5 align-middle">
+                            <td className="px-3 py-4 sm:px-4 sm:py-5 align-middle">
                               <div className="flex w-full max-w-[150px] flex-col gap-2">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="font-black uppercase tracking-wide text-emerald-700">กำลังเช็คชื่อ</span>
@@ -413,7 +409,7 @@ export default async function TeacherDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-5 text-center align-middle">
+                            <td className="px-3 py-4 sm:px-6 sm:py-5 text-center align-middle">
                               <Link
                                 href={`/teacher/sessions/${sess.id}`}
                                 className="inline-flex w-full max-w-[160px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold !text-white shadow-md shadow-emerald-500/20 transition-all hover:-translate-y-0.5 hover:bg-emerald-600"
@@ -441,7 +437,7 @@ export default async function TeacherDashboard() {
                             }`}
                           >
                             <td
-                              className={`px-6 py-5 ${
+                              className={`px-3 py-4 sm:px-6 sm:py-5 ${
                                 isActive
                                   ? "border-l-4 border-l-emerald-500"
                                   : "border-l-4 border-transparent rounded-l-2xl"
@@ -477,7 +473,7 @@ export default async function TeacherDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-5 align-middle">
+                            <td className="px-3 py-4 sm:px-4 sm:py-5 align-middle">
                               <p className="text-base font-bold text-slate-700 font-inter bg-slate-100 w-fit px-2 py-0.5 rounded-md">
                                 {s.startTime}–{s.endTime}
                               </p>
@@ -487,7 +483,7 @@ export default async function TeacherDashboard() {
                                 </p>
                               )}
                             </td>
-                            <td className="px-4 py-5 align-middle">
+                            <td className="px-3 py-4 sm:px-4 sm:py-5 align-middle">
                               {isActive ? (
                                 <div className="flex flex-col gap-2 w-full max-w-[150px]">
                                   <div className="flex items-center justify-between text-xs">
@@ -514,7 +510,7 @@ export default async function TeacherDashboard() {
                                 </span>
                               )}
                             </td>
-                            <td className="px-6 py-5 align-middle text-center rounded-r-2xl">
+                            <td className="px-3 py-4 sm:px-6 sm:py-5 align-middle text-center rounded-r-2xl">
                               {isActive ? (
                                 <Link
                                   href={`/teacher/sessions/${activeSession.id}`}
@@ -544,7 +540,7 @@ export default async function TeacherDashboard() {
 
             {/* Latest class summary donut */}
             <div className="self-start overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:sticky xl:top-28">
-              <div className="h-32 bg-[#990000] p-6 relative overflow-hidden">
+              <div className="h-28 sm:h-32 bg-[#990000] p-5 sm:p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-xl" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-10 rounded-full -ml-10 -mb-10 blur-lg" />
                 <h3 className="text-2xl font-black text-white relative z-10 tracking-wide flex items-center gap-2">
@@ -554,7 +550,7 @@ export default async function TeacherDashboard() {
                   {latestDateLabel ?? "ยังไม่มีคาบที่ปิดแล้ว"}
                 </p>
               </div>
-              <div className="p-6 flex flex-col flex-1 bg-white relative">
+              <div className="p-5 sm:p-6 flex flex-col flex-1 bg-white relative">
                 {latestClosedSession ? (
                   <Link
                     href={`/teacher/sessions/${latestClosedSession.id}`}

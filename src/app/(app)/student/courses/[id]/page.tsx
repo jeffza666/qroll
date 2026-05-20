@@ -13,6 +13,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import AttendanceRow from "@/components/student/AttendanceRow";
+import PageHeader from "@/components/shell/PageHeader";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -66,26 +67,26 @@ export default async function StudentCourseDetailPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center justify-between gap-3 border-b border-slate-200 bg-white/80 pl-6 pr-16 backdrop-blur-md lg:px-10">
-        <div className="flex items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href="/student"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
             aria-label="กลับ"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div>
-            <h1 className="font-inter text-2xl font-black text-slate-900">{course.code}</h1>
-            <p className="text-sm text-slate-500">{course.name}</p>
+          <div className="min-w-0">
+            <h1 className="truncate font-inter text-2xl font-black text-slate-900">{course.code}</h1>
+            <p className="truncate text-sm text-slate-500">{course.name}</p>
           </div>
         </div>
         {enrollment.droppedAt && (
-          <span className="font-inter rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+          <span className="font-inter shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
             ถอนแล้ว
           </span>
         )}
-      </header>
+      </PageHeader>
 
       <main className="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10">
         <div className="animate-fade-in pb-8">
@@ -209,7 +210,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
           {avgPct !== null && (
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-bold text-slate-500">อัตราเข้าเรียน (PRESENT + LATE×0.5)</p>
+                <p className="text-sm font-bold text-slate-500">อัตราเข้าเรียน</p>
                 <p
                   className={`font-inter text-2xl font-black ${
                     avgPct >= 80

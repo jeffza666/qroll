@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireTeacher } from "@/lib/auth-helpers";
 import { isFaceSeedEnabled } from "@/lib/face/constants";
+import PageHeader from "@/components/shell/PageHeader";
 
 import FaceSeedClient from "./FaceSeedClient";
 
@@ -37,22 +38,25 @@ export default async function FaceSeedPage() {
   }));
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-10">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <header>
-          <h1 className="text-xl font-extrabold text-slate-900">
-            Face Seed (จำลอง TU Photo Sync)
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
+    <>
+      <PageHeader>
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-black text-slate-900">Face Seed</h1>
+          <p className="truncate text-sm text-slate-500">จำลอง TU Photo Sync</p>
+        </div>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <p className="text-sm text-slate-600">
             หน้านี้จำลองการดึงรูปจากระบบทะเบียน TU
             ในระบบจริงจะ sync ผ่าน API; ใน prototype นี้อาจารย์อัปโหลดรูปแทน
             ระบบจะแปลงรูปเป็น descriptor (~1024 ตัวเลข) แล้วเก็บแค่ตัวเลข
             <strong> ไม่เก็บรูปต้นฉบับ</strong>
           </p>
-        </header>
 
-        <FaceSeedClient students={items} />
+          <FaceSeedClient students={items} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
