@@ -189,8 +189,8 @@ export default function RosterImport({ courseId }: { courseId: string }) {
                     <PreviewPanel preview={preview} />
 
                     {preview.type === "ready" && (
-                      <div className="space-y-1 rounded-xl border border-red-100 bg-red-50/60 px-4 py-3">
-                        <p className="text-sm font-medium text-red-700">
+                      <div className="space-y-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <p className="text-sm font-medium text-amber-800">
                           * กรุณาตรวจรหัสนักศึกษาให้ถูกต้องก่อน import เนื่องจากไม่สามารถแก้ไขภายหลังได้
                         </p>
                         <p className="text-xs text-slate-600">

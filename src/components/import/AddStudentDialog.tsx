@@ -114,8 +114,8 @@ export default function AddStudentDialog({ courseId }: { courseId: string }) {
                     </label>
 
                     {showStudentIdNote && (
-                      <div className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3">
-                        <p className="text-sm font-medium text-red-700">
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <p className="text-sm font-medium text-amber-800">
                           * กรุณาตรวจรหัสนักศึกษาให้ถูกต้อง เนื่องจากไม่สามารถแก้ไขภายหลังได้
                         </p>
                         <p className="mt-1 text-xs text-slate-600">
