@@ -151,7 +151,6 @@ export default function FaceScanModal({ mode, onResult, onCancel }: Props) {
                 setPhase("challenge-center");
                 if (Math.abs(yawDeg) < FACE_YAW_CENTER_DEG) {
                   // ผ่าน challenge แล้ว — เช็ค passive liveness ก่อน capture
-                  // eslint-disable-next-line no-console
                   console.log(
                     `[face] capture liveness=${realScore.toFixed(4)} threshold=${FACE_LIVENESS_THRESHOLD} yaw=${yawDeg.toFixed(1)}`,
                   );

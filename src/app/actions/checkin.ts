@@ -142,7 +142,6 @@ export async function checkInWithQrToken(
     if (!parsedFace.success) return { ok: false, reason: "face_invalid" };
     const dist = euclideanDistance(userFace!.faceDescriptor, parsedFace.data);
     const passed = dist <= FACE_MATCH_THRESHOLD;
-    // eslint-disable-next-line no-console
     console.log(
       `[face] distance=${dist.toFixed(4)} threshold=${FACE_MATCH_THRESHOLD} result=${passed ? "PASS" : "FAIL"}`,
     );
