@@ -81,10 +81,16 @@ export default async function CheckInPage({ searchParams }: Props) {
     );
   }
 
-  const faceRow = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { faceDescriptor: true },
-  });
+  const [faceRow, existingAttendance] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { faceDescriptor: true },
+    }),
+    db.attendance.findFirst({
+      where: { classSessionId: context.session.id, studentId: session.user.id },
+      select: { status: true, checkedInAt: true, distanceM: true, accuracyM: true, faceVerified: true },
+    }),
+  ]);
   const hasFace = (faceRow?.faceDescriptor.length ?? 0) > 0;
 
   if (session.user.role !== Role.STUDENT) {
@@ -115,6 +121,7 @@ export default async function CheckInPage({ searchParams }: Props) {
       eyebrow="Student"
       title="เช็คชื่อเข้าเรียน"
       subtitle="ตรวจสอบข้อมูลของคุณก่อนกดยืนยันเข้าเรียน"
+      showBack
     >
       <SessionSummary
         courseCode={context.session.course.code}
@@ -125,6 +132,7 @@ export default async function CheckInPage({ searchParams }: Props) {
       />
       <StudentCheckInForm
         token={token}
+        courseId={context.session.course.id}
         requiresLocation={context.session.anchor !== null}
         requiresFace={hasFace}
         student={{
@@ -132,6 +140,17 @@ export default async function CheckInPage({ searchParams }: Props) {
           email: session.user.email ?? "-",
           studentId: session.user.studentId,
         }}
+        existingAttendance={
+          existingAttendance
+            ? {
+                status: existingAttendance.status,
+                checkedInAt: existingAttendance.checkedInAt.toISOString(),
+                distanceM: existingAttendance.distanceM,
+                accuracyM: existingAttendance.accuracyM,
+                faceVerified: existingAttendance.faceVerified,
+              }
+            : null
+        }
       />
     </CheckInShell>
   );

@@ -15,7 +15,7 @@ export default function QRollLogo({
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`${markSize} flex shrink-0 items-center justify-center rounded-xl bg-[#990000] text-white shadow-md`}
+        className={`${markSize} flex shrink-0 items-center justify-center rounded-xl bg-qroll-red-dark text-white shadow-md`}
         aria-hidden="true"
       >
         <svg
@@ -40,7 +40,7 @@ export default function QRollLogo({
         <div
           className={`${wordSize} font-inter font-bold leading-none tracking-tight text-slate-900`}
         >
-          QRoll<span className="text-[#990000]">.</span>
+          QRoll<span className="text-qroll-red-dark">.</span>
         </div>
         {showTagline && (
           <div

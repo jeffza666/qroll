@@ -25,7 +25,10 @@ function parseTokenFromQrText(text: string): string | null {
 
 function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (token: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
+  const scannerRef = useRef<{
+    instance: { stop: () => Promise<void>; clear: () => void };
+    started: boolean;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
         containerRef.current.id = elementId;
 
         const instance = new Html5Qrcode(elementId, { verbose: false });
-        scannerRef.current = instance;
+        scannerRef.current = { instance, started: false };
 
         await instance.start(
           { facingMode: "environment" },
@@ -48,11 +51,14 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
           (decodedText) => {
             const token = parseTokenFromQrText(decodedText);
             if (!token) return;
+            const ref = scannerRef.current;
+            if (!ref || !ref.started) return;
+            ref.started = false;
             instance
               .stop()
               .catch(() => {})
               .finally(() => {
-                instance.clear();
+                try { instance.clear(); } catch { /* noop */ }
                 onResult(token);
               });
           },
@@ -60,6 +66,14 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
             // ignore decode errors per frame
           }
         );
+        if (cancelled) {
+          // unmounted ระหว่าง start — หยุดทันที
+          instance.stop().catch(() => {}).finally(() => {
+            try { instance.clear(); } catch { /* noop */ }
+          });
+          return;
+        }
+        if (scannerRef.current) scannerRef.current.started = true;
       } catch (err) {
         if (cancelled) return;
         setError(
@@ -72,13 +86,16 @@ function ScannerModal({ onClose, onResult }: { onClose: () => void; onResult: (t
 
     return () => {
       cancelled = true;
-      const inst = scannerRef.current;
-      if (inst) {
-        inst
+      const ref = scannerRef.current;
+      scannerRef.current = null;
+      if (ref && ref.started) {
+        ref.started = false;
+        ref.instance
           .stop()
           .catch(() => {})
-          .finally(() => inst.clear());
-        scannerRef.current = null;
+          .finally(() => {
+            try { ref.instance.clear(); } catch { /* noop */ }
+          });
       }
     };
   }, [onResult]);
@@ -157,7 +174,7 @@ export default function CheckInLauncher() {
 
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="relative h-24 bg-[#990000] p-5 sm:h-28 sm:p-6">
+      <div className="relative h-24 bg-qroll-red-dark p-5 sm:h-28 sm:p-6">
         <div className="absolute right-0 top-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-white opacity-5 blur-xl" />
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-32 w-32 rounded-full bg-white opacity-10 blur-lg" />
         <div className="relative z-10 flex items-center gap-2.5 text-white">
@@ -179,7 +196,7 @@ export default function CheckInLauncher() {
               setMode("scan");
               setCodeError(null);
             }}
-            className="font-inter group flex min-h-[52px] items-center justify-center gap-2.5 rounded-xl bg-[#990000] px-4 py-3 text-sm font-extrabold text-white shadow-md shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-red-800 sm:text-base"
+            className="font-inter group flex min-h-[52px] items-center justify-center gap-2.5 rounded-xl bg-qroll-red-dark px-4 py-3 text-sm font-extrabold text-white shadow-md shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-qroll-red-darker sm:text-base"
           >
             <Camera className="h-4 w-4 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
             สแกน QR
@@ -192,7 +209,7 @@ export default function CheckInLauncher() {
             }}
             className={`font-inter flex min-h-[52px] items-center justify-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-extrabold shadow-sm transition-all hover:-translate-y-0.5 sm:text-base ${
               mode === "code"
-                ? "border-[#990000] bg-red-50 text-[#990000]"
+                ? "border-qroll-red-dark bg-red-50 text-qroll-red-dark"
                 : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
             }`}
           >
@@ -218,7 +235,7 @@ export default function CheckInLauncher() {
                   setCodeError(null);
                 }}
                 placeholder="000000"
-                className="font-inter mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-2xl font-black tracking-[0.5em] text-slate-900 shadow-sm outline-none transition-all focus:border-[#990000] focus:ring-2 focus:ring-[#990000]/20"
+                className="font-inter mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-2xl font-black tracking-[0.5em] text-slate-900 shadow-sm outline-none transition-all focus:border-qroll-red-dark focus:ring-2 focus:ring-qroll-red-dark/20"
               />
             </label>
             {codeError && (
@@ -229,7 +246,7 @@ export default function CheckInLauncher() {
             <button
               type="submit"
               disabled={isPending || code.length !== 6}
-              className="font-inter flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-sm font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-red-800 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+              className="font-inter flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 text-sm font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-qroll-red-darker disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
             >
               {isPending ? (
                 <>

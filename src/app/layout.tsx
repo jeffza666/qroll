@@ -17,6 +17,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "QRoll",
   description: "Smart attendance for Thammasat University",
+  // กัน iOS Safari แปลง date/phone/email ใน text เป็น <a> เอง — ทำให้ DOM ไม่ตรง SSR
+  formatDetection: { telephone: false, date: false, address: false, email: false },
 };
 
 export default function RootLayout({

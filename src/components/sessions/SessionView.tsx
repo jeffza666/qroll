@@ -224,7 +224,6 @@ export default function SessionView({
           >
             <div>
               <div className={isPresenterMode ? "hidden" : "flex flex-wrap items-center gap-3"}>
-                {/* Live indicator: pulsing dot ตอนเปิดอยู่และยังไม่หมดเวลา */}
                 <span className="relative flex h-3 w-3 items-center justify-center">
                   {isOpen && timeLeftSeconds > 0 && (
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
@@ -246,7 +245,6 @@ export default function SessionView({
                       : "หมดเวลาแล้ว"
                     : "ปิดเช็คอินแล้ว"}
                 </p>
-                {/* Duration + grace badges — จับกลุ่มชิดกัน */}
                 <span className="inline-flex items-center gap-1.5">
                   <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
                     เปิด {sessionInfo.durationMinutes} นาที
@@ -277,7 +275,6 @@ export default function SessionView({
                 {sessionInfo.courseName} • เทอม {sessionInfo.semester}
               </p>
 
-              {/* Session meta — แถวนอนใต้ชื่อวิชา */}
               {!isPresenterMode && (
                 <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-500">
                   <span className="flex items-center gap-1.5">
@@ -308,7 +305,7 @@ export default function SessionView({
           <div
             className={
               isPresenterMode
-                ? "grid flex-1 place-items-center gap-4"
+                ? "grid flex-1 items-center justify-center justify-items-center gap-6 lg:grid-cols-[auto_minmax(360px,420px)] lg:gap-10"
                 : isOpen
                   ? "grid flex-1 items-center gap-8 lg:grid-cols-[minmax(360px,1fr)_360px]"
                   : "flex flex-1 items-center justify-center"
@@ -352,7 +349,7 @@ export default function SessionView({
                 </div>
                 <button
                   onClick={() => router.push(`/teacher/sessions/${sessionId}`)}
-                  className="mt-8 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#990000] px-5 py-3 text-sm font-bold !text-white shadow-sm transition-colors hover:bg-[#7a0000]"
+                  className="mt-8 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-5 py-3 text-sm font-bold !text-white shadow-sm transition-colors hover:bg-qroll-red-darker"
                 >
                   <History className="h-4 w-4 !text-white" />
                   ดูประวัติคาบนี้

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireStudent } from "@/lib/auth-helpers";
 import FaceStatusInfo from "@/components/face/FaceStatusInfo";
+import PageHeader from "@/components/shell/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +20,15 @@ export default async function StudentSettingsPage() {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+    <>
+    <PageHeader>
+      <div className="min-w-0">
+        <h1 className="truncate text-2xl font-black text-slate-900">ตั้งค่า</h1>
+        <p className="truncate text-sm text-slate-500">ข้อมูลบัญชีและการยืนยันตัวตน</p>
+      </div>
+    </PageHeader>
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
       <div className="mx-auto max-w-2xl space-y-5">
-      <header>
-        <h1 className="text-xl font-extrabold text-slate-900">ตั้งค่า</h1>
-        <p className="mt-1 text-sm text-slate-600">ข้อมูลบัญชีและการยืนยันตัวตน</p>
-      </header>
-
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-base font-extrabold text-slate-900">ข้อมูลบัญชี</h2>
         <dl className="space-y-2 text-sm">
@@ -50,5 +53,6 @@ export default async function StudentSettingsPage() {
       />
       </div>
     </div>
+    </>
   );
 }

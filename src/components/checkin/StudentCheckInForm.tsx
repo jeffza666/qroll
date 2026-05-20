@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { ArrowRight, CheckCircle2, Loader2, MapPin, ScanFace, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, History, Loader2, MapPin, ScanFace, UserRound } from "lucide-react";
 
 import {
   checkInWithQrToken,
@@ -16,7 +17,8 @@ import { FACE_MAX_RETRY } from "@/lib/face/constants";
 
 type Props = {
   token: string;
-  /** Phase 6: ถ้า session เปิด geofence ต้องขอ browser geolocation ก่อน submit */
+  courseId: string;
+  /** ถ้า session เปิด geofence ต้องขอ browser geolocation ก่อน submit */
   requiresLocation: boolean;
   /** user ที่ seed face แล้วต้องสแกนหน้าก่อน submit */
   requiresFace: boolean;
@@ -25,6 +27,14 @@ type Props = {
     email: string;
     studentId: string | null;
   };
+  /** ถ้านศ. เคยเช็คอินคาบนี้แล้ว — โชว์ panel เลยโดยไม่ต้องกด submit */
+  existingAttendance: {
+    status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
+    checkedInAt: string;
+    distanceM: number | null;
+    accuracyM: number | null;
+    faceVerified: boolean;
+  } | null;
 };
 
 function formatBangkokTime(value: string) {
@@ -156,12 +166,31 @@ function ResultPanel({ result }: { result: CheckInActionResult }) {
 
 export default function StudentCheckInForm({
   token,
+  courseId,
   student,
   requiresLocation,
   requiresFace,
+  existingAttendance,
 }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<CheckInActionResult | null>(null);
+  const [result, setResult] = useState<CheckInActionResult | null>(
+    existingAttendance
+      ? {
+          ok: true,
+          status: existingAttendance.status,
+          checkedInAt: existingAttendance.checkedInAt,
+          duplicate: true,
+          locationVerified:
+            existingAttendance.distanceM !== null
+              ? {
+                  distanceM: existingAttendance.distanceM,
+                  accuracyM: existingAttendance.accuracyM ?? 0,
+                }
+              : undefined,
+          faceVerified: existingAttendance.faceVerified || undefined,
+        }
+      : null
+  );
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [faceModalOpen, setFaceModalOpen] = useState(false);
@@ -251,7 +280,7 @@ export default function StudentCheckInForm({
     <div className="space-y-5">
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 text-sm font-black text-white shadow-lg shadow-red-900/20">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-qroll-red-dark to-red-800 text-sm font-black text-white shadow-lg shadow-red-900/20">
             {initials || <UserRound className="h-5 w-5" />}
           </div>
           <div className="min-w-0">
@@ -301,8 +330,8 @@ export default function StudentCheckInForm({
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={busy || Boolean(result?.ok && !result.duplicate)}
-        className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-red-800 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+        disabled={busy || Boolean(result?.ok)}
+        className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 text-base font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-qroll-red-darker disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
       >
         {locating ? (
           <>
@@ -314,7 +343,7 @@ export default function StudentCheckInForm({
             <Loader2 className="h-5 w-5 animate-spin" />
             กำลังเช็คชื่อ...
           </>
-        ) : result?.ok && !result.duplicate ? (
+        ) : result?.ok ? (
           <>
             <CheckCircle2 className="h-5 w-5" />
             บันทึกแล้ว
@@ -326,6 +355,16 @@ export default function StudentCheckInForm({
           </>
         )}
       </button>
+
+      {result?.ok && (
+        <Link
+          href={`/student/courses/${courseId}`}
+          className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-base font-extrabold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+        >
+          <History className="h-5 w-5 text-slate-500" />
+          ดูประวัติเช็คชื่อวิชานี้
+        </Link>
+      )}
 
       {faceModalOpen && (
         <FaceScanModal

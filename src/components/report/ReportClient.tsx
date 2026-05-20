@@ -90,7 +90,7 @@ export default function ReportClient({
           <input
             type="text"
             placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..."
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm shadow-sm transition-shadow focus:border-[#990000] focus:outline-none focus:ring-1 focus:ring-[#990000]"
+            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm shadow-sm transition-shadow focus:border-qroll-red-dark focus:outline-none focus:ring-1 focus:ring-qroll-red-dark"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

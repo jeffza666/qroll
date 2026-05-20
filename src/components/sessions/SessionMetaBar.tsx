@@ -49,7 +49,6 @@ function AttendanceDonut({ pct }: { pct: number | null }) {
   return (
     <div className="relative flex h-48 w-48 shrink-0 items-center justify-center">
       <svg viewBox="0 0 100 100" className="h-48 w-48 -rotate-90">
-        {/* track วงพื้น */}
         <circle
           cx="50"
           cy="50"
@@ -58,7 +57,6 @@ function AttendanceDonut({ pct }: { pct: number | null }) {
           className="stroke-slate-100"
           strokeWidth="8"
         />
-        {/* progress */}
         <circle
           cx="50"
           cy="50"
@@ -71,7 +69,6 @@ function AttendanceDonut({ pct }: { pct: number | null }) {
           strokeDashoffset={offset}
         />
       </svg>
-      {/* ตัวเลขกลางวง */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {pct === null ? (
           <span className="text-sm font-bold text-slate-400">ยังไม่มีข้อมูล</span>
@@ -109,10 +106,9 @@ export default function SessionMetaBar({
     <div className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
       {actions && <div className="absolute right-5 top-5">{actions}</div>}
       <div className="flex flex-col gap-6 pr-10 md:flex-row md:items-center md:justify-between">
-        {/* Left: course info */}
         <div className="min-w-0 flex-1">
           <div className="mb-5 flex items-center gap-3">
-            <div className="h-7 w-2 rounded-full bg-[#990000] shadow-sm"></div>
+            <div className="h-7 w-2 rounded-full bg-qroll-red-dark shadow-sm"></div>
             <h2 className="text-2xl font-extrabold tracking-wide text-slate-800 md:text-[28px]">
               รายงาน Session
             </h2>
@@ -123,7 +119,7 @@ export default function SessionMetaBar({
               {courseCode}
             </h3>
             {section && (
-              <span className="font-inter rounded-lg bg-[#990000] px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+              <span className="font-inter rounded-lg bg-qroll-red-dark px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                 Sec {section}
               </span>
             )}
@@ -137,28 +133,27 @@ export default function SessionMetaBar({
 
           <div className="flex w-fit flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-600">
             <span className="flex items-center gap-2.5 text-slate-500">
-              <Clock className="h-5 w-5 text-[#990000]" />
+              <Clock className="h-5 w-5 text-qroll-red-dark" />
               {dayLabel} {timeLabel}
             </span>
             {room && (
               <span className="flex items-center gap-2.5 text-slate-500">
-                <MapPin className="h-5 w-5 text-[#990000]" />
+                <MapPin className="h-5 w-5 text-qroll-red-dark" />
                 {room}
               </span>
             )}
             <span className="flex items-center gap-2.5 text-slate-500">
-              <BookOpen className="h-5 w-5 text-[#990000]" />
+              <BookOpen className="h-5 w-5 text-qroll-red-dark" />
               เปิด {openedAtLabel}
               {closedAtLabel && ` · ปิด ${closedAtLabel}`}
             </span>
             <span className="flex items-center gap-2.5 text-slate-500">
-              <Users className="h-5 w-5 text-[#990000]" />
+              <Users className="h-5 w-5 text-qroll-red-dark" />
               {totalEnrolled} คนในรายวิชา
             </span>
           </div>
         </div>
 
-        {/* Right: donut chart */}
         <div className="mt-4 shrink-0 md:mt-0">
           <AttendanceDonut pct={avgAttendancePct} />
         </div>

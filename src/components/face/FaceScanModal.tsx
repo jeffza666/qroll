@@ -264,7 +264,7 @@ export default function FaceScanModal({ mode, onResult, onCancel }: Props) {
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
           <div className="flex items-center gap-2">
-            <ScanFace className="h-5 w-5 text-[#990000]" />
+            <ScanFace className="h-5 w-5 text-qroll-red-dark" />
             <h2 className="text-base font-extrabold text-slate-900">
               {mode === "verify" ? "ยืนยันตัวตนด้วยใบหน้า" : "บันทึกรูปจากระบบทะเบียน"}
             </h2>
@@ -302,7 +302,7 @@ export default function FaceScanModal({ mode, onResult, onCancel }: Props) {
                   <button
                     type="button"
                     onClick={handleRetry}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 py-3 font-bold text-white hover:bg-red-800"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 py-3 font-bold text-white hover:bg-qroll-red-darker"
                   >
                     <RefreshCw className="h-4 w-4" />
                     ลองใหม่
@@ -325,7 +325,7 @@ export default function FaceScanModal({ mode, onResult, onCancel }: Props) {
                 <p className="mb-3 text-sm text-slate-600">
                   เลือกรูปนักศึกษา (จากระบบทะเบียน TU)
                 </p>
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#990000] px-4 py-2 font-bold text-white hover:bg-red-800">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-qroll-red-dark px-4 py-2 font-bold text-white hover:bg-qroll-red-darker">
                   {seedBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -9,10 +8,10 @@ import {
   User as UserIcon,
   XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import AttendanceRow from "@/components/student/AttendanceRow";
+import PageHeader from "@/components/shell/PageHeader";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -66,32 +65,24 @@ export default async function StudentCourseDetailPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center justify-between gap-3 border-b border-slate-200 bg-white/80 pl-6 pr-16 backdrop-blur-md lg:px-10">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/student"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
-            aria-label="กลับ"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="font-inter text-2xl font-black text-slate-900">{course.code}</h1>
-            <p className="text-sm text-slate-500">{course.name}</p>
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="truncate font-inter text-2xl font-black text-slate-900">{course.code}</h1>
+            <p className="truncate text-sm text-slate-500">{course.name}</p>
           </div>
         </div>
         {enrollment.droppedAt && (
-          <span className="font-inter rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+          <span className="font-inter shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
             ถอนแล้ว
           </span>
         )}
-      </header>
+      </PageHeader>
 
       <main className="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10">
         <div className="animate-fade-in pb-8">
-          {/* Course info card */}
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="relative h-32 bg-[#990000] p-6">
+            <div className="relative h-32 bg-qroll-red-dark p-6">
               <div className="absolute right-0 top-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-white opacity-5 blur-xl" />
               <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-32 w-32 rounded-full bg-white opacity-10 blur-lg" />
               <h2 className="font-inter relative z-10 text-2xl font-black tracking-wide text-white">
@@ -103,7 +94,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
             <div className="relative p-6">
               <div className="-mt-12 mb-6 flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-lg shadow-slate-200/50">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#990000] to-red-800 text-white shadow-lg shadow-red-900/20">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-qroll-red-dark to-red-800 text-white shadow-lg shadow-red-900/20">
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <div className="min-w-0">
@@ -158,7 +149,6 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
           </section>
 
-          {/* Stats */}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-3">
@@ -209,7 +199,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
           {avgPct !== null && (
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-bold text-slate-500">อัตราเข้าเรียน (PRESENT + LATE×0.5)</p>
+                <p className="text-sm font-bold text-slate-500">อัตราเข้าเรียน</p>
                 <p
                   className={`font-inter text-2xl font-black ${
                     avgPct >= 80
@@ -237,10 +227,9 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Attendance history */}
           <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="relative overflow-hidden border-b border-slate-100 px-6 py-5">
-              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#990000]" />
+              <div className="absolute top-0 left-0 h-full w-1.5 bg-qroll-red-dark" />
               <div className="flex items-center gap-3 pl-2">
                 <HistoryIcon className="h-5 w-5 text-slate-400" />
                 <h2 className="font-inter text-xl font-black text-slate-800">

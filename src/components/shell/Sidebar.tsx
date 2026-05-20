@@ -41,7 +41,7 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       onClick={onNavigate}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
         isActive
-          ? "bg-red-50 text-[#990000] border border-red-100"
+          ? "bg-red-50 text-qroll-red-dark border border-red-100"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
@@ -109,7 +109,7 @@ export default function Sidebar({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="เปิดเมนู"
-        className="fixed top-3 right-3 z-30 lg:hidden flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50"
+        className="fixed top-4 left-3 z-30 lg:hidden flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50"
       >
         <Menu className="h-5 w-5" />
       </button>

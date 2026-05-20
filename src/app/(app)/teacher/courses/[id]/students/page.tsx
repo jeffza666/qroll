@@ -9,6 +9,7 @@ import DropStudentButton from "@/components/import/DropStudentButton";
 import EditStudentDialog from "@/components/import/EditStudentDialog";
 import RosterImport from "@/components/import/RosterImport";
 import StudentsSearchInput from "@/components/import/StudentsSearchInput";
+import PageHeader from "@/components/shell/PageHeader";
 
 const DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
 
@@ -79,51 +80,52 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
 
   return (
     <>
-      <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-10">
-        <div className="flex items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={
               showDropped
                 ? `/teacher/courses/${id}/students`
                 : `/teacher/courses/${id}`
             }
-            className="text-slate-500 hover:text-slate-900 transition-colors"
+            className="shrink-0 text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900">รายละเอียดรายวิชา</h1>
-            <p className="text-sm text-slate-500">
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-black text-slate-900">รายละเอียดรายวิชา</h1>
+            <p className="truncate text-sm text-slate-500">
               {course.name} • เทอม {course.semester}
             </p>
           </div>
         </div>
         <Link
           href={`/teacher/courses/${id}/report`}
-          className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+          aria-label="ดูรายงานสรุป"
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
         >
           <PieChart className="w-4 h-4" />
-          ดูรายงานสรุป
+          <span className="hidden lg:inline">ดูรายงานสรุป</span>
         </Link>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="max-w-6xl mx-auto animate-fade-in">
           {/* CourseHeader card — pattern เดียวกับหน้า detail */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-8 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-2 h-7 bg-[#990000] rounded-full shadow-sm"></div>
+                <div className="w-2 h-7 bg-qroll-red-dark rounded-full shadow-sm"></div>
                 <h2 className="text-2xl md:text-[28px] font-extrabold text-slate-800 tracking-wide">
                   {showDropped ? "นักศึกษาที่ถอนออกจากรายวิชา" : "จัดการรายชื่อนักศึกษา"}
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-4 mb-2">
-                <h3 className="text-4xl md:text-5xl font-black text-slate-900 font-inter tracking-tight leading-none">
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 font-inter tracking-tight leading-none">
                   {course.code}
                 </h3>
                 {course.section && (
-                  <span className="px-3 py-1 bg-[#990000] text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
+                  <span className="px-3 py-1 bg-qroll-red-dark text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
                     Sec {course.section}
                   </span>
                 )}
@@ -137,20 +139,20 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
               <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-[14px] font-bold text-slate-600 bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100 w-fit">
                 {course.schedules.map((s) => (
                   <span key={s.id} className="flex items-center gap-2.5 text-slate-500 font-bold">
-                    <Clock className="w-5 h-5 text-[#990000]" />
+                    <Clock className="w-5 h-5 text-qroll-red-dark" />
                     {DAYS[s.dayOfWeek]} {s.startTime} - {s.endTime}
                   </span>
                 ))}
                 {firstRoom && (
                   <span className="flex items-center gap-2.5 text-slate-500 font-bold">
-                    <MapPin className="w-5 h-5 text-[#990000]" />
+                    <MapPin className="w-5 h-5 text-qroll-red-dark" />
                     {firstRoom}
                   </span>
                 )}
               </div>
             </div>
             {/* total count card ฝั่งขวา */}
-            <div className="bg-slate-50 px-7 py-6 rounded-2xl text-center shadow-sm shrink-0 min-w-[160px] flex flex-col items-center border border-slate-100">
+            <div className="bg-slate-50 px-5 sm:px-7 py-5 sm:py-6 rounded-2xl text-center shadow-sm shrink-0 w-full md:w-auto md:min-w-[160px] flex flex-col items-center border border-slate-100">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-slate-200 mb-2">
                 <Users className="w-5 h-5 text-slate-500" />
               </div>
@@ -201,7 +203,7 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
 
           {/* Table card */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-sm">
+            <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-sm">
               <span className="text-slate-500 font-semibold">
                 แสดงผล <strong className="text-slate-800">{filteredCount}</strong> จาก{" "}
                 {showDropped ? droppedCount : totalCount} รายการ
@@ -237,19 +239,19 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
                 <table className="w-full text-left text-base">
                   <thead className="text-slate-600 text-xs uppercase tracking-wider font-semibold">
                     <tr>
-                      <th className="py-4 px-6 text-center w-12 bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center w-12 bg-slate-50 border-b border-r border-slate-200">
                         #
                       </th>
-                      <th className="py-4 px-6 font-inter w-44 bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 font-inter w-44 bg-slate-50 border-b border-r border-slate-200">
                         รหัสนักศึกษา
                       </th>
-                      <th className="py-4 px-6 bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 bg-slate-50 border-b border-r border-slate-200">
                         ชื่อ-นามสกุล
                       </th>
-                      <th className="py-4 px-6 w-44 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 w-44 text-center bg-slate-50 border-b border-r border-slate-200">
                         {showDropped ? "ถอนเมื่อ" : "สถานะ"}
                       </th>
-                      <th className="py-4 px-6 w-48 text-center bg-slate-50 border-b border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 w-48 text-center bg-slate-50 border-b border-slate-200">
                         จัดการ
                       </th>
                     </tr>
@@ -260,16 +262,16 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
                         key={enrollment.id}
                         className="hover:bg-slate-50/80 transition-colors"
                       >
-                        <td className="py-4 px-6 text-center text-slate-400 font-medium border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-4 sm:px-6 text-center text-slate-400 font-medium border-r border-slate-100">
                           {i + 1}
                         </td>
-                        <td className="py-4 px-6 font-mono font-semibold text-slate-700 border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-4 sm:px-6 font-mono font-semibold text-slate-700 border-r border-slate-100">
                           {enrollment.student.studentId ?? "—"}
                         </td>
-                        <td className="py-4 px-6 font-medium text-slate-900 border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-4 sm:px-6 font-medium text-slate-900 border-r border-slate-100">
                           {enrollment.student.name}
                         </td>
-                        <td className="py-4 px-6 text-center border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-4 sm:px-6 text-center border-r border-slate-100">
                           {showDropped ? (
                             <span className="text-sm font-semibold text-slate-500">
                               {enrollment.droppedAt
@@ -286,7 +288,7 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
                             </span>
                           )}
                         </td>
-                        <td className="py-4 px-6 text-center">
+                        <td className="py-3 px-3 sm:py-4 sm:px-6 text-center">
                           <div className="flex items-center justify-center gap-2">
                             {showDropped ? (
                               <DeleteEnrollmentButton

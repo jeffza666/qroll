@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import CourseMoreMenu from "@/components/courses/CourseMoreMenu";
 import OpenSessionButton from "@/components/courses/OpenSessionButton";
+import PageHeader from "@/components/shell/PageHeader";
 
 const DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
 const TH_MONTHS = [
@@ -87,10 +88,11 @@ export default async function CourseDetailPage({ params }: Props) {
     ? "/teacher/courses?show=archived"
     : "/teacher/courses";
 
+  const totalEnrolled = course._count.enrollments;
   const sessionRows = course.classSessions.map((s) => {
     const stats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
     for (const a of s.attendances) stats[a.status]++;
-    const counted = stats.PRESENT + stats.LATE + stats.ABSENT;
+    const counted = totalEnrolled - stats.EXCUSED;
     const presentPct =
       counted > 0
         ? Math.round(((stats.PRESENT + stats.LATE * 0.5) / counted) * 100)
@@ -119,42 +121,43 @@ export default async function CourseDetailPage({ params }: Props) {
 
   return (
     <>
-      <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-10">
-        <div className="flex items-center gap-4">
+      <PageHeader className="justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={backHref}
-            className="text-slate-500 hover:text-slate-900 transition-colors"
+            className="shrink-0 text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900">รายวิชาทั้งหมด</h1>
-            <p className="text-sm text-slate-500">
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-black text-slate-900">รายวิชาทั้งหมด</h1>
+            <p className="truncate text-sm text-slate-500">
               {course.name} • เทอม {course.semester}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
             href={`/teacher/courses/${id}/students`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="จัดการนักศึกษา"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <Users className="w-4 h-4" />
-            จัดการนักศึกษา
+            <span className="hidden lg:inline">จัดการนักศึกษา</span>
           </Link>
           <Link
             href={`/teacher/courses/${id}/report`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-base font-bold antialiased hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label="ดูรายงานสรุป"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-base font-bold text-slate-700 antialiased shadow-sm transition-colors hover:bg-slate-50 sm:px-5"
           >
             <PieChart className="w-4 h-4" />
-            ดูรายงานสรุป
+            <span className="hidden lg:inline">ดูรายงานสรุป</span>
           </Link>
         </div>
-      </header>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="max-w-6xl mx-auto">
-          {/* Archived banner — แสดงเมื่อ archivedAt !== null */}
           {isArchived && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 shadow-sm">
               <Archive className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
@@ -170,8 +173,7 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* CourseHeader card */}
-          <div className="relative bg-white rounded-3xl border border-slate-200 p-8 mb-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-8 animate-fade-in">
+          <div className="relative bg-white rounded-3xl border border-slate-200 p-5 sm:p-8 mb-6 sm:mb-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 animate-fade-in">
             <CourseMoreMenu
               courseId={id}
               courseCode={course.code}
@@ -182,18 +184,18 @@ export default async function CourseDetailPage({ params }: Props) {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-2 h-7 bg-[#990000] rounded-full shadow-sm"></div>
+                <div className="w-2 h-7 bg-qroll-red-dark rounded-full shadow-sm"></div>
                 <h2 className="text-2xl md:text-[28px] font-extrabold text-slate-800 tracking-wide">
                   รายละเอียดรายวิชา
                 </h2>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 mb-2">
-                <h3 className="text-4xl md:text-5xl font-black text-slate-900 font-inter tracking-tight leading-none">
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 font-inter tracking-tight leading-none">
                   {course.code}
                 </h3>
                 {course.section && (
-                  <span className="px-3 py-1 bg-[#990000] text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
+                  <span className="px-3 py-1 bg-qroll-red-dark text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
                     Sec {course.section}
                   </span>
                 )}
@@ -211,18 +213,18 @@ export default async function CourseDetailPage({ params }: Props) {
                     key={s.id}
                     className="flex items-center gap-2.5 text-slate-500 font-bold"
                   >
-                    <Clock className="w-5 h-5 text-[#990000]" />
+                    <Clock className="w-5 h-5 text-qroll-red-dark" />
                     {DAYS[s.dayOfWeek]} {s.startTime} - {s.endTime}
                   </span>
                 ))}
                 {course.schedules.find((s) => s.room) && (
                   <span className="flex items-center gap-2.5 text-slate-500 font-bold">
-                    <MapPin className="w-5 h-5 text-[#990000]" />
+                    <MapPin className="w-5 h-5 text-qroll-red-dark" />
                     {course.schedules.find((s) => s.room)?.room}
                   </span>
                 )}
                 <span className="flex items-center gap-2.5 text-slate-500 font-bold">
-                  <Users className="w-5 h-5 text-[#990000]" />
+                  <Users className="w-5 h-5 text-qroll-red-dark" />
                   {course._count.enrollments} คน
                 </span>
               </div>
@@ -253,23 +255,22 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Stat cards */}
-          <div className="grid grid-cols-1 gap-6 mb-8 [&>*:nth-child(3)]:order-4 [&>*:nth-child(4)]:order-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 [&>*:nth-child(3)]:order-4 [&>*:nth-child(4)]:order-3 md:grid-cols-4 md:gap-6">
             <Link
               href={`/teacher/courses/${id}/students`}
               className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-red-200 hover:shadow-md"
             >
               <div className="mb-4 flex items-start justify-between gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:bg-red-50 group-hover:text-[#990000] group-hover:ring-red-100">
+               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:bg-red-50 group-hover:text-qroll-red-dark group-hover:ring-red-100">
                   <Users className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-[#990000]" />
+                <ArrowRight className="h-4 w-4 text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-qroll-red-dark" />
               </div>
-              <p className="text-sm font-bold text-slate-500 transition-colors group-hover:text-[#990000]">
+              <p className="text-sm font-bold text-slate-500 transition-colors group-hover:text-qroll-red-dark">
                 นักศึกษาทั้งหมด
               </p>
               <div className="mt-1 flex items-end gap-2">
-                <h2 className="font-inter text-4xl font-black leading-none text-slate-900 transition-colors group-hover:text-[#990000]">
+                <h2 className="font-inter text-4xl font-black leading-none text-slate-900 transition-colors group-hover:text-qroll-red-dark">
                   {course._count.enrollments}
                 </h2>
                 <span className="pb-1 text-sm font-bold text-slate-400">คน</span>
@@ -340,13 +341,12 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Sessions history */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-8">
             <div className="flex flex-col gap-4 border-b border-slate-100 bg-white px-8 py-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="h-5 w-1.5 rounded-full bg-[#990000]" />
+                    <div className="h-5 w-1.5 rounded-full bg-qroll-red-dark" />
                     <h3 className="text-xl font-black text-slate-900">
                       ประวัติคาบเรียน
                     </h3>
@@ -387,25 +387,25 @@ export default async function CourseDetailPage({ params }: Props) {
                 <table className="w-full text-left text-base whitespace-nowrap">
                   <thead className="text-slate-600 text-xs uppercase tracking-wider font-semibold">
                     <tr>
-                      <th className="py-4 px-8 w-1/4 bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-4 sm:py-4 sm:px-8 w-1/4 bg-slate-50 border-b border-r border-slate-200">
                         วันที่
                       </th>
-                      <th className="py-4 px-6 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center bg-slate-50 border-b border-r border-slate-200">
                         เวลาเปิด-ปิด
                       </th>
-                      <th className="py-4 px-6 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center bg-slate-50 border-b border-r border-slate-200">
                         มาเรียน
                       </th>
-                      <th className="py-4 px-6 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center bg-slate-50 border-b border-r border-slate-200">
                         สาย
                       </th>
-                      <th className="py-4 px-6 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center bg-slate-50 border-b border-r border-slate-200">
                         ลา
                       </th>
-                      <th className="py-4 px-6 text-center bg-slate-50 border-b border-r border-slate-200">
+                      <th className="py-3 px-3 sm:py-4 sm:px-6 text-center bg-slate-50 border-b border-r border-slate-200">
                         ขาด
                       </th>
-                      <th className="py-4 px-8 text-center bg-slate-50 border-b border-slate-200">
+                      <th className="py-3 px-4 sm:py-4 sm:px-8 text-center bg-slate-50 border-b border-slate-200">
                         จัดการ
                       </th>
                     </tr>
@@ -416,13 +416,13 @@ export default async function CourseDetailPage({ params }: Props) {
                         key={s.id}
                         className="hover:bg-slate-50 transition-colors"
                       >
-                        <td className="py-5 px-8 font-bold text-slate-800 border-r border-slate-100">
+                        <td className="py-3 px-4 sm:py-5 sm:px-8 font-bold text-slate-800 border-r border-slate-100">
                           {formatDate(s.startsAt)}
                         </td>
-                        <td className="py-5 px-6 text-center text-slate-600 font-inter border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-5 sm:px-6 text-center text-slate-600 font-inter border-r border-slate-100">
                           {formatTime(s.startsAt)} - {formatTime(s.endsAt)}
                         </td>
-                        <td className="py-5 px-6 text-center border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-5 sm:px-6 text-center border-r border-slate-100">
                           <span
                             className={`inline-flex min-w-[92px] items-center justify-between gap-2 rounded-full px-3 py-1.5 font-inter text-xs font-black ring-1 ${
                               s.presentPct >= 80
@@ -438,19 +438,19 @@ export default async function CourseDetailPage({ params }: Props) {
                             </span>
                           </span>
                         </td>
-                        <td className="py-5 px-6 text-center text-slate-600 font-inter border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-5 sm:px-6 text-center text-slate-600 font-inter border-r border-slate-100">
                           {s.late}
                         </td>
-                        <td className="py-5 px-6 text-center text-slate-600 font-inter border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-5 sm:px-6 text-center text-slate-600 font-inter border-r border-slate-100">
                           {s.excused}
                         </td>
-                        <td className="py-5 px-6 text-center text-slate-600 font-inter border-r border-slate-100">
+                        <td className="py-3 px-3 sm:py-5 sm:px-6 text-center text-slate-600 font-inter border-r border-slate-100">
                           {s.absent}
                         </td>
-                        <td className="py-5 px-8 text-center">
+                        <td className="py-3 px-4 sm:py-5 sm:px-8 text-center">
                           <Link
                             href={`/teacher/sessions/${s.id}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-md text-base  font-semibold hover:bg-red-50 hover:text-[#990000] hover:border-red-200 transition-colors shadow-sm"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-md text-base  font-semibold hover:bg-red-50 hover:text-qroll-red-dark hover:border-red-200 transition-colors shadow-sm"
                           >
                             <History className="w-4 h-4" />
                             ดูประวัติ

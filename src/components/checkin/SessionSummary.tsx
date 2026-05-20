@@ -18,7 +18,7 @@ export default function SessionSummary({
   return (
     <div className="mb-5 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 text-white shadow-lg shadow-red-900/20">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-qroll-red-dark to-red-800 text-white shadow-lg shadow-red-900/20">
           <BookOpen className="h-5 w-5" />
         </div>
         <div className="min-w-0">

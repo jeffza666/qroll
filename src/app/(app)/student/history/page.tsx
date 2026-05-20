@@ -2,6 +2,7 @@ import { CheckCircle2, Clock, History as HistoryIcon, XCircle } from "lucide-rea
 import Link from "next/link";
 
 import AttendanceRow from "@/components/student/AttendanceRow";
+import PageHeader from "@/components/shell/PageHeader";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -30,12 +31,12 @@ export default async function StudentHistoryPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-20 items-center border-b border-slate-200 bg-white/80 pl-6 pr-16 backdrop-blur-md lg:px-10">
-        <div>
-          <h1 className="font-inter text-2xl font-black text-slate-900">ประวัติเข้าเรียน</h1>
-          <p className="text-sm text-slate-500">{total} รายการ</p>
+      <PageHeader>
+        <div className="min-w-0">
+          <h1 className="truncate font-inter text-2xl font-black text-slate-900">ประวัติเข้าเรียน</h1>
+          <p className="truncate text-sm text-slate-500">{total} รายการ</p>
         </div>
-      </header>
+      </PageHeader>
 
       <main className="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10">
         <div className="animate-fade-in pb-8">
@@ -90,7 +91,7 @@ export default async function StudentHistoryPage() {
 
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="relative overflow-hidden border-b border-slate-100 px-6 py-5">
-              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#990000]" />
+              <div className="absolute top-0 left-0 h-full w-1.5 bg-qroll-red-dark" />
               <div className="flex items-center gap-3 pl-2">
                 <HistoryIcon className="h-5 w-5 text-slate-400" />
                 <h2 className="font-inter text-xl font-black text-slate-800">
