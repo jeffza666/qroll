@@ -13,4 +13,5 @@ export const TEACHER_NAV: NavItem[] = [
 export const STUDENT_NAV: NavItem[] = [
   { label: "วิชาที่ลงเรียน", href: "/student", icon: "book-open" },
   { label: "ประวัติเข้าเรียน", href: "/student/history", icon: "clock" },
+  { label: "ตั้งค่า", href: "/student/settings", icon: "settings" },
 ];
