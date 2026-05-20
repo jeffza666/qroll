@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -9,7 +8,6 @@ import {
   User as UserIcon,
   XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import AttendanceRow from "@/components/student/AttendanceRow";
@@ -69,13 +67,6 @@ export default async function StudentCourseDetailPage({ params }: Props) {
     <>
       <PageHeader className="justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-          <Link
-            href="/student"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
-            aria-label="กลับ"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
           <div className="min-w-0">
             <h1 className="truncate font-inter text-2xl font-black text-slate-900">{course.code}</h1>
             <p className="truncate text-sm text-slate-500">{course.name}</p>
