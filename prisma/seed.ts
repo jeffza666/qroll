@@ -15,6 +15,16 @@ async function main() {
     },
   });
 
+    const teacher2 = await db.user.upsert({
+    where: { email: "teacher2@tu.ac.th" },
+    update: {},
+    create: {
+      email: "teacher2@tu.ac.th",
+      name: "อาจารย์ทดสอบ 2",
+      role: "TEACHER",
+    },
+  });
+
   const student = await db.user.upsert({
     where: { studentId: "6500000001" },
     update: {
@@ -70,7 +80,7 @@ async function main() {
     },
   });
 
-  console.log("Seeded:", { teacher, student, preImportedStudent, student2, student3 });
+  console.log("Seeded:", { teacher, teacher2, student, preImportedStudent, student2, student3 });
 }
 
 main().catch(console.error).finally(() => db.$disconnect());
