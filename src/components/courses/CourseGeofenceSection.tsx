@@ -126,7 +126,7 @@ export default function CourseGeofenceSection({ courseId, initial }: Props) {
   const busy = isPending || requesting;
 
   return (
-    <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-4">
+    <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-4">
       <header className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">

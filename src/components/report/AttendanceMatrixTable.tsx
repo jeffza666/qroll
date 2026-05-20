@@ -64,23 +64,23 @@ export default function AttendanceMatrixTable({ sessions, students }: Props) {
         </colgroup>
         <thead className="text-xs font-semibold uppercase tracking-wider text-slate-600">
           <tr>
-            <th className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-4 py-4 text-center">
+            <th className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-2 py-3 sm:px-4 sm:py-4 text-center">
               #
             </th>
             <th
-              className="sticky top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-6 py-4 font-inter"
+              className="sticky top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 font-inter"
               style={{ left: 64 }}
             >
               รหัสนักศึกษา
             </th>
             <th
-              className="sticky top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-6 py-4"
+              className="sticky top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4"
               style={{ left: 224 }}
             >
               ชื่อ-นามสกุล
             </th>
             <th
-              className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50 px-6 py-4 text-center"
+              className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-center"
               style={{ left: 464, boxShadow: "inset -1px 0 0 #e2e8f0" }}
             >
               % มาเรียน
@@ -88,7 +88,7 @@ export default function AttendanceMatrixTable({ sessions, students }: Props) {
             {sessions.map((s) => (
               <th
                 key={s.sessionId}
-                className="sticky top-0 z-20 border-b border-r border-slate-200 bg-slate-50 px-6 py-4 text-center last:border-r-0"
+                className="sticky top-0 z-20 border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-center last:border-r-0"
               >
                 <div className="flex flex-col items-center justify-center gap-1">
                   <Calendar className="h-4 w-4 text-slate-400" />
@@ -111,23 +111,23 @@ export default function AttendanceMatrixTable({ sessions, students }: Props) {
           ) : (
             students.map((student, i) => (
               <tr key={student.enrollmentId} className="group transition-colors">
-                <td className="sticky left-0 z-[5] border-b border-r border-slate-100 bg-white px-4 py-4 text-center font-medium text-slate-400 group-hover:bg-slate-50/50">
+                <td className="sticky left-0 z-[5] border-b border-r border-slate-100 bg-white px-2 py-3 sm:px-4 sm:py-4 text-center font-medium text-slate-400 group-hover:bg-slate-50/50">
                   {i + 1}
                 </td>
                 <td
-                  className="sticky z-[5] border-b border-r border-slate-100 bg-white px-6 py-4 font-inter font-medium text-slate-700 group-hover:bg-slate-50/50"
+                  className="sticky z-[5] border-b border-r border-slate-100 bg-white px-3 py-3 sm:px-6 sm:py-4 font-inter font-medium text-slate-700 group-hover:bg-slate-50/50"
                   style={{ left: 64 }}
                 >
                   {student.studentId ?? "—"}
                 </td>
                 <td
-                  className="sticky z-[5] border-b border-r border-slate-100 bg-white px-6 py-4 font-medium text-slate-900 group-hover:bg-slate-50/50"
+                  className="sticky z-[5] border-b border-r border-slate-100 bg-white px-3 py-3 sm:px-6 sm:py-4 font-medium text-slate-900 group-hover:bg-slate-50/50"
                   style={{ left: 224 }}
                 >
                   {student.name}
                 </td>
                 <td
-                  className="sticky z-[5] border-b border-slate-100 bg-white px-6 py-4 text-center group-hover:bg-slate-50/50"
+                  className="sticky z-[5] border-b border-slate-100 bg-white px-3 py-3 sm:px-6 sm:py-4 text-center group-hover:bg-slate-50/50"
                   style={{ left: 464, boxShadow: "inset -1px 0 0 #e2e8f0" }}
                 >
                   {student.pct !== null ? (
@@ -147,7 +147,7 @@ export default function AttendanceMatrixTable({ sessions, students }: Props) {
                   )}
                 </td>
                 {student.cells.map((status, ci) => (
-                  <td key={ci} className="border-b border-r border-slate-100 px-6 py-4 text-center last:border-r-0 group-hover:bg-slate-50/50">
+                  <td key={ci} className="border-b border-r border-slate-100 px-3 py-3 sm:px-6 sm:py-4 text-center last:border-r-0 group-hover:bg-slate-50/50">
                     <StatusBadge status={status} />
                   </td>
                 ))}

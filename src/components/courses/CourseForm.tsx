@@ -20,8 +20,7 @@ const DAYS = [
 ];
 
 type ScheduleRow = {
-  // id: undefined = แถวใหม่ที่ user เพิ่ม / มีค่า = แถวเดิมจาก DB
-  // ส่งไป server เพื่อให้รู้ว่า update หรือ create (รักษา link กับ session)
+  // id present → update existing row; absent → new row (keeps session link intact)
   id?: string;
   dayOfWeek: number;
   startTime: string;
@@ -41,7 +40,6 @@ type Props = {
   mode: "create" | "edit";
   courseId?: string; // required เมื่อ mode = edit
   initial?: CourseFormInitial;
-  // edit mode: slot สำหรับ CourseGeofenceSection ระหว่าง form-card กับปุ่ม action
   belowFields?: React.ReactNode;
 };
 
@@ -65,7 +63,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Phase 6: pending anchor — เฉพาะ create mode (edit mode ใช้ CourseGeofenceSection แยก)
+  // pending anchor state — create mode เท่านั้น (edit mode มี CourseGeofenceSection แยก)
   const [pendingLat, setPendingLat] = useState<number | null>(null);
   const [pendingLng, setPendingLng] = useState<number | null>(null);
   const [pendingAccuracy, setPendingAccuracy] = useState<number | null>(null);
@@ -167,7 +165,6 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
     fd.set("semester", semester);
     fd.set("schedules", JSON.stringify(schedules));
 
-    // Phase 6: send pending anchor (create mode เท่านั้น) — edit mode ใช้ standalone section
     if (mode === "create" && pendingLat !== null && pendingLng !== null) {
       fd.set("geofenceLat", String(pendingLat));
       fd.set("geofenceLng", String(pendingLng));
@@ -195,7 +192,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
     <form
       onSubmit={handleSubmit}
       id="course-form"
-      className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-6"
+      className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-6"
     >
       {/* code + section */}
       <div className="flex gap-3">
@@ -211,7 +208,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
             className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-[#990000]/30 focus:border-[#990000] transition-all"
           />
         </div>
-        <div className="w-40">
+        <div className="w-28 sm:w-40">
           <label className="block text-sm font-semibold text-slate-700 mb-2">
             Section
           </label>
@@ -334,9 +331,8 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
       )}
     </form>
 
-    {/* Phase 6: geofence anchor card (create mode only — edit mode ใช้ CourseGeofenceSection แยก) */}
     {mode === "create" && (
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-4">
+      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-4">
         <header>
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-emerald-600" />

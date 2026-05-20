@@ -14,7 +14,7 @@ export type SessionReportRow = {
     id: string;
     status: AttendanceStatus;
     checkedInAtLabel: string;
-    /** Phase 6: null = session ไม่เปิด geofence หรือเป็นการเช็คก่อนเปิด feature */
+    /** null = session ไม่เปิด geofence หรือเป็นการเช็คก่อนเปิด feature */
     locationVerified?: { distanceM: number } | null;
   } | null;
 };
@@ -101,7 +101,7 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
       {/* Header bar: count + filter indicator */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 text-sm">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-sm">
         <span className="font-semibold text-slate-500">
           แสดงผล <strong className="text-slate-800">{visible.length}</strong> จาก{" "}
           {rows.length} รายการ
@@ -118,17 +118,17 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
         <table className="w-full whitespace-nowrap text-left text-base">
           <thead className="sticky top-0 z-10 text-xs font-semibold uppercase tracking-wider text-slate-600 shadow-sm">
             <tr>
-              <th className="w-12 border-b border-r border-slate-200 bg-slate-50 px-6 py-4 text-center">#</th>
-              <th className="w-40 border-b border-r border-slate-200 bg-slate-50 px-6 py-4 font-inter">
+              <th className="w-12 border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-center">#</th>
+              <th className="w-40 border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 font-inter">
                 รหัสนักศึกษา
               </th>
-              <th className="border-b border-r border-slate-200 bg-slate-50 px-6 py-4">
+              <th className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4">
                 ชื่อ-นามสกุล
               </th>
-              <th className="border-b border-r border-slate-200 bg-slate-50 px-6 py-4 text-center">
+              <th className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-center">
                 เวลาเช็คชื่อ
               </th>
-              <th className="w-44 border-b border-slate-200 bg-slate-50 px-6 py-4 text-center">
+              <th className="w-44 border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-center">
                 สถานะ (คลิกเพื่อแก้ไข)
               </th>
             </tr>
@@ -146,13 +146,13 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
                   key={row.enrollmentId}
                   className="transition-colors hover:bg-slate-50/50"
                 >
-                  <td className="border-r border-slate-100 px-6 py-4 text-center font-medium text-slate-400">
+                  <td className="border-r border-slate-100 px-3 py-3 sm:px-6 sm:py-4 text-center font-medium text-slate-400">
                     {i + 1}
                   </td>
-                  <td className="border-r border-slate-100 px-6 py-4 font-inter font-bold text-slate-700">
+                  <td className="border-r border-slate-100 px-3 py-3 sm:px-6 sm:py-4 font-inter font-bold text-slate-700">
                     {row.student.studentId ?? "—"}
                   </td>
-                  <td className="border-r border-slate-100 px-6 py-4 font-medium text-slate-800">
+                  <td className="border-r border-slate-100 px-3 py-3 sm:px-6 sm:py-4 font-medium text-slate-800">
                     {row.student.name}
                     {row.isDropped && (
                       <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
@@ -160,7 +160,7 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
                       </span>
                     )}
                   </td>
-                  <td className="border-r border-slate-100 px-6 py-4 text-center font-inter font-medium text-slate-500">
+                  <td className="border-r border-slate-100 px-3 py-3 sm:px-6 sm:py-4 text-center font-inter font-medium text-slate-500">
                     <div className="flex items-center justify-center gap-2">
                       <span>{row.attendance?.checkedInAtLabel ?? "—"}</span>
                       {row.attendance?.locationVerified && (
@@ -174,7 +174,7 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4 text-center">
                     {row.attendance ? (
                       <StatusSelect
                         attendanceId={row.attendance.id}
