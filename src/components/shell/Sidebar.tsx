@@ -109,7 +109,7 @@ export default function Sidebar({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="เปิดเมนู"
-        className="fixed top-3 right-3 z-30 lg:hidden flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50"
+        className="fixed top-4 left-3 z-30 lg:hidden flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50"
       >
         <Menu className="h-5 w-5" />
       </button>
