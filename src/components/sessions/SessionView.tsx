@@ -308,7 +308,7 @@ export default function SessionView({
           <div
             className={
               isPresenterMode
-                ? "grid flex-1 place-items-center gap-4"
+                ? "grid flex-1 items-center justify-center justify-items-center gap-6 lg:grid-cols-[auto_minmax(360px,420px)] lg:gap-10"
                 : isOpen
                   ? "grid flex-1 items-center gap-8 lg:grid-cols-[minmax(360px,1fr)_360px]"
                   : "flex flex-1 items-center justify-center"
