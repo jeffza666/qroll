@@ -98,10 +98,24 @@ async function callTuApi(username: string, password: string) {
 }
 
 async function authorizeBypass(username: string): Promise<QrollAuthUser | null> {
-  const user = await db.user.findUnique({
-    where: { email: normalizeEmail(username) },
-    select: authUserSelect,
-  });
+  // ให้ตรงกับ TU login: นศ.กรอก studentId, อจ.กรอก TU username
+  // ยังไม่มี column tuUsername แยก เลย fallback ไปหา email สำหรับเคสอาจารย์
+  const raw = username.trim();
+  const looksLikeEmail = raw.includes("@");
+
+  const user = looksLikeEmail
+    ? await db.user.findUnique({
+        where: { email: normalizeEmail(raw) },
+        select: authUserSelect,
+      })
+    : (await db.user.findUnique({
+        where: { studentId: raw },
+        select: authUserSelect,
+      })) ??
+      (await db.user.findUnique({
+        where: { email: normalizeEmail(raw) },
+        select: authUserSelect,
+      }));
 
   if (!user?.email || !isAllowedEmail(user.email)) return null;
 
