@@ -47,6 +47,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // face embedding ~1024 floats จาก "TU sync" (prototype: seed ผ่าน admin page)
+  // empty = ยังไม่ sync → check-in จะข้าม face verify
+  // ไม่เก็บรูปต้นฉบับ
+  faceDescriptor Float[]   @default([])
+  faceEnrolledAt DateTime?
+
   // Domain relations
   taughtCourses Course[]     @relation("CourseTeacher")
   enrollments   Enrollment[]
@@ -104,7 +110,7 @@ model Enrollment {
   student User   @relation(fields: [studentId], references: [id], onDelete: Restrict)
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, courseId]) // ❗ กันลงทะเบียนซ้ำ
+  @@unique([studentId, courseId]) // ! กันลงทะเบียนซ้ำ
   @@index([courseId])
   @@index([studentId])
   @@index([droppedAt])
@@ -166,7 +172,7 @@ model ClassSession {
   schedule     Schedule?     @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
   attendances  Attendance[]
   demoCheckIns DemoCheckIn[]
-  // ❗ Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
+  // ! Partial unique index: 1 open session per course — เขียนเป็น raw SQL ใน migration
   // CREATE UNIQUE INDEX "ClassSession_one_open_per_course" ON "ClassSession"("courseId") WHERE "isOpen" = true;
 
   @@index([courseId])
@@ -193,13 +199,17 @@ model Attendance {
   distanceM Int?
   accuracyM Int?
 
+  // true = ตอน check-in match descriptor + ผ่าน liveness
+  // false = user ยังไม่ seed face → ข้าม verify
+  faceVerified Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   classSession ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
   student      User         @relation(fields: [studentId], references: [id], onDelete: Restrict)
 
-  @@unique([classSessionId, studentId]) // ❗❗❗ กัน race condition + replay attack
+  @@unique([classSessionId, studentId]) // ! กัน race condition + replay attack
   @@index([studentId])
   @@index([classSessionId])
 }
