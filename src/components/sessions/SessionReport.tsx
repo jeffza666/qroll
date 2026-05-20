@@ -57,7 +57,6 @@ export default function SessionReport({ sessionId, sessionMeta, rows }: Props) {
   return (
     <div className="flex-1 overflow-y-auto p-6 lg:p-10">
       <div className="mx-auto max-w-6xl space-y-6">
-      {/* Meta bar with donut chart on right */}
       <SessionMetaBar
         {...sessionMeta}
         totalEnrolled={totalEnrolled}
@@ -89,13 +88,13 @@ export default function SessionReport({ sessionId, sessionMeta, rows }: Props) {
               placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm shadow-sm transition-shadow focus:border-[#990000] focus:outline-none focus:ring-1 focus:ring-[#990000]"
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm shadow-sm transition-shadow focus:border-qroll-red-dark focus:outline-none focus:ring-1 focus:ring-qroll-red-dark"
             />
           </div>
           {hasActiveFilter && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-500 shadow-sm transition-colors hover:text-[#990000]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-500 shadow-sm transition-colors hover:text-qroll-red-dark"
             >
               <XCircle className="h-4 w-4" />
               ล้างตัวกรอง
@@ -104,7 +103,6 @@ export default function SessionReport({ sessionId, sessionMeta, rows }: Props) {
         </div>
       </div>
 
-      {/* Roster table */}
       <RosterTable rows={rows} filter={filter} searchQuery={searchQuery} />
 
       </div>

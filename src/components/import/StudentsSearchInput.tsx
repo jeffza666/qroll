@@ -44,7 +44,7 @@ export default function StudentsSearchInput() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..."
-        className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm shadow-sm transition-shadow focus:border-[#990000] focus:outline-none focus:ring-1 focus:ring-[#990000]"
+        className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm shadow-sm transition-shadow focus:border-qroll-red-dark focus:outline-none focus:ring-1 focus:ring-qroll-red-dark"
       />
       {isPending && (
         <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />

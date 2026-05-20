@@ -111,7 +111,7 @@ export default function EditStudentDialog({
                       setName(event.target.value);
                       if (state.type !== "idle") setState({ type: "idle" });
                     }}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition-colors focus:border-[#990000] focus:ring-4 focus:ring-red-100"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition-colors focus:border-qroll-red-dark focus:ring-4 focus:ring-red-100"
                     placeholder="ชื่อนักศึกษา"
                     autoFocus
                   />
@@ -148,7 +148,7 @@ export default function EditStudentDialog({
                       state.type === "done" ||
                       !hasChanges
                     }
-                    className="flex items-center gap-2 rounded-xl bg-[#990000] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-qroll-red-dark px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-qroll-red-darker disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {(isPending || state.type === "loading") && (
                       <Loader2 className="h-4 w-4 animate-spin" />

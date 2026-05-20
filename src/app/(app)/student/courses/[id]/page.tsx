@@ -81,9 +81,8 @@ export default async function StudentCourseDetailPage({ params }: Props) {
 
       <main className="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10">
         <div className="animate-fade-in pb-8">
-          {/* Course info card */}
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="relative h-32 bg-[#990000] p-6">
+            <div className="relative h-32 bg-qroll-red-dark p-6">
               <div className="absolute right-0 top-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-white opacity-5 blur-xl" />
               <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-32 w-32 rounded-full bg-white opacity-10 blur-lg" />
               <h2 className="font-inter relative z-10 text-2xl font-black tracking-wide text-white">
@@ -95,7 +94,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
             <div className="relative p-6">
               <div className="-mt-12 mb-6 flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-lg shadow-slate-200/50">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#990000] to-red-800 text-white shadow-lg shadow-red-900/20">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-qroll-red-dark to-red-800 text-white shadow-lg shadow-red-900/20">
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <div className="min-w-0">
@@ -150,7 +149,6 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
           </section>
 
-          {/* Stats */}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-3">
@@ -229,10 +227,9 @@ export default async function StudentCourseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Attendance history */}
           <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="relative overflow-hidden border-b border-slate-100 px-6 py-5">
-              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#990000]" />
+              <div className="absolute top-0 left-0 h-full w-1.5 bg-qroll-red-dark" />
               <div className="flex items-center gap-3 pl-2">
                 <HistoryIcon className="h-5 w-5 text-slate-400" />
                 <h2 className="font-inter text-xl font-black text-slate-800">

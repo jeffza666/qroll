@@ -70,7 +70,7 @@ export default async function CoursesPage({ searchParams }: Props) {
           {!showArchived && (
             <Link
               href="/teacher/courses/new"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000] whitespace-nowrap sm:px-5"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-qroll-red-darker focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qroll-red-dark whitespace-nowrap sm:px-5"
             >
               <Plus className="h-4 w-4 !text-white" />
               <span className="hidden sm:inline">สร้างวิชาใหม่</span>
@@ -82,9 +82,8 @@ export default async function CoursesPage({ searchParams }: Props) {
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="max-w-7xl mx-auto animate-fade-in">
-          {/* section title bar */}
           <div className="flex items-center gap-3 mb-6 ml-1">
-            <div className="w-2 h-8 bg-[#990000] rounded-full shadow-md"></div>
+            <div className="w-2 h-8 bg-qroll-red-dark rounded-full shadow-md"></div>
             <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-none pt-1">
               รายวิชาทั้งหมด
             </h2>
@@ -97,7 +96,7 @@ export default async function CoursesPage({ searchParams }: Props) {
               <p className="text-sm mt-1 mb-6">เริ่มต้นด้วยการสร้างวิชาแรกของคุณ</p>
               <Link
                 href="/teacher/courses/new"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#990000] px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000] whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-qroll-red-darker focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qroll-red-dark whitespace-nowrap"
               >
                 <Plus className="h-4 w-4 !text-white" />
                 สร้างวิชาใหม่
@@ -121,41 +120,37 @@ export default async function CoursesPage({ searchParams }: Props) {
                     href={`/teacher/courses/${course.id}`}
                     className="group bg-white rounded-3xl border border-slate-200 p-6 cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl relative overflow-hidden flex flex-col h-full shadow-sm"
                   >
-                    {/* decorative circle */}
                     <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 -mr-12 -mt-12 rounded-full transition-all group-hover:scale-150 group-hover:bg-red-50 duration-700 ease-out pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col h-full">
-                      {/* icon + sec badge */}
                       <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-[#990000] group-hover:bg-[#990000] group-hover:text-white transition-all duration-500 shadow-sm ring-4 ring-red-50/50 group-hover:ring-[#990000]/10">
+                        <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-qroll-red-dark group-hover:bg-qroll-red-dark group-hover:text-white transition-all duration-500 shadow-sm ring-4 ring-red-50/50 group-hover:ring-qroll-red-dark/10">
                           <BookOpen className="w-6 h-6" />
                         </div>
                         {course.section && (
-                          <span className="px-3 py-1 bg-[#990000] !text-white text-[10px] font-black uppercase rounded-lg border border-[#990000] shadow-md transition-transform group-hover:scale-110">
+                          <span className="px-3 py-1 bg-qroll-red-dark !text-white text-[10px] font-black uppercase rounded-lg border border-qroll-red-dark shadow-md transition-transform group-hover:scale-110">
                             Sec {course.section}
                           </span>
                         )}
                       </div>
 
-                      {/* code + name */}
                       <div className="flex-1">
-                        <h3 className="text-2xl font-black text-slate-900 font-inter group-hover:text-[#990000] transition-colors tracking-tight leading-tight mb-1.5">
+                        <h3 className="text-2xl font-black text-slate-900 font-inter group-hover:text-qroll-red-dark transition-colors tracking-tight leading-tight mb-1.5">
                           {course.code}
                         </h3>
                         <p className="text-slate-500 font-bold text-sm mb-4 line-clamp-2 leading-relaxed min-h-[2.5rem] group-hover:text-slate-600">
                           {course.name}
                         </p>
 
-                        {/* schedule + room/semester */}
                         <div className="flex flex-col gap-1.5 mt-2 mb-5">
                           <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-500">
-                            <Clock className="w-4 h-4 text-slate-400 group-hover:text-[#990000] transition-colors shrink-0" />
+                            <Clock className="w-4 h-4 text-slate-400 group-hover:text-qroll-red-dark transition-colors shrink-0" />
                             <span className="truncate">
                               {scheduleText || "ยังไม่ระบุเวลาเรียน"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-500">
-                            <MapPin className="w-4 h-4 text-slate-400 group-hover:text-[#990000] transition-colors shrink-0" />
+                            <MapPin className="w-4 h-4 text-slate-400 group-hover:text-qroll-red-dark transition-colors shrink-0" />
                             <span className="truncate">
                               {firstRoom || "ยังไม่ระบุห้อง"}
                               <span className="mx-1.5 text-slate-300 font-light">|</span>
@@ -165,7 +160,6 @@ export default async function CoursesPage({ searchParams }: Props) {
                         </div>
                       </div>
 
-                      {/* footer: students + arrow */}
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
                         <div className="flex items-center gap-2 text-slate-500">
                           <Users className="w-4 h-4 text-slate-400" />
@@ -174,7 +168,7 @@ export default async function CoursesPage({ searchParams }: Props) {
                           </span>
                           <span className="text-sm font-semibold text-slate-400">คน</span>
                         </div>
-                        <div className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-[#990000] group-hover:!text-white group-hover:border-[#990000] group-hover:translate-x-1.5 transition-all duration-300 shadow-sm">
+                        <div className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-qroll-red-dark group-hover:!text-white group-hover:border-qroll-red-dark group-hover:translate-x-1.5 transition-all duration-300 shadow-sm">
                           <ArrowRight className="w-5 h-5" />
                         </div>
                       </div>
@@ -187,12 +181,12 @@ export default async function CoursesPage({ searchParams }: Props) {
               {!showArchived && (
               <Link
                 href="/teacher/courses/new"
-                className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-300 p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-[#990000] group transition-all duration-500 h-full min-h-[260px] shadow-sm hover:shadow-xl"
+                className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-300 p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-qroll-red-dark group transition-all duration-500 h-full min-h-[260px] shadow-sm hover:shadow-xl"
               >
-                <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-red-50 group-hover:text-[#990000] group-hover:border-[#990000] group-hover:scale-110 transition-all mb-4 shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-red-50 group-hover:text-qroll-red-dark group-hover:border-qroll-red-dark group-hover:scale-110 transition-all mb-4 shadow-sm">
                   <Plus className="w-6 h-6" />
                 </div>
-                <span className="text-lg font-black text-slate-500 group-hover:text-[#990000] tracking-tight transition-colors">
+                <span className="text-lg font-black text-slate-500 group-hover:text-qroll-red-dark tracking-tight transition-colors">
                   สร้างรายวิชาใหม่
                 </span>
               </Link>

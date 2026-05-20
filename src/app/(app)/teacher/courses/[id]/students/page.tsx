@@ -115,7 +115,7 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
           <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-8 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-2 h-7 bg-[#990000] rounded-full shadow-sm"></div>
+                <div className="w-2 h-7 bg-qroll-red-dark rounded-full shadow-sm"></div>
                 <h2 className="text-2xl md:text-[28px] font-extrabold text-slate-800 tracking-wide">
                   {showDropped ? "นักศึกษาที่ถอนออกจากรายวิชา" : "จัดการรายชื่อนักศึกษา"}
                 </h2>
@@ -125,7 +125,7 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
                   {course.code}
                 </h3>
                 {course.section && (
-                  <span className="px-3 py-1 bg-[#990000] text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
+                  <span className="px-3 py-1 bg-qroll-red-dark text-white text-xs font-bold uppercase rounded-lg shadow-sm font-inter tracking-wider">
                     Sec {course.section}
                   </span>
                 )}
@@ -139,13 +139,13 @@ export default async function CourseStudentsPage({ params, searchParams }: Props
               <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-[14px] font-bold text-slate-600 bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100 w-fit">
                 {course.schedules.map((s) => (
                   <span key={s.id} className="flex items-center gap-2.5 text-slate-500 font-bold">
-                    <Clock className="w-5 h-5 text-[#990000]" />
+                    <Clock className="w-5 h-5 text-qroll-red-dark" />
                     {DAYS[s.dayOfWeek]} {s.startTime} - {s.endTime}
                   </span>
                 ))}
                 {firstRoom && (
                   <span className="flex items-center gap-2.5 text-slate-500 font-bold">
-                    <MapPin className="w-5 h-5 text-[#990000]" />
+                    <MapPin className="w-5 h-5 text-qroll-red-dark" />
                     {firstRoom}
                   </span>
                 )}

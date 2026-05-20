@@ -93,7 +93,7 @@ export default function DemoCheckInForm({ token }: Props) {
             id="displayName"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
-            className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-4 text-[15px] text-slate-900 outline-none transition focus:border-[#990000] focus:ring-4 focus:ring-red-900/10"
+            className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-4 text-[15px] text-slate-900 outline-none transition focus:border-qroll-red-dark focus:ring-4 focus:ring-red-900/10"
             placeholder="พิมพ์ชื่อของคุณ"
             maxLength={80}
           />
@@ -105,7 +105,7 @@ export default function DemoCheckInForm({ token }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-[0_14px_28px_rgba(127,29,29,0.20)] transition hover:-translate-y-px hover:bg-[#7F0000] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+        className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 text-base font-extrabold text-white shadow-[0_14px_28px_rgba(127,29,29,0.20)] transition hover:-translate-y-px hover:bg-qroll-red-darker disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
       >
         {isPending ? (
           <>

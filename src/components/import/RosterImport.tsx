@@ -143,7 +143,7 @@ export default function RosterImport({ courseId }: { courseId: string }) {
                     <button
                       type="button"
                       onClick={handleDownloadTemplate}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#990000]"
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 hover:text-qroll-red-dark"
                     >
                       <Download className="h-3.5 w-3.5" />
                       ดาวน์โหลดไฟล์ตัวอย่าง
@@ -170,7 +170,7 @@ export default function RosterImport({ courseId }: { courseId: string }) {
 
                 {state.type !== "done" && (
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 px-4 py-8 transition-all hover:border-[#990000]/40 hover:bg-red-50/30">
+                    <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 px-4 py-8 transition-all hover:border-qroll-red-dark/40 hover:bg-red-50/30">
                       <Upload className="h-8 w-8 text-slate-300" />
                       <span className="text-center text-sm font-semibold text-slate-700">
                         {selectedFile?.name ?? "เลือกหรือลากไฟล์รายชื่อมาวาง"}
@@ -215,7 +215,7 @@ export default function RosterImport({ courseId }: { courseId: string }) {
                         preview.type === "loading" ||
                         preview.type === "error"
                       }
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#990000] py-3 text-sm font-semibold text-white transition-all hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark py-3 text-sm font-semibold text-white transition-all hover:bg-qroll-red-darker disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {(isPending || state.type === "loading") && (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,7 +255,7 @@ export default function RosterImport({ courseId }: { courseId: string }) {
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="w-full rounded-xl bg-[#990000] py-3 text-sm font-semibold text-white transition-all hover:bg-red-800"
+                      className="w-full rounded-xl bg-qroll-red-dark py-3 text-sm font-semibold text-white transition-all hover:bg-qroll-red-darker"
                     >
                       ปิด
                     </button>
@@ -326,7 +326,7 @@ function PreviewPanel({ preview }: { preview: PreviewState }) {
     <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <FileSpreadsheet className="h-4 w-4 text-[#990000]" />
+          <FileSpreadsheet className="h-4 w-4 text-qroll-red-dark" />
           ตัวอย่างก่อน Import
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">

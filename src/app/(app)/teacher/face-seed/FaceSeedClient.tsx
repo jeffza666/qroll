@@ -100,7 +100,7 @@ export default function FaceSeedClient({ students }: Props) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="ค้นหา ชื่อ / รหัส นศ. / email"
-        className="w-full rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-[#990000] focus:outline-none"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-qroll-red-dark focus:outline-none"
       />
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -149,7 +149,7 @@ export default function FaceSeedClient({ students }: Props) {
                       type="button"
                       disabled={busy}
                       onClick={() => setTargetId(s.id)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-[#990000] px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-lg bg-qroll-red-dark px-3 py-1.5 text-xs font-bold text-white hover:bg-qroll-red-darker disabled:opacity-50"
                     >
                       {s.hasFace ? (
                         <>

@@ -108,7 +108,7 @@ export default function AddStudentDialog({ courseId }: { courseId: string }) {
                         }}
                         inputMode="numeric"
                         maxLength={10}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 font-mono text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:font-sans placeholder:text-slate-400 focus:border-[#990000] focus:ring-4 focus:ring-red-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 font-mono text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:font-sans placeholder:text-slate-400 focus:border-qroll-red-dark focus:ring-4 focus:ring-red-100"
                         placeholder="ตัวเลข 10 หลัก"
                       />
                     </label>
@@ -134,7 +134,7 @@ export default function AddStudentDialog({ courseId }: { courseId: string }) {
                           setName(event.target.value);
                           setState({ type: "idle" });
                         }}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-[#990000] focus:ring-4 focus:ring-red-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-qroll-red-dark focus:ring-4 focus:ring-red-100"
                         placeholder="ชื่อนักศึกษา"
                       />
                     </label>
@@ -187,7 +187,7 @@ export default function AddStudentDialog({ courseId }: { courseId: string }) {
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="flex w-full items-center justify-center rounded-xl bg-[#990000] py-3.5 text-sm font-bold text-white shadow-lg shadow-red-900/10 transition-all hover:bg-red-800"
+                    className="flex w-full items-center justify-center rounded-xl bg-qroll-red-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-red-900/10 transition-all hover:bg-qroll-red-darker"
                   >
                     ปิด
                   </button>
@@ -200,7 +200,7 @@ export default function AddStudentDialog({ courseId }: { courseId: string }) {
                       studentId.trim().length === 0 ||
                       name.trim().length === 0
                     }
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#990000] py-3.5 text-sm font-bold text-white shadow-lg shadow-red-900/10 transition-all hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-red-900/10 transition-all hover:bg-qroll-red-darker disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
                   >
                     {(isPending || state.type === "loading") && (
                       <Loader2 className="h-4 w-4 animate-spin" />

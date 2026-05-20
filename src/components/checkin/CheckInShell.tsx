@@ -30,14 +30,14 @@ export default function CheckInShell({ eyebrow, title, subtitle, showBack = fals
             <QRollLogo />
           </div>
           {eyebrow && (
-            <span className="rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-[#990000]">
+            <span className="rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-qroll-red-dark">
               {eyebrow}
             </span>
           )}
         </header>
 
         <section className="animate-fade-in overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
-          <div className="h-1.5 w-full bg-[#990000]" />
+          <div className="h-1.5 w-full bg-qroll-red-dark" />
           <div className="p-5 sm:p-7">
             <div className="mb-6">
               <h1 className="font-inter text-2xl font-black leading-tight text-slate-900 sm:text-[28px]">

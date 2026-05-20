@@ -200,7 +200,6 @@ export default async function TeacherDashboard() {
 
   return (
     <>
-      {/* Top header */}
       <PageHeader className="justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-black text-slate-900">ภาพรวมการเรียนการสอน</h1>
@@ -208,9 +207,9 @@ export default async function TeacherDashboard() {
         </div>
         <Link
           href="/teacher/courses/new"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#990000] px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000] whitespace-nowrap"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-5 py-3 text-sm font-bold leading-none !text-white shadow-lg shadow-qroll-red-dark/20 transition-all hover:bg-qroll-red-darker focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qroll-red-dark whitespace-nowrap"
         >
-          <Plus className="h-4 w-4 !text-white" />
+          <Plus className="h-4 w-4 text-white" />
           <span className="hidden sm:inline">สร้างวิชาใหม่</span>
           <span className="sm:hidden">วิชาใหม่</span>
         </Link>
@@ -218,7 +217,6 @@ export default async function TeacherDashboard() {
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="animate-fade-in pb-8">
-          {/* Stat cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
             <Link
               href="/teacher/courses"
@@ -238,7 +236,7 @@ export default async function TeacherDashboard() {
 
             <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 flex items-center justify-center shadow-lg shadow-red-900/20">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-qroll-red-dark to-red-800 flex items-center justify-center shadow-lg shadow-red-900/20">
                   <CalendarDays className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -309,12 +307,10 @@ export default async function TeacherDashboard() {
             </div>
           </div>
 
-          {/* Two-column: schedule table + attendance donut */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
-            {/* Schedule table */}
             <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
               <div className="px-5 py-5 sm:px-8 sm:py-7 border-b border-slate-100 flex justify-between items-center bg-white relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#990000]" />
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-qroll-red-dark" />
                 <div>
                   <h3 className="text-xl font-black text-slate-800">
                     ตารางสอนวันนี้{" "}
@@ -330,7 +326,7 @@ export default async function TeacherDashboard() {
                   <p className="text-sm font-semibold">ไม่มีคาบสอนวันนี้</p>
                   <p className="text-xs mt-1">
                     ไปที่{" "}
-                    <Link href="/teacher/courses" className="text-[#990000] underline underline-offset-2 font-semibold">
+                    <Link href="/teacher/courses" className="text-qroll-red-dark underline underline-offset-2 font-semibold">
                       รายวิชา
                     </Link>{" "}
                     เพื่อเพิ่มตารางสอน
@@ -454,7 +450,7 @@ export default async function TeacherDashboard() {
                                   </div>
                                 ) : (
                                   <div className="w-12 h-12 rounded-xl bg-slate-100/80 border border-slate-200 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 group-hover:border-red-200 transition-colors">
-                                    <BookOpen className="w-5 h-5 text-slate-400 group-hover:text-[#990000]" />
+                                    <BookOpen className="w-5 h-5 text-slate-400 group-hover:text-qroll-red-dark" />
                                   </div>
                                 )}
                                 <div className="min-w-0">
@@ -462,7 +458,7 @@ export default async function TeacherDashboard() {
                                     className={`text-base font-black leading-tight font-inter ${
                                       isActive
                                         ? "text-emerald-700"
-                                        : "text-slate-800 group-hover:text-[#990000] transition-colors"
+                                        : "text-slate-800 group-hover:text-qroll-red-dark transition-colors"
                                     }`}
                                   >
                                     {s.course.code}
@@ -538,9 +534,8 @@ export default async function TeacherDashboard() {
               )}
             </div>
 
-            {/* Latest class summary donut */}
             <div className="self-start overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:sticky xl:top-28">
-              <div className="h-28 sm:h-32 bg-[#990000] p-5 sm:p-6 relative overflow-hidden">
+              <div className="h-28 sm:h-32 bg-qroll-red-dark p-5 sm:p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-xl" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-10 rounded-full -ml-10 -mb-10 blur-lg" />
                 <h3 className="text-2xl font-black text-white relative z-10 tracking-wide flex items-center gap-2">
@@ -557,10 +552,10 @@ export default async function TeacherDashboard() {
                     className="bg-white border border-slate-100 rounded-2xl p-4 shadow-lg shadow-slate-200/50 -mt-12 relative z-20 mb-8 flex items-center gap-4 cursor-pointer hover:shadow-xl hover:border-red-200 transition-all group/card"
                   >
                     <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center border border-red-100 flex-shrink-0 group-hover/card:bg-red-100 transition-colors">
-                      <BookOpen className="w-6 h-6 text-[#990000]" />
+                      <BookOpen className="w-6 h-6 text-qroll-red-dark" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-bold text-slate-800 leading-snug group-hover/card:text-[#990000] transition-colors truncate font-inter">
+                      <h4 className="text-base font-bold text-slate-800 leading-snug group-hover/card:text-qroll-red-dark transition-colors truncate font-inter">
                         {latestClosedSession.course.code}
                       </h4>
                       <p className="text-sm text-slate-500 truncate">{latestClosedSession.course.name}</p>
@@ -578,7 +573,7 @@ export default async function TeacherDashboard() {
                         {latestPct}%
                       </span>
                     )}
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover/card:text-[#990000] group-hover/card:translate-x-0.5 transition-all" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover/card:text-qroll-red-dark group-hover/card:translate-x-0.5 transition-all" />
                   </Link>
                 ) : (
                   <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-lg shadow-slate-200/50 -mt-12 relative z-20 mb-8 flex items-center gap-4">

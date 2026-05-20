@@ -13,7 +13,7 @@ export default function RiskCard({ safe, warn, danger }: Props) {
   return (
     <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-500">
-        <Activity className="h-4 w-4 text-[#990000]" />
+        <Activity className="h-4 w-4 text-qroll-red-dark" />
         สถานะนักศึกษา (ความเสี่ยง)
       </h3>
 

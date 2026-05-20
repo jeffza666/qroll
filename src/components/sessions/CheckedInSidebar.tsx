@@ -169,7 +169,7 @@ export default function CheckedInSidebar({
                 unoptimized
                 className="mx-auto h-32 w-32 rounded-lg bg-white p-2"
               />
-              <p className="mt-2 break-all text-center text-[11px] font-semibold text-[#990000]">
+              <p className="mt-2 break-all text-center text-[11px] font-semibold text-qroll-red-dark">
                 {demoUrl}
               </p>
             </div>
@@ -183,7 +183,7 @@ export default function CheckedInSidebar({
             ) : (
               demoCheckIns.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-[#990000]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-qroll-red-dark">
                     <Clock className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">

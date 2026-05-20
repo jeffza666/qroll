@@ -100,7 +100,7 @@ export default async function SettingsPage() {
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="mx-auto max-w-4xl animate-fade-in pb-12">
           <div className="mb-6 ml-1 flex items-center gap-3">
-            <div className="h-8 w-2 rounded-full bg-[#990000] shadow-md" />
+            <div className="h-8 w-2 rounded-full bg-qroll-red-dark shadow-md" />
             <h2 className="pt-1 text-2xl font-black leading-none tracking-tight text-slate-900 md:text-3xl">
               การตั้งค่าระบบ
             </h2>
@@ -116,7 +116,7 @@ export default async function SettingsPage() {
               <div className="flex flex-col items-start gap-8 sm:flex-row">
                 <div className="relative shrink-0">
                   <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-slate-50 bg-white shadow-sm">
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-red-100 text-3xl font-black text-[#990000]">
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-red-100 text-3xl font-black text-qroll-red-dark">
                       {(user.name ?? "T").trim().charAt(0).toUpperCase()}
                     </div>
                   </div>
@@ -149,7 +149,7 @@ export default async function SettingsPage() {
                     <button
                       type="button"
                       disabled
-                      className="cursor-not-allowed rounded-xl bg-[#990000] px-5 py-2.5 text-sm font-semibold text-white opacity-50 shadow-sm shadow-red-900/20"
+                      className="cursor-not-allowed rounded-xl bg-qroll-red-dark px-5 py-2.5 text-sm font-semibold text-white opacity-50 shadow-sm shadow-red-900/20"
                     >
                       บันทึกข้อมูลส่วนตัว
                     </button>
@@ -224,7 +224,7 @@ export default async function SettingsPage() {
                 </p>
                 <Link
                   href="/teacher/face-seed"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#990000] px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800"
+                  className="inline-flex items-center gap-2 rounded-xl bg-qroll-red-dark px-4 py-2.5 text-sm font-bold text-white hover:bg-qroll-red-darker"
                 >
                   <ScanFace className="h-4 w-4" />
                   Face Seed (จำลอง TU Photo Sync)

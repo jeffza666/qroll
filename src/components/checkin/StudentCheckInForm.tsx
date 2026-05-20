@@ -18,7 +18,7 @@ import { FACE_MAX_RETRY } from "@/lib/face/constants";
 type Props = {
   token: string;
   courseId: string;
-  /** Phase 6: ถ้า session เปิด geofence ต้องขอ browser geolocation ก่อน submit */
+  /** ถ้า session เปิด geofence ต้องขอ browser geolocation ก่อน submit */
   requiresLocation: boolean;
   /** user ที่ seed face แล้วต้องสแกนหน้าก่อน submit */
   requiresFace: boolean;
@@ -280,7 +280,7 @@ export default function StudentCheckInForm({
     <div className="space-y-5">
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#990000] to-red-800 text-sm font-black text-white shadow-lg shadow-red-900/20">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-qroll-red-dark to-red-800 text-sm font-black text-white shadow-lg shadow-red-900/20">
             {initials || <UserRound className="h-5 w-5" />}
           </div>
           <div className="min-w-0">
@@ -331,7 +331,7 @@ export default function StudentCheckInForm({
         type="button"
         onClick={handleSubmit}
         disabled={busy || Boolean(result?.ok)}
-        className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-red-800 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+        className="font-inter flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-qroll-red-dark px-4 text-base font-extrabold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-px hover:bg-qroll-red-darker disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
       >
         {locating ? (
           <>

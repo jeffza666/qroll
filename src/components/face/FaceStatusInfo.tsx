@@ -21,7 +21,7 @@ export default function FaceStatusInfo({ hasFace, enrolledAt }: Props) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
-        <ScanFace className="h-5 w-5 text-[#990000]" />
+        <ScanFace className="h-5 w-5 text-qroll-red-dark" />
         <h2 className="text-base font-extrabold text-slate-900">การยืนยันตัวตนด้วยใบหน้า</h2>
       </div>
 

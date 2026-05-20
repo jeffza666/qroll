@@ -41,7 +41,7 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       onClick={onNavigate}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
         isActive
-          ? "bg-red-50 text-[#990000] border border-red-100"
+          ? "bg-red-50 text-qroll-red-dark border border-red-100"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >

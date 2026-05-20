@@ -162,11 +162,10 @@ export default async function CourseReportPage({ params }: Props) {
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         <div className="mx-auto max-w-6xl">
-          {/* CourseHeader card with inline stats */}
           <div className="mb-8 flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 flex-1">
               <div className="mb-5 flex items-center gap-3">
-                <div className="h-7 w-2 rounded-full bg-[#990000] shadow-sm" />
+                <div className="h-7 w-2 rounded-full bg-qroll-red-dark shadow-sm" />
                 <h2 className="text-2xl font-extrabold tracking-wide text-slate-800 md:text-[28px]">
                   สรุปการเข้าเรียนทั้งเทอม
                 </h2>
@@ -176,7 +175,7 @@ export default async function CourseReportPage({ params }: Props) {
                   {course.code}
                 </h3>
                 {course.section && (
-                  <span className="rounded-lg bg-[#990000] px-3 py-1 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                  <span className="rounded-lg bg-qroll-red-dark px-3 py-1 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                     Sec {course.section}
                   </span>
                 )}

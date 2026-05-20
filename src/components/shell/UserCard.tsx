@@ -8,7 +8,7 @@ export default function UserCard({ name, email }: { name: string; email: string 
     <div className="p-5 border-t border-slate-100 bg-slate-50/50">
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-red-100 border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0">
-          <span className="text-sm font-bold text-[#990000]">
+          <span className="text-sm font-bold text-qroll-red-dark">
             {name.charAt(0).toUpperCase()}
           </span>
         </div>

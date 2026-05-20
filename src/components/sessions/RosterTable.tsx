@@ -100,20 +100,18 @@ export default function RosterTable({ rows, filter, searchQuery }: Props) {
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      {/* Header bar: count + filter indicator */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-6 sm:py-4 text-sm">
         <span className="font-semibold text-slate-500">
           แสดงผล <strong className="text-slate-800">{visible.length}</strong> จาก{" "}
           {rows.length} รายการ
           {(filter !== "ALL" || q) && (
-            <span className="ml-2 rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#990000]">
+            <span className="ml-2 rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-qroll-red-dark">
               กำลังกรองข้อมูล
             </span>
           )}
         </span>
       </div>
 
-      {/* Sticky-header table */}
       <div className="relative max-h-[600px] overflow-x-auto overflow-y-auto">
         <table className="w-full whitespace-nowrap text-left text-base">
           <thead className="sticky top-0 z-10 text-xs font-semibold uppercase tracking-wider text-slate-600 shadow-sm">

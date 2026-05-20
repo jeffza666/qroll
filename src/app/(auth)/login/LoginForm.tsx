@@ -89,7 +89,7 @@ export function LoginForm({
           </div>
 
           <nav className="flex flex-col gap-2 px-4 py-8">
-            <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-[#990000]">
+            <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-qroll-red-dark">
               <LayoutGrid size={19} />
               เข้าสู่ระบบ
             </div>
@@ -110,7 +110,7 @@ export function LoginForm({
 
         <div className="border-t border-slate-100 bg-slate-50/60 p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-xl bg-red-50 font-sans font-extrabold text-[#990000]">
+            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-xl bg-red-50 font-sans font-extrabold text-qroll-red-dark">
               TU
             </div>
             <div className="min-w-0">
@@ -145,7 +145,7 @@ export function LoginForm({
             className="w-full max-w-[440px] rounded-2xl border border-slate-200 bg-white p-[30px] shadow-[0_14px_28px_rgba(15,23,42,0.08)] max-[560px]:rounded-[14px] max-[560px]:p-[22px]"
           >
             <div className="mb-6 flex items-start gap-3.5 max-[560px]:flex-col">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#990000] text-white shadow-[0_12px_26px_rgba(127,29,29,0.20)]">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-qroll-red-dark text-white shadow-[0_12px_26px_rgba(127,29,29,0.20)]">
                 <Lock size={22} />
               </div>
               <div>
@@ -186,7 +186,7 @@ export function LoginForm({
                   />
                   <input
                     id="username"
-                    className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-4 text-[15px] text-slate-900 outline-none transition focus:border-[#990000] focus:ring-4 focus:ring-red-900/10"
+                    className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-4 text-[15px] text-slate-900 outline-none transition focus:border-qroll-red-dark focus:ring-4 focus:ring-red-900/10"
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                     placeholder="กรอกชื่อผู้ใช้หรือรหัสนักศึกษา"
@@ -209,7 +209,7 @@ export function LoginForm({
                   />
                   <input
                     id="password"
-                    className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-12 text-[15px] text-slate-900 outline-none transition focus:border-[#990000] focus:ring-4 focus:ring-red-900/10"
+                    className="h-12 w-full rounded-xl border-[1.5px] border-slate-200 bg-white py-3 pl-11 pr-12 text-[15px] text-slate-900 outline-none transition focus:border-qroll-red-dark focus:ring-4 focus:ring-red-900/10"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -235,7 +235,7 @@ export function LoginForm({
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded-[7px] border-2 ${
                     remember
-                      ? "border-[#990000] bg-[#990000] text-white"
+                      ? "border-qroll-red-dark bg-qroll-red-dark text-white"
                       : "border-slate-300 bg-white text-transparent"
                   }`}
                 >
@@ -247,7 +247,7 @@ export function LoginForm({
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="mt-1 flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#990000] px-4 text-base font-extrabold text-white shadow-[0_14px_28px_rgba(127,29,29,0.20)] transition hover:-translate-y-px hover:bg-[#7F0000] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+                className="mt-1 flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-xl bg-qroll-red-dark px-4 text-base font-extrabold text-white shadow-[0_14px_28px_rgba(127,29,29,0.20)] transition hover:-translate-y-px hover:bg-qroll-red-darker disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
               >
                 {loading ? (
                   <>

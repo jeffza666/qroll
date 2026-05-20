@@ -12,9 +12,8 @@
   --font-inter: var(--font-inter), "Inter", ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, monospace;
 
-  /* QRoll brand tokens */
-  --color-qroll-red: #cc0000;
   --color-qroll-red-dark: #990000;
+  --color-qroll-red-darker: #7a0000;
   --color-qroll-bg: #f7f8fc;
   --color-qroll-border: #e2e8f0;
   --color-qroll-muted: #64748b;

@@ -194,7 +194,6 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
       id="course-form"
       className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-6"
     >
-      {/* code + section */}
       <div className="flex gap-3">
         <div className="flex-1">
           <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -205,7 +204,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             required
             placeholder="เช่น CS311"
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-[#990000]/30 focus:border-[#990000] transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-qroll-red-dark/30 focus:border-qroll-red-dark transition-all"
           />
         </div>
         <div className="w-28 sm:w-40">
@@ -216,12 +215,11 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
             value={section}
             onChange={(e) => setSection(e.target.value)}
             placeholder="650001"
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-[#990000]/30 focus:border-[#990000] transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-qroll-red-dark/30 focus:border-qroll-red-dark transition-all"
           />
         </div>
       </div>
 
-      {/* name */}
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2">
           ชื่อวิชา <span className="text-red-500">*</span>
@@ -231,11 +229,10 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="เช่น Operating Systems"
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#990000]/30 focus:border-[#990000] transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-qroll-red-dark/30 focus:border-qroll-red-dark transition-all"
         />
       </div>
 
-      {/* semester */}
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2">
           ภาคการศึกษา <span className="text-red-500">*</span>
@@ -245,11 +242,10 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
           onChange={(e) => setSemester(e.target.value)}
           required
           placeholder="1/2569"
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-[#990000]/30 focus:border-[#990000] transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-qroll-red-dark/30 focus:border-qroll-red-dark transition-all"
         />
       </div>
 
-      {/* schedules */}
       <div className="pt-4 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <label className="block text-sm font-semibold text-slate-700">
@@ -258,7 +254,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
           <button
             type="button"
             onClick={addRow}
-            className="text-xs font-bold text-[#990000] hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors flex items-center gap-1"
+            className="text-xs font-bold text-qroll-red-dark hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors flex items-center gap-1"
           >
             <Plus className="w-3 h-3" />
             เพิ่มเวลาเรียน
@@ -276,7 +272,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
                 onChange={(e) =>
                   updateRow(idx, "dayOfWeek", Number(e.target.value))
                 }
-                className="w-28 px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-semibold focus:outline-none focus:border-[#990000]"
+                className="w-28 px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-semibold focus:outline-none focus:border-qroll-red-dark"
               >
                 {DAYS.map((d) => (
                   <option key={d.value} value={d.value}>
@@ -291,14 +287,14 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
                 type="time"
                 value={row.startTime}
                 onChange={(e) => updateRow(idx, "startTime", e.target.value)}
-                className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-inter font-semibold focus:outline-none focus:border-[#990000]"
+                className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-inter font-semibold focus:outline-none focus:border-qroll-red-dark"
               />
               <span className="text-slate-400 font-bold">-</span>
               <input
                 type="time"
                 value={row.endTime}
                 onChange={(e) => updateRow(idx, "endTime", e.target.value)}
-                className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-inter font-semibold focus:outline-none focus:border-[#990000]"
+                className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-inter font-semibold focus:outline-none focus:border-qroll-red-dark"
               />
               <div className="flex items-center gap-1.5 text-slate-400 ml-2">
                 <MapPin className="w-4 h-4" />
@@ -308,7 +304,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
                 value={row.room}
                 onChange={(e) => updateRow(idx, "room", e.target.value)}
                 placeholder="ห้อง (ไม่บังคับ)"
-                className="flex-1 min-w-[120px] px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#990000]"
+                className="flex-1 min-w-[120px] px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-qroll-red-dark"
               />
               {schedules.length > 1 && (
                 <button
@@ -428,7 +424,7 @@ export default function CourseForm({ mode, courseId, initial, belowFields }: Pro
         type="submit"
         form="course-form"
         disabled={isPending}
-        className="flex-1 py-3 text-sm font-semibold !text-white bg-[#990000] rounded-xl hover:bg-red-800 shadow-lg shadow-red-900/20 transition-all disabled:opacity-60"
+        className="flex-1 py-3 text-sm font-semibold !text-white bg-qroll-red-dark rounded-xl hover:bg-qroll-red-darker shadow-lg shadow-red-900/20 transition-all disabled:opacity-60"
       >
         {isPending
           ? "กำลังบันทึก..."

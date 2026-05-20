@@ -91,7 +91,7 @@ export default async function StudentHistoryPage() {
 
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="relative overflow-hidden border-b border-slate-100 px-6 py-5">
-              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#990000]" />
+              <div className="absolute top-0 left-0 h-full w-1.5 bg-qroll-red-dark" />
               <div className="flex items-center gap-3 pl-2">
                 <HistoryIcon className="h-5 w-5 text-slate-400" />
                 <h2 className="font-inter text-xl font-black text-slate-800">
