@@ -27,6 +27,7 @@ type Props = {
   demoEnabled: boolean;
   demoUrl: string | null;
   demoQrDataUrl: string | null;
+  totalEnrolled: number;
   onAttendanceCountChange?: (count: number) => void;
 };
 
@@ -73,12 +74,15 @@ export default function CheckedInSidebar({
   demoEnabled,
   demoUrl,
   demoQrDataUrl,
+  totalEnrolled,
   onAttendanceCountChange,
 }: Props) {
   const [attendanceCount, setAttendanceCount] = useState(initialAttendanceCount);
   const [demoCount, setDemoCount] = useState(initialDemoCount);
   const [attendances, setAttendances] = useState(initialAttendances);
   const [demoCheckIns, setDemoCheckIns] = useState(initialDemoCheckIns);
+  const attendancePct =
+    totalEnrolled > 0 ? Math.round((attendanceCount / totalEnrolled) * 100) : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +120,10 @@ export default function CheckedInSidebar({
         <div>
           <p className="text-sm font-semibold text-slate-500">เช็คชื่อจริง</p>
           <p className="text-3xl font-black tabular-nums text-slate-950">
-            {attendanceCount}
+            <span className="text-emerald-600">{attendanceCount}</span> / {totalEnrolled} ({attendancePct}%)
+          </p>
+          <p className="text-xs font-black tabular-nums text-slate-950">
+            ยังไม่เช็คชื่อ {totalEnrolled - attendanceCount} คน
           </p>
         </div>
       </div>

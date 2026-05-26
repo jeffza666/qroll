@@ -404,6 +404,7 @@ export default function SessionView({
             demoUrl={demoUrl}
             demoQrDataUrl={demoQrDataUrl}
             onAttendanceCountChange={setAttendanceCount}
+            totalEnrolled={sessionInfo.enrollmentCount}
           />
         </div>
       )}

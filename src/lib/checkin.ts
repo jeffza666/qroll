@@ -44,7 +44,7 @@ export function isDemoCheckInEnabled() {
 }
 
 export function getAttendanceStatus(now: Date, lateAfter: Date | null) {
-  if (lateAfter && now > lateAfter) return AttendanceStatus.LATE;
+  if (lateAfter && now >= lateAfter) return AttendanceStatus.LATE;
   return AttendanceStatus.PRESENT;
 }
 
