@@ -2,7 +2,9 @@ import { BookOpen, ChevronRight, QrCode, Users } from "lucide-react";
 import Link from "next/link";
 
 import CheckInLauncher from "@/components/student/CheckInLauncher";
+import AttendanceStanding from "@/components/student/AttendanceStanding";
 import PageHeader from "@/components/shell/PageHeader";
+import { cellForSession, summarizeMarks } from "@/lib/attendance-summary";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -19,6 +21,43 @@ export default async function StudentHomePage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const closedSessions =
+    enrollments.length === 0
+      ? []
+      : await db.classSession.findMany({
+          where: {
+            isOpen: false,
+            courseId: { in: enrollments.map((enrollment) => enrollment.course.id) },
+          },
+          select: {
+            courseId: true,
+            startsAt: true,
+            attendances: {
+              where: { studentId: user.id },
+              select: { status: true },
+            },
+          },
+        });
+
+  const standings = enrollments.map((enrollment) => {
+    const summary = summarizeMarks(
+      closedSessions
+        .filter((session) => session.courseId === enrollment.course.id)
+        .map((session) =>
+          cellForSession(enrollment.createdAt, {
+            startsAt: session.startsAt,
+            status: session.attendances[0]?.status ?? null,
+          }),
+        ),
+    );
+    return { enrollmentId: enrollment.id, ...summary };
+  });
+  const standingByEnrollment = new Map(
+    standings.map((standing) => [standing.enrollmentId, standing]),
+  );
+  const dangerCount = standings.filter((standing) => standing.band === "danger").length;
+  const warnCount = standings.filter((standing) => standing.band === "warn").length;
+
   return (
     <>
       <PageHeader>
@@ -33,6 +72,22 @@ export default async function StudentHomePage() {
           <div className="mb-8">
             <CheckInLauncher />
           </div>
+
+          {dangerCount > 0 ? (
+            <div
+              role="status"
+              className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-800"
+            >
+              มี {dangerCount} วิชาที่อัตราเข้าเรียนต่ำกว่า 60% — เปิดรายวิชาเพื่อดูคาบที่ขาด
+            </div>
+          ) : warnCount > 0 ? (
+            <div
+              role="status"
+              className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900"
+            >
+              มี {warnCount} วิชาที่ควรเฝ้าระวัง เพราะอัตราเข้าเรียนต่ำกว่า 80%
+            </div>
+          ) : null}
 
           <div className="relative mb-6 ml-1 flex items-center gap-3">
             <div className="h-8 w-2 rounded-full bg-qroll-red-dark shadow-md shadow-red-900/20" />
@@ -73,10 +128,13 @@ export default async function StudentHomePage() {
                   <p className="mt-1 text-xs font-bold text-slate-400">
                     เทอม {enrollment.course.semester}
                   </p>
-                  <div className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-4 text-sm text-slate-500">
+                  <div className="mt-4 flex items-center gap-1.5 text-sm text-slate-500">
                     <Users className="h-4 w-4 text-slate-400" />
                     {enrollment.course._count.enrollments} นักศึกษา
                   </div>
+                  <AttendanceStanding
+                    pct={standingByEnrollment.get(enrollment.id)?.pct ?? null}
+                  />
                 </Link>
               ))}
             </div>

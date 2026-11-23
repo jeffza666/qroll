@@ -1,5 +1,7 @@
 import PageHeader from "@/components/shell/PageHeader";
+import { attendanceRate } from "@/lib/attendance-summary";
 import { requireTeacher } from "@/lib/auth-helpers";
+import { bangkokParts, formatBangkokTime } from "@/lib/datetime";
 import { db } from "@/lib/db";
 import {
   BookOpen,
@@ -26,14 +28,17 @@ const MONTHS_TH = [
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
 ];
 
+function formatSessionDate(date: Date) {
+  const parts = bangkokParts(date);
+  return `${parts.day} ${MONTHS_TH[parts.month - 1]} ${parts.year + 543}`;
+}
+
 export default async function TeacherDashboard() {
   const user = await requireTeacher();
 
-  const bangkokNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-  );
-  const todayDow = bangkokNow.getDay();
-  const todayLabel = `${DAYS[todayDow]}ที่ ${bangkokNow.getDate()} ${MONTHS_TH[bangkokNow.getMonth()]} ${bangkokNow.getFullYear() + 543}`;
+  const today = bangkokParts(new Date());
+  const todayDow = today.dayOfWeek;
+  const todayLabel = `${DAYS[todayDow]}ที่ ${today.day} ${MONTHS_TH[today.month - 1]} ${today.year + 543}`;
 
   const [courseCount, enrollmentCount, todaySchedules, offScheduleSessions, closedSessionsForAvg, latestClosedSession] =
     await Promise.all([
@@ -108,6 +113,9 @@ export default async function TeacherDashboard() {
           attendances: { select: { status: true } },
           course: {
             select: {
+              id: true,
+              code: true,
+              name: true,
               _count: { select: { enrollments: { where: { droppedAt: null } } } },
             },
           },
@@ -132,8 +140,13 @@ export default async function TeacherDashboard() {
       }),
     ]);
 
-  let totalPresentish = 0;
+  let totalPresent = 0;
+  let totalLate = 0;
   let totalExpected = 0;
+  const courseTotals = new Map<
+    string,
+    { id: string; code: string; name: string; present: number; late: number; expected: number }
+  >();
   for (const s of closedSessionsForAvg) {
     let p = 0;
     let l = 0;
@@ -143,27 +156,63 @@ export default async function TeacherDashboard() {
       else if (a.status === "LATE") l++;
       else if (a.status === "EXCUSED") e++;
     }
-    totalPresentish += p + l * 0.5;
+    totalPresent += p;
+    totalLate += l;
     totalExpected += s.course._count.enrollments - e;
+
+    const course = courseTotals.get(s.course.id) ?? {
+      id: s.course.id,
+      code: s.course.code,
+      name: s.course.name,
+      present: 0,
+      late: 0,
+      expected: 0,
+    };
+    course.present += p;
+    course.late += l;
+    course.expected += s.course._count.enrollments - e;
+    courseTotals.set(s.course.id, course);
   }
-  const avgPct =
-    totalExpected > 0 ? Math.round((totalPresentish / totalExpected) * 100) : null;
+  const avgPct = attendanceRate({
+    present: totalPresent,
+    late: totalLate,
+    counted: totalExpected,
+  });
+  const coursesToWatch = [...courseTotals.values()]
+    .flatMap((course) => {
+      const pct = attendanceRate({
+        present: course.present,
+        late: course.late,
+        counted: course.expected,
+      });
+      if (pct === null || pct >= 80) return [];
+      return [{ ...course, pct }];
+    })
+    .sort((a, b) => a.pct - b.pct);
   const activeScheduleCount = todaySchedules.filter((s) => s.classSessions.length > 0).length;
   const todayClassCount = todaySchedules.length + offScheduleSessions.length;
   const activeClassCount = activeScheduleCount + offScheduleSessions.length;
 
   const latestStats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
+  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
   if (latestClosedSession) {
     for (const a of latestClosedSession.attendances) latestStats[a.status]++;
+    const unmarked =
+      latestEnrolled -
+      latestStats.PRESENT -
+      latestStats.LATE -
+      latestStats.ABSENT -
+      latestStats.EXCUSED;
+    if (unmarked > 0) latestStats.ABSENT += unmarked;
   }
   const latestTotal =
     latestStats.PRESENT + latestStats.LATE + latestStats.ABSENT + latestStats.EXCUSED;
-  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
   const latestCheckedIn = latestStats.PRESENT + latestStats.LATE;
-  const latestPct =
-    latestEnrolled > 0
-      ? Math.round(((latestStats.PRESENT + latestStats.LATE * 0.5) / latestEnrolled) * 100)
-      : null;
+  const latestPct = attendanceRate({
+    present: latestStats.PRESENT,
+    late: latestStats.LATE,
+    counted: Math.max(0, latestEnrolled - latestStats.EXCUSED),
+  });
   const segments: Array<{
     id: string;
     label: string;
@@ -191,11 +240,11 @@ export default async function TeacherDashboard() {
   });
 
   function fmtBkk(d: Date) {
-    return d.toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false });
+    return formatBangkokTime(d);
   }
 
   const latestDateLabel = latestClosedSession
-    ? `${latestClosedSession.startsAt.getDate()} ${MONTHS_TH[latestClosedSession.startsAt.getMonth()]} ${latestClosedSession.startsAt.getFullYear() + 543} • ${latestClosedSession.startsAt.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })} น.`
+    ? `${formatSessionDate(latestClosedSession.startsAt)} • ${formatBangkokTime(latestClosedSession.startsAt)} น.`
     : null;
 
   return (
@@ -306,6 +355,56 @@ export default async function TeacherDashboard() {
               </div>
             </div>
           </div>
+
+          {coursesToWatch.length > 0 && (
+            <section
+              aria-label="วิชาที่ควรติดตาม"
+              className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm sm:p-6"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-amber-950">วิชาที่ควรติดตาม</h2>
+                  <p className="mt-1 text-sm font-medium text-amber-800">
+                    อัตราเข้าเรียนเฉลี่ยต่ำกว่า 80% จากคาบที่ปิดแล้ว
+                  </p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 font-inter text-sm font-black text-amber-700">
+                  {coursesToWatch.length}
+                </span>
+              </div>
+              <ul className="grid gap-3 md:grid-cols-2">
+                {coursesToWatch.slice(0, 4).map((course) => (
+                  <li key={course.id}>
+                    <Link
+                      href={`/teacher/courses/${course.id}/report`}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-white px-4 py-3 transition hover:border-amber-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-inter text-sm font-black text-slate-900">
+                          {course.code}
+                        </span>
+                        <span className="block truncate text-xs font-semibold text-slate-500">
+                          {course.name}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 font-inter text-lg font-black ${
+                          course.pct >= 60 ? "text-amber-600" : "text-red-600"
+                        }`}
+                      >
+                        {course.pct}%
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {coursesToWatch.length > 4 && (
+                <p className="mt-3 text-xs font-semibold text-amber-800">
+                  และอีก {coursesToWatch.length - 4} วิชาในหน้ารายวิชา
+                </p>
+              )}
+            </section>
+          )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
             <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">

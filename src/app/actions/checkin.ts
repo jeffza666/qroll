@@ -116,12 +116,11 @@ export async function checkInWithQrToken(
   const context = await getCheckInContext(parsedToken.data);
   if (!context.ok) return { ok: false, reason: mapContextFailure(context.reason) };
 
-  const enrollment = await db.enrollment.findUnique({
+  const enrollment = await db.enrollment.findFirst({
     where: {
-      studentId_courseId: {
-        studentId: user.id,
-        courseId: context.session.course.id,
-      },
+      studentId: user.id,
+      courseId: context.session.course.id,
+      droppedAt: null,
     },
     select: { id: true },
   });
@@ -278,8 +277,9 @@ export async function resolveEntryCode(rawCode: string): Promise<ResolveEntryCod
   const parsed = entryCodeSchema.safeParse(rawCode);
   if (!parsed.success) return { ok: false, reason: "invalid" };
 
+  let user: Awaited<ReturnType<typeof requireStudent>>;
   try {
-    await requireStudent();
+    user = await requireStudent();
   } catch (error) {
     if (error instanceof AuthError) {
       return {
@@ -292,10 +292,21 @@ export async function resolveEntryCode(rawCode: string): Promise<ResolveEntryCod
 
   const session = await db.classSession.findFirst({
     where: { entryCode: parsed.data, isOpen: true },
-    select: { qrToken: true },
+    select: { qrToken: true, courseId: true },
   });
 
   if (!session?.qrToken) return { ok: false, reason: "not_found" };
+
+  const enrollment = await db.enrollment.findFirst({
+    where: {
+      studentId: user.id,
+      courseId: session.courseId,
+      droppedAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (!enrollment) return { ok: false, reason: "not_found" };
 
   return { ok: true, token: session.qrToken };
 }

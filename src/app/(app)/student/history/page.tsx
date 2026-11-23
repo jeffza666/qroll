@@ -34,7 +34,7 @@ export default async function StudentHistoryPage() {
       <PageHeader>
         <div className="min-w-0">
           <h1 className="truncate font-inter text-2xl font-black text-slate-900">ประวัติเข้าเรียน</h1>
-          <p className="truncate text-sm text-slate-500">{total} รายการ</p>
+          <p className="truncate text-sm text-slate-500">{total} รายการที่เช็คชื่อแล้ว</p>
         </div>
       </PageHeader>
 
@@ -94,10 +94,15 @@ export default async function StudentHistoryPage() {
               <div className="absolute top-0 left-0 h-full w-1.5 bg-qroll-red-dark" />
               <div className="flex items-center gap-3 pl-2">
                 <HistoryIcon className="h-5 w-5 text-slate-400" />
-                <h2 className="font-inter text-xl font-black text-slate-800">
-                  ประวัติทั้งหมด{" "}
-                  <span className="ml-1 font-medium text-slate-400">(All Check-ins)</span>
-                </h2>
+                <div>
+                  <h2 className="font-inter text-xl font-black text-slate-800">
+                    ประวัติทั้งหมด{" "}
+                    <span className="ml-1 font-medium text-slate-400">(All Check-ins)</span>
+                  </h2>
+                  <p className="mt-1 text-xs font-medium text-slate-400">
+                    คาบที่ไม่ได้เช็คชื่อจะถูกนับเป็นขาดในแต่ละรายวิชา
+                  </p>
+                </div>
               </div>
             </div>
 

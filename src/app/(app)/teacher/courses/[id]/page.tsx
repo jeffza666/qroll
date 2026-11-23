@@ -19,6 +19,8 @@ import {
 import CourseMoreMenu from "@/components/courses/CourseMoreMenu";
 import OpenSessionButton from "@/components/courses/OpenSessionButton";
 import PageHeader from "@/components/shell/PageHeader";
+import { summarizeSession } from "@/lib/attendance-summary";
+import { formatBangkokDate, formatBangkokTime } from "@/lib/datetime";
 
 const DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
 const TH_MONTHS = [
@@ -27,14 +29,11 @@ const TH_MONTHS = [
 ];
 
 function formatDate(d: Date) {
-  return `${d.getDate()} ${TH_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+  return formatBangkokDate(d, TH_MONTHS);
 }
 
 function formatTime(d: Date) {
-  return `${d.getHours().toString().padStart(2, "0")}:${d
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}`;
+  return formatBangkokTime(d);
 }
 
 function relativeTime(d: Date) {
@@ -67,10 +66,14 @@ export default async function CourseDetailPage({ params }: Props) {
           classSessions: true,
         },
       },
+      enrollments: {
+        where: { droppedAt: null },
+        select: { createdAt: true, studentId: true },
+      },
       classSessions: {
         where: { isOpen: false },
         orderBy: { startsAt: "desc" },
-        include: { attendances: { select: { status: true } } },
+        include: { attendances: { select: { status: true, studentId: true } } },
       },
     },
   });
@@ -88,24 +91,25 @@ export default async function CourseDetailPage({ params }: Props) {
     ? "/teacher/courses?show=archived"
     : "/teacher/courses";
 
-  const totalEnrolled = course._count.enrollments;
   const sessionRows = course.classSessions.map((s) => {
-    const stats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
-    for (const a of s.attendances) stats[a.status]++;
-    const counted = totalEnrolled - stats.EXCUSED;
-    const presentPct =
-      counted > 0
-        ? Math.round(((stats.PRESENT + stats.LATE * 0.5) / counted) * 100)
-        : 0;
+    const summary = summarizeSession({
+      startsAt: s.startsAt,
+      students: course.enrollments.map((enrollment) => ({
+        enrolledAt: enrollment.createdAt,
+        status:
+          s.attendances.find((attendance) => attendance.studentId === enrollment.studentId)
+            ?.status ?? null,
+      })),
+    });
     return {
       id: s.id,
       startsAt: s.startsAt,
       endsAt: s.endsAt,
-      present: stats.PRESENT,
-      late: stats.LATE,
-      excused: stats.EXCUSED,
-      absent: stats.ABSENT,
-      presentPct,
+      present: summary.present,
+      late: summary.late,
+      excused: summary.excused,
+      absent: summary.absent,
+      presentPct: summary.pct ?? 0,
     };
   });
 
@@ -125,6 +129,7 @@ export default async function CourseDetailPage({ params }: Props) {
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={backHref}
+            aria-label="กลับหน้ารายวิชา"
             className="shrink-0 text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />

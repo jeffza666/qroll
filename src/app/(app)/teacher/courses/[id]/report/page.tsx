@@ -6,8 +6,15 @@ import type { AttendanceStatus } from "@prisma/client";
 import ReportClient from "@/components/report/ReportClient";
 import ExportCsvButton from "@/components/report/ExportCsvButton";
 import PageHeader from "@/components/shell/PageHeader";
+import {
+  cellForSession,
+  riskBand,
+  summarizeMarks,
+  summarizeSession,
+} from "@/lib/attendance-summary";
 import { requireCourseOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { bangkokParts } from "@/lib/datetime";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,8 +22,8 @@ const DAYS_SHORT = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 const TH_MONTHS_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
 function sessionLabel(startsAt: Date): string {
-  const bkk = new Date(startsAt.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
-  return `${DAYS_SHORT[bkk.getDay()]} ${bkk.getDate()} ${TH_MONTHS_SHORT[bkk.getMonth()]}`;
+  const bkk = bangkokParts(startsAt);
+  return `${DAYS_SHORT[bkk.dayOfWeek]} ${bkk.day} ${TH_MONTHS_SHORT[bkk.month - 1]}`;
 }
 
 export default async function CourseReportPage({ params }: Props) {
@@ -47,6 +54,7 @@ export default async function CourseReportPage({ params }: Props) {
       where: { courseId: id, droppedAt: null },
       select: {
         id: true,
+        createdAt: true,
         student: { select: { id: true, name: true, studentId: true } },
       },
       orderBy: { createdAt: "asc" },
@@ -60,63 +68,49 @@ export default async function CourseReportPage({ params }: Props) {
     label: sessionLabel(s.startsAt),
   }));
 
-  const totalSessions = sessions.length;
-  const totalEnrolled = enrollments.length;
-
   const matrixStudents = enrollments.map((en) => {
-    const cells: (AttendanceStatus | null)[] = sessions.map((s) => {
-      const att = s.attendances.find((a) => a.studentId === en.student.id);
-      return att?.status ?? null;
-    });
-
-    const presentCount = cells.filter((c) => c === "PRESENT").length;
-    const lateCount = cells.filter((c) => c === "LATE").length;
-    const absentCount = cells.filter((c) => c === "ABSENT").length;
-    const excusedCount = cells.filter((c) => c === "EXCUSED").length;
-    const counted = totalSessions - excusedCount;
+    const cells: (AttendanceStatus | null)[] = sessions.map((s) =>
+      cellForSession(en.createdAt, {
+        startsAt: s.startsAt,
+        status: s.attendances.find((a) => a.studentId === en.student.id)?.status ?? null,
+      }),
+    );
+    const summary = summarizeMarks(cells);
 
     return {
       enrollmentId: en.id,
       studentId: en.student.studentId,
       name: en.student.name,
       cells,
-      presentCount,
-      lateCount,
-      absentCount,
-      excusedCount,
-      pct: counted > 0 ? Math.round(((presentCount + lateCount * 0.5) / counted) * 100) : null,
+      presentCount: summary.present,
+      lateCount: summary.late,
+      absentCount: summary.absent,
+      excusedCount: summary.excused,
+      pct: summary.pct,
     };
   });
 
-  // Risk buckets — skip pct === null (counted === 0)
   const riskBuckets = matrixStudents.reduce(
     (acc, s) => {
-      if (s.pct === null) return acc;
-      if (s.pct >= 80) acc.safe += 1;
-      else if (s.pct >= 60) acc.warn += 1;
-      else acc.danger += 1;
+      const band = riskBand(s.pct);
+      if (band === "safe") acc.safe += 1;
+      else if (band === "warn") acc.warn += 1;
+      else if (band === "danger") acc.danger += 1;
       return acc;
     },
-    { safe: 0, warn: 0, danger: 0 }
+    { safe: 0, warn: 0, danger: 0 },
   );
 
-  // Per-session pct — หารด้วย enrolled - EXCUSED (เคสนี้ session ใด)
-  // เพื่อให้สูตรเดียวกับ session report / dashboard
-  const sessionStats = sessions.map((s) => {
-    let p = 0;
-    let l = 0;
-    let e = 0;
-    for (const att of s.attendances) {
-      if (att.status === "PRESENT") p += 1;
-      else if (att.status === "LATE") l += 1;
-      else if (att.status === "EXCUSED") e += 1;
-    }
-    const counted = totalEnrolled - e;
-    return {
-      label: sessionLabel(s.startsAt),
-      pct: counted > 0 ? Math.round(((p + l * 0.5) / counted) * 100) : null,
-    };
-  });
+  const sessionStats = sessions.map((s) => ({
+    label: sessionLabel(s.startsAt),
+    pct: summarizeSession({
+      startsAt: s.startsAt,
+      students: enrollments.map((en) => ({
+        enrolledAt: en.createdAt,
+        status: s.attendances.find((a) => a.studentId === en.student.id)?.status ?? null,
+      })),
+    }).pct,
+  }));
 
   const totalAbsent = matrixStudents.reduce((sum, s) => sum + s.absentCount, 0);
   const totalLate = matrixStudents.reduce((sum, s) => sum + s.lateCount, 0);
@@ -136,6 +130,7 @@ export default async function CourseReportPage({ params }: Props) {
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Link
             href={`/teacher/courses/${id}`}
+            aria-label="กลับไปรายวิชา"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
             title="กลับไปรายวิชา"
           >

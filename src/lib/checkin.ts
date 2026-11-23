@@ -2,6 +2,7 @@ import "server-only";
 
 import { AttendanceStatus } from "@prisma/client";
 
+import { statusForCheckIn } from "@/lib/attendance-summary";
 import { db } from "@/lib/db";
 import { autoCloseIfExpired } from "@/lib/session-helpers";
 import { verifyQrToken } from "@/lib/qr-verify";
@@ -44,8 +45,9 @@ export function isDemoCheckInEnabled() {
 }
 
 export function getAttendanceStatus(now: Date, lateAfter: Date | null) {
-  if (lateAfter && now >= lateAfter) return AttendanceStatus.LATE;
-  return AttendanceStatus.PRESENT;
+  return statusForCheckIn(now, lateAfter) === "LATE"
+    ? AttendanceStatus.LATE
+    : AttendanceStatus.PRESENT;
 }
 
 export async function getCheckInContext(token?: string | null): Promise<CheckInContext> {

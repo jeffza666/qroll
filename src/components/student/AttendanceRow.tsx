@@ -1,9 +1,11 @@
 import { AttendanceStatus } from "@prisma/client";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 
+import { formatBangkokDate, formatBangkokTime } from "@/lib/datetime";
+
 type Props = {
   status: AttendanceStatus;
-  checkedInAt: Date;
+  checkedInAt?: Date | null;
   sessionStartsAt: Date;
   courseCode?: string;
   courseName?: string;
@@ -24,19 +26,7 @@ const MONTHS_TH = [
 ];
 
 function formatBkkDate(d: Date) {
-  const day = d.getDate();
-  const month = MONTHS_TH[d.getMonth()];
-  const year = (d.getFullYear() + 543) % 100;
-  return `${day} ${month} ${year}`;
-}
-
-function formatBkkTime(d: Date) {
-  return d.toLocaleTimeString("th-TH", {
-    timeZone: "Asia/Bangkok",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return formatBangkokDate(d, MONTHS_TH, "buddhist-short");
 }
 
 export default function AttendanceRow({
@@ -68,7 +58,7 @@ export default function AttendanceRow({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-slate-400" />
-            เช็คชื่อ {formatBkkTime(checkedInAt)} น.
+            {checkedInAt ? `เช็คชื่อ ${formatBangkokTime(checkedInAt)} น.` : "ไม่ได้เช็คชื่อ"}
           </span>
           {room && (
             <span className="inline-flex items-center gap-1.5">

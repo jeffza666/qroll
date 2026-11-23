@@ -6,6 +6,7 @@ import { AnchorSource, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireCourseOwner } from "@/lib/auth-helpers";
+import { bangkokDayOfWeek } from "@/lib/datetime";
 import { generateEntryCode, generateQrToken } from "@/lib/qr-token";
 
 // Phase 6: anchor choice ตอนเปิด session
@@ -32,11 +33,8 @@ export type OpenSessionInput = z.infer<typeof openSessionSchema>;
 async function findTodaySchedule(
   courseId: string
 ): Promise<{ id: string; room: string | null } | null> {
-  const bangkokNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-  );
   const match = await db.schedule.findFirst({
-    where: { courseId, dayOfWeek: bangkokNow.getDay() },
+    where: { courseId, dayOfWeek: bangkokDayOfWeek(new Date()) },
     select: { id: true, room: true },
   });
   return match ?? null;

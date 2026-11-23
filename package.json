@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/attendance-summary.test.ts src/lib/auth-config.test.ts src/lib/datetime.test.ts src/lib/face/distance.test.ts src/lib/geo/haversine.test.ts src/lib/report-csv.test.ts src/lib/roster-import.test.ts src/lib/safe-redirect.test.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

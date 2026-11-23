@@ -7,7 +7,6 @@ import {
   AlertCircle,
   ArrowRight,
   BookOpen,
-  Check,
   Eye,
   EyeOff,
   LayoutGrid,
@@ -17,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import QRollLogo from "@/components/brand/QRollLogo";
+import { getSafeRedirect } from "@/lib/safe-redirect";
 
 const GENERIC_ERROR =
   "Username หรือ password ไม่ถูกต้อง / บัญชีไม่อยู่ในสถานะปกติ";
@@ -42,7 +42,6 @@ export function LoginForm({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(initialError ? GENERIC_ERROR : "");
 
@@ -76,7 +75,7 @@ export function LoginForm({
       return;
     }
 
-    router.push(result.url || redirectTo);
+    router.push(getSafeRedirect(result.url || redirectTo, window.location.origin));
     router.refresh();
   }
 
@@ -166,7 +165,11 @@ export function LoginForm({
               )}
 
               {error && (
-                <div className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-bold text-red-800">
+                <div
+                  id="login-error"
+                  role="alert"
+                  className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-bold text-red-800"
+                >
                   <AlertCircle size={17} />
                   <span>{error}</span>
                 </div>
@@ -191,6 +194,9 @@ export function LoginForm({
                     onChange={(event) => setUsername(event.target.value)}
                     placeholder="กรอกชื่อผู้ใช้หรือรหัสนักศึกษา"
                     autoComplete="username"
+                    required
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? "login-error" : undefined}
                   />
                 </div>
               </div>
@@ -215,6 +221,9 @@ export function LoginForm({
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="กรอกรหัสผ่าน"
                     autoComplete="current-password"
+                    required
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? "login-error" : undefined}
                   />
                   <button
                     type="button"
@@ -226,23 +235,6 @@ export function LoginForm({
                   </button>
                 </div>
               </div>
-
-              <button
-                type="button"
-                className="flex w-fit items-center gap-2.5 bg-transparent text-sm font-semibold text-slate-500"
-                onClick={() => setRemember((value) => !value)}
-              >
-                <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-[7px] border-2 ${
-                    remember
-                      ? "border-qroll-red-dark bg-qroll-red-dark text-white"
-                      : "border-slate-300 bg-white text-transparent"
-                  }`}
-                >
-                  <Check size={13} />
-                </span>
-                จดจำการเข้าสู่ระบบ
-              </button>
 
               <button
                 type="submit"

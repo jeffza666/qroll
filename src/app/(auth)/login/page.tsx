@@ -1,4 +1,5 @@
 import { LoginForm } from "@/app/(auth)/login/LoginForm";
+import { getSafeRedirect } from "@/lib/safe-redirect";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -6,12 +7,6 @@ type LoginPageProps = {
     from?: string;
   }>;
 };
-
-function getSafeRedirect(path?: string) {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) return "/";
-  if (path.startsWith("/login") || path.startsWith("/api/auth")) return "/";
-  return path;
-}
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
