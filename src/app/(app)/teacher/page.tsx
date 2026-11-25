@@ -1,5 +1,13 @@
 import PageHeader from "@/components/shell/PageHeader";
+import {
+  ATTENDANCE_SAFE_PCT,
+  averageRate,
+  studentRates,
+  summarizeClosedSession,
+  type RosterEntry,
+} from "@/lib/attendance-summary";
 import { requireTeacher } from "@/lib/auth-helpers";
+import { bangkokParts, formatBangkokTime } from "@/lib/datetime";
 import { db } from "@/lib/db";
 import {
   BookOpen,
@@ -26,16 +34,27 @@ const MONTHS_TH = [
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
 ];
 
+function formatSessionDate(date: Date) {
+  const parts = bangkokParts(date);
+  return `${parts.day} ${MONTHS_TH[parts.month - 1]} ${parts.year + 543}`;
+}
+
 export default async function TeacherDashboard() {
   const user = await requireTeacher();
 
-  const bangkokNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-  );
-  const todayDow = bangkokNow.getDay();
-  const todayLabel = `${DAYS[todayDow]}ที่ ${bangkokNow.getDate()} ${MONTHS_TH[bangkokNow.getMonth()]} ${bangkokNow.getFullYear() + 543}`;
+  const today = bangkokParts(new Date());
+  const todayDow = today.dayOfWeek;
+  const todayLabel = `${DAYS[todayDow]}ที่ ${today.day} ${MONTHS_TH[today.month - 1]} ${today.year + 543}`;
 
-  const [courseCount, enrollmentCount, todaySchedules, offScheduleSessions, closedSessionsForAvg, latestClosedSession] =
+  const [
+    courseCount,
+    enrollmentCount,
+    todaySchedules,
+    offScheduleSessions,
+    closedSessionsForAvg,
+    latestClosedSession,
+    activeEnrollments,
+  ] =
     await Promise.all([
       // Filter เฉพาะ active courses (ไม่นับ archived) — archived = "จบเทอม" ไม่ควรเด้งใน today's schedule
       db.course.count({ where: { teacherId: user.id, archivedAt: null } }),
@@ -105,12 +124,9 @@ export default async function TeacherDashboard() {
       db.classSession.findMany({
         where: { isOpen: false, course: { teacherId: user.id, archivedAt: null } },
         select: {
-          attendances: { select: { status: true } },
-          course: {
-            select: {
-              _count: { select: { enrollments: { where: { droppedAt: null } } } },
-            },
-          },
+          startsAt: true,
+          attendances: { select: { studentId: true, status: true } },
+          course: { select: { id: true, code: true, name: true } },
         },
       }),
       db.classSession.findFirst({
@@ -119,51 +135,69 @@ export default async function TeacherDashboard() {
         select: {
           id: true,
           startsAt: true,
-          course: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              _count: { select: { enrollments: { where: { droppedAt: null } } } },
-            },
-          },
-          attendances: { select: { status: true } },
+          course: { select: { id: true, code: true, name: true } },
+          attendances: { select: { studentId: true, status: true } },
         },
+      }),
+      db.enrollment.findMany({
+        where: {
+          course: { teacherId: user.id, archivedAt: null },
+          droppedAt: null,
+        },
+        select: { courseId: true, studentId: true, createdAt: true },
       }),
     ]);
 
-  let totalPresentish = 0;
-  let totalExpected = 0;
-  for (const s of closedSessionsForAvg) {
-    let p = 0;
-    let l = 0;
-    let e = 0;
-    for (const a of s.attendances) {
-      if (a.status === "PRESENT") p++;
-      else if (a.status === "LATE") l++;
-      else if (a.status === "EXCUSED") e++;
-    }
-    totalPresentish += p + l * 0.5;
-    totalExpected += s.course._count.enrollments - e;
+  // ใช้กติกาเดียวกับหน้า report: นับเฉพาะคนที่ยังอยู่ในวิชา และไม่นับคาบก่อนที่นักศึกษาจะเข้าวิชา
+  const rosterByCourse = new Map<string, RosterEntry[]>();
+  for (const e of activeEnrollments) {
+    const roster = rosterByCourse.get(e.courseId) ?? [];
+    roster.push({ studentId: e.studentId, enrolledAt: e.createdAt });
+    rosterByCourse.set(e.courseId, roster);
   }
-  const avgPct =
-    totalExpected > 0 ? Math.round((totalPresentish / totalExpected) * 100) : null;
+
+  const closedByCourse = new Map<
+    string,
+    { id: string; code: string; name: string; sessions: typeof closedSessionsForAvg }
+  >();
+  for (const s of closedSessionsForAvg) {
+    const course = closedByCourse.get(s.course.id) ?? { ...s.course, sessions: [] };
+    course.sessions.push(s);
+    closedByCourse.set(s.course.id, course);
+  }
+
+  const allStudentRates: (number | null)[] = [];
+  const courseRates = [...closedByCourse.values()].map((course) => {
+    const rates = studentRates(rosterByCourse.get(course.id) ?? [], course.sessions);
+    allStudentRates.push(...rates);
+    return { id: course.id, code: course.code, name: course.name, pct: averageRate(rates) };
+  });
+  const avgPct = averageRate(allStudentRates);
+  const coursesToWatch = courseRates
+    .flatMap((course) =>
+      course.pct !== null && course.pct < ATTENDANCE_SAFE_PCT ? [{ ...course, pct: course.pct }] : [],
+    )
+    .sort((a, b) => a.pct - b.pct);
   const activeScheduleCount = todaySchedules.filter((s) => s.classSessions.length > 0).length;
   const todayClassCount = todaySchedules.length + offScheduleSessions.length;
   const activeClassCount = activeScheduleCount + offScheduleSessions.length;
 
-  const latestStats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
-  if (latestClosedSession) {
-    for (const a of latestClosedSession.attendances) latestStats[a.status]++;
-  }
-  const latestTotal =
-    latestStats.PRESENT + latestStats.LATE + latestStats.ABSENT + latestStats.EXCUSED;
-  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
+  const latestSummary = latestClosedSession
+    ? summarizeClosedSession(
+        rosterByCourse.get(latestClosedSession.course.id) ?? [],
+        latestClosedSession,
+      )
+    : null;
+  const latestStats = {
+    PRESENT: latestSummary?.present ?? 0,
+    LATE: latestSummary?.late ?? 0,
+    ABSENT: latestSummary?.absent ?? 0,
+    EXCUSED: latestSummary?.excused ?? 0,
+  };
+  // คนที่เข้าวิชาหลังคาบนี้ไม่นับเป็นผู้มีสิทธิ์เข้าเรียนในคาบนี้
+  const latestEnrolled = latestSummary?.applicable ?? 0;
   const latestCheckedIn = latestStats.PRESENT + latestStats.LATE;
-  const latestPct =
-    latestEnrolled > 0
-      ? Math.round(((latestStats.PRESENT + latestStats.LATE * 0.5) / latestEnrolled) * 100)
-      : null;
+  const latestPct = latestSummary?.pct ?? null;
   const segments: Array<{
     id: string;
     label: string;
@@ -191,11 +225,11 @@ export default async function TeacherDashboard() {
   });
 
   function fmtBkk(d: Date) {
-    return d.toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false });
+    return formatBangkokTime(d);
   }
 
   const latestDateLabel = latestClosedSession
-    ? `${latestClosedSession.startsAt.getDate()} ${MONTHS_TH[latestClosedSession.startsAt.getMonth()]} ${latestClosedSession.startsAt.getFullYear() + 543} • ${latestClosedSession.startsAt.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })} น.`
+    ? `${formatSessionDate(latestClosedSession.startsAt)} • ${formatBangkokTime(latestClosedSession.startsAt)} น.`
     : null;
 
   return (
@@ -283,7 +317,7 @@ export default async function TeacherDashboard() {
                 <div>
                   <p className="text-xl font-bold text-slate-500">อัตราเข้าเรียนเฉลี่ย</p>
                   <p className="mt-0.5 text-xs font-semibold text-slate-400">
-                    จากคาบที่บันทึกแล้วทั้งหมด
+                    เฉลี่ยรายคน จากคาบที่ปิดแล้ว
                   </p>
                 </div>
               </div>
@@ -306,6 +340,56 @@ export default async function TeacherDashboard() {
               </div>
             </div>
           </div>
+
+          {coursesToWatch.length > 0 && (
+            <section
+              aria-label="วิชาที่ควรติดตาม"
+              className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm sm:p-6"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-amber-950">วิชาที่ควรติดตาม</h2>
+                  <p className="mt-1 text-sm font-medium text-amber-800">
+                    อัตราเข้าเรียนเฉลี่ยต่ำกว่า 80% จากคาบที่ปิดแล้ว
+                  </p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 font-inter text-sm font-black text-amber-700">
+                  {coursesToWatch.length}
+                </span>
+              </div>
+              <ul className="grid gap-3 md:grid-cols-2">
+                {coursesToWatch.slice(0, 4).map((course) => (
+                  <li key={course.id}>
+                    <Link
+                      href={`/teacher/courses/${course.id}/report`}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-white px-4 py-3 transition hover:border-amber-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-inter text-sm font-black text-slate-900">
+                          {course.code}
+                        </span>
+                        <span className="block truncate text-xs font-semibold text-slate-500">
+                          {course.name}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 font-inter text-lg font-black ${
+                          course.pct >= 60 ? "text-amber-600" : "text-red-600"
+                        }`}
+                      >
+                        {course.pct}%
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {coursesToWatch.length > 4 && (
+                <p className="mt-3 text-xs font-semibold text-amber-800">
+                  และอีก {coursesToWatch.length - 4} วิชาในหน้ารายวิชา
+                </p>
+              )}
+            </section>
+          )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
             <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
@@ -634,7 +718,7 @@ export default async function TeacherDashboard() {
                   <div className="w-full grid grid-cols-2 gap-3">
                     {segments.map((s) => {
                       const Icon = s.icon;
-                      const isEmpty = latestTotal === 0;
+                      const isEmpty = latestEnrolled === 0;
                       return (
                         <div
                           key={s.id}
@@ -666,10 +750,10 @@ export default async function TeacherDashboard() {
                       );
                     })}
                   </div>
-                  {latestTotal === 0 && (
+                  {latestEnrolled === 0 && (
                     <p className="mt-5 text-center text-sm text-slate-400 leading-5 max-w-[280px]">
                       {latestClosedSession
-                        ? "คาบล่าสุดยังไม่มีรายการเช็คชื่อ — สรุปจะแสดงเมื่อมีข้อมูล"
+                        ? "ตอนคาบล่าสุดยังไม่มีนักศึกษาในรายชื่อวิชานี้"
                         : "ยังไม่มีคาบที่ปิดแล้ว — เปิดและปิดคาบแรกเพื่อดูสรุปการเข้าเรียน"}
                     </p>
                   )}

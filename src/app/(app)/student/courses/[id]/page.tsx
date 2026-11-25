@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 
 import AttendanceRow from "@/components/student/AttendanceRow";
 import PageHeader from "@/components/shell/PageHeader";
+import { cellForSession, summarizeMarks } from "@/lib/attendance-summary";
 import { requireStudent } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -39,29 +40,37 @@ export default async function StudentCourseDetailPage({ params }: Props) {
   if (!enrollment) notFound();
   const course = enrollment.course;
 
-  const attendances = await db.attendance.findMany({
+  const sessions = await db.classSession.findMany({
     where: {
-      studentId: user.id,
-      classSession: { courseId: id },
+      courseId: id,
+      startsAt: { gte: enrollment.createdAt },
+      // คาบที่ยังเปิดอยู่จะโชว์เฉพาะตอนที่เช็คชื่อไปแล้ว นักศึกษาจะได้เห็นว่าเช็คชื่อติด
+      OR: [{ isOpen: false }, { attendances: { some: { studentId: user.id } } }],
     },
-    orderBy: { checkedInAt: "desc" },
-    include: {
-      classSession: {
-        select: {
-          startsAt: true,
-          roomSnapshot: true,
-          schedule: { select: { room: true } },
-        },
+    orderBy: { startsAt: "desc" },
+    select: {
+      id: true,
+      isOpen: true,
+      startsAt: true,
+      roomSnapshot: true,
+      schedule: { select: { room: true } },
+      attendances: {
+        where: { studentId: user.id },
+        select: { status: true, checkedInAt: true, distanceM: true },
       },
     },
   });
 
-  const total = attendances.length;
-  const present = attendances.filter((a) => a.status === "PRESENT").length;
-  const late = attendances.filter((a) => a.status === "LATE").length;
-  const absent = attendances.filter((a) => a.status === "ABSENT").length;
-  const counted = present + late + absent;
-  const avgPct = counted > 0 ? Math.round(((present + late * 0.5) / counted) * 100) : null;
+  // % นับเฉพาะคาบที่ปิดแล้ว ให้ตรงกับหน้าของอาจารย์
+  const summary = summarizeMarks(
+    sessions.filter((session) => !session.isOpen).map((session) =>
+      cellForSession(enrollment.createdAt, {
+        startsAt: session.startsAt,
+        status: session.attendances[0]?.status ?? null,
+      }),
+    ),
+  );
+  const avgPct = summary.pct;
 
   return (
     <>
@@ -156,8 +165,8 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                   <HistoryIcon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-500">บันทึกทั้งหมด</p>
-                  <p className="font-inter text-2xl font-black text-slate-800">{total}</p>
+                  <p className="text-xs font-bold text-slate-500">คาบที่ปิดแล้ว</p>
+                  <p className="font-inter text-2xl font-black text-slate-800">{summary.applicable}</p>
                 </div>
               </div>
             </div>
@@ -168,7 +177,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-500">ทันเวลา</p>
-                  <p className="font-inter text-2xl font-black text-emerald-700">{present}</p>
+                  <p className="font-inter text-2xl font-black text-emerald-700">{summary.present}</p>
                 </div>
               </div>
             </div>
@@ -179,7 +188,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-500">มาสาย</p>
-                  <p className="font-inter text-2xl font-black text-amber-700">{late}</p>
+                  <p className="font-inter text-2xl font-black text-amber-700">{summary.late}</p>
                 </div>
               </div>
             </div>
@@ -190,7 +199,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-500">ขาด</p>
-                  <p className="font-inter text-2xl font-black text-red-700">{absent}</p>
+                  <p className="font-inter text-2xl font-black text-red-700">{summary.absent}</p>
                 </div>
               </div>
             </div>
@@ -212,6 +221,11 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                   {avgPct}%
                 </p>
               </div>
+              {summary.excused > 0 && (
+                <p className="mt-2 text-xs font-semibold text-slate-400">
+                  ไม่นับ {summary.excused} คาบที่ลา
+                </p>
+              )}
               <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className={`h-full rounded-full ${
@@ -239,27 +253,28 @@ export default async function StudentCourseDetailPage({ params }: Props) {
               </div>
             </div>
 
-            {total === 0 ? (
+            {sessions.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-16 text-center text-slate-400">
                 <Clock className="mb-3 h-12 w-12 opacity-30" />
-                <p className="text-sm font-semibold">ยังไม่มีประวัติเช็คชื่อในวิชานี้</p>
+                <p className="text-sm font-semibold">ยังไม่มีคาบที่ปิดในวิชานี้</p>
+                <p className="mt-1 text-xs">เมื่ออาจารย์ปิดคาบแล้ว รายการมา ขาด และลาจะแสดงที่นี่</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {attendances.map((attendance) => (
-                  <AttendanceRow
-                    key={attendance.id}
-                    status={attendance.status}
-                    checkedInAt={attendance.checkedInAt}
-                    sessionStartsAt={attendance.classSession.startsAt}
-                    room={
-                      attendance.classSession.roomSnapshot ??
-                      attendance.classSession.schedule?.room ??
-                      null
-                    }
-                    distanceM={attendance.distanceM}
-                  />
-                ))}
+                {sessions.map((session) => {
+                  const attendance = session.attendances[0];
+                  return (
+                    <AttendanceRow
+                      key={session.id}
+                      status={attendance?.status ?? "ABSENT"}
+                      checkedInAt={attendance?.checkedInAt ?? null}
+                      sessionStartsAt={session.startsAt}
+                      room={session.roomSnapshot ?? session.schedule?.room ?? null}
+                      distanceM={attendance?.distanceM ?? null}
+                      sessionOpen={session.isOpen}
+                    />
+                  );
+                })}
               </div>
             )}
           </section>

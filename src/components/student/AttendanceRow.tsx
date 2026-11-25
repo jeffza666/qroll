@@ -1,14 +1,17 @@
 import { AttendanceStatus } from "@prisma/client";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 
+import { formatBangkokDate, formatBangkokTime } from "@/lib/datetime";
+
 type Props = {
   status: AttendanceStatus;
-  checkedInAt: Date;
+  checkedInAt?: Date | null;
   sessionStartsAt: Date;
   courseCode?: string;
   courseName?: string;
   room: string | null;
   distanceM: number | null;
+  sessionOpen?: boolean;
 };
 
 const STATUS_PILL: Record<AttendanceStatus, { label: string; className: string }> = {
@@ -24,19 +27,7 @@ const MONTHS_TH = [
 ];
 
 function formatBkkDate(d: Date) {
-  const day = d.getDate();
-  const month = MONTHS_TH[d.getMonth()];
-  const year = (d.getFullYear() + 543) % 100;
-  return `${day} ${month} ${year}`;
-}
-
-function formatBkkTime(d: Date) {
-  return d.toLocaleTimeString("th-TH", {
-    timeZone: "Asia/Bangkok",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return formatBangkokDate(d, MONTHS_TH, "buddhist-short");
 }
 
 export default function AttendanceRow({
@@ -47,6 +38,7 @@ export default function AttendanceRow({
   courseName,
   room,
   distanceM,
+  sessionOpen = false,
 }: Props) {
   const pill = STATUS_PILL[status];
 
@@ -68,7 +60,7 @@ export default function AttendanceRow({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-slate-400" />
-            เช็คชื่อ {formatBkkTime(checkedInAt)} น.
+            {checkedInAt ? `เช็คชื่อ ${formatBangkokTime(checkedInAt)} น.` : "ไม่ได้เช็คชื่อ"}
           </span>
           {room && (
             <span className="inline-flex items-center gap-1.5">
@@ -80,6 +72,11 @@ export default function AttendanceRow({
             <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700">
               <MapPin className="h-3 w-3" />
               ตรวจตำแหน่งแล้ว ~{distanceM}m
+            </span>
+          )}
+          {sessionOpen && (
+            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600">
+              คาบยังเปิดอยู่ · ยังไม่นับใน %
             </span>
           )}
         </div>
