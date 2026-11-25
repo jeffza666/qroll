@@ -107,3 +107,48 @@ export function summarizeSession(input: {
     ),
   );
 }
+
+export type RosterEntry = { studentId: string; enrolledAt: Date };
+
+export type ClosedSession = {
+  startsAt: Date;
+  attendances: readonly { studentId: string; status: AttendanceMark }[];
+};
+
+function statusOf(session: ClosedSession, studentId: string) {
+  return session.attendances.find((row) => row.studentId === studentId)?.status ?? null;
+}
+
+/** Rows from students who are no longer on the roster are ignored. */
+export function summarizeClosedSession(roster: readonly RosterEntry[], session: ClosedSession) {
+  return summarizeSession({
+    startsAt: session.startsAt,
+    students: roster.map((entry) => ({
+      enrolledAt: entry.enrolledAt,
+      status: statusOf(session, entry.studentId),
+    })),
+  });
+}
+
+/** Mean of each student's own rate. Students with nothing counted yet are skipped. */
+export function averageRate(pcts: readonly (number | null)[]): number | null {
+  const values = pcts.filter((pct): pct is number => pct !== null);
+  if (values.length === 0) return null;
+  return Math.round(values.reduce((sum, pct) => sum + pct, 0) / values.length);
+}
+
+export function studentRates(
+  roster: readonly RosterEntry[],
+  sessions: readonly ClosedSession[],
+): (number | null)[] {
+  return roster.map(
+    (entry) =>
+      summarizeEnrollment(
+        entry.enrolledAt,
+        sessions.map((session) => ({
+          startsAt: session.startsAt,
+          status: statusOf(session, entry.studentId),
+        })),
+      ).pct,
+  );
+}

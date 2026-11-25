@@ -3,9 +3,12 @@ import test from "node:test";
 
 import {
   attendanceRate,
+  averageRate,
   cellForSession,
   riskBand,
   statusForCheckIn,
+  studentRates,
+  summarizeClosedSession,
   summarizeEnrollment,
   summarizeSession,
 } from "./attendance-summary.ts";
@@ -63,4 +66,38 @@ test("session totals ignore students who joined later", () => {
   assert.equal(summary.late, 1);
   assert.equal(summary.applicable, 2);
   assert.equal(summary.pct, 25);
+});
+
+const early = new Date("2026-11-02T02:00:00.000Z");
+const late = new Date("2026-11-20T02:00:00.000Z");
+const roster = [
+  { studentId: "a", enrolledAt: enrolled },
+  { studentId: "b", enrolledAt: new Date("2026-11-10T00:00:00.000Z") },
+];
+const sessions = [
+  {
+    startsAt: early,
+    attendances: [
+      { studentId: "a", status: "PRESENT" as const },
+      { studentId: "dropped", status: "PRESENT" as const },
+    ],
+  },
+  { startsAt: late, attendances: [{ studentId: "b", status: "PRESENT" as const }] },
+];
+
+test("a student who joined later is not marked absent for earlier sessions", () => {
+  assert.deepEqual(studentRates(roster, sessions), [50, 100]);
+});
+
+test("rows from students no longer on the roster are ignored", () => {
+  const summary = summarizeClosedSession(roster, sessions[0]);
+  assert.equal(summary.present, 1);
+  assert.equal(summary.applicable, 1);
+  assert.equal(summary.pct, 100);
+});
+
+test("course average is the mean of each student's rate", () => {
+  assert.equal(averageRate([50, 100]), 75);
+  assert.equal(averageRate([null, 80]), 80);
+  assert.equal(averageRate([]), null);
 });

@@ -43,12 +43,14 @@ export default async function StudentCourseDetailPage({ params }: Props) {
   const sessions = await db.classSession.findMany({
     where: {
       courseId: id,
-      isOpen: false,
       startsAt: { gte: enrollment.createdAt },
+      // คาบที่ยังเปิดอยู่จะโชว์เฉพาะตอนที่เช็คชื่อไปแล้ว นักศึกษาจะได้เห็นว่าเช็คชื่อติด
+      OR: [{ isOpen: false }, { attendances: { some: { studentId: user.id } } }],
     },
     orderBy: { startsAt: "desc" },
     select: {
       id: true,
+      isOpen: true,
       startsAt: true,
       roomSnapshot: true,
       schedule: { select: { room: true } },
@@ -59,8 +61,9 @@ export default async function StudentCourseDetailPage({ params }: Props) {
     },
   });
 
+  // % นับเฉพาะคาบที่ปิดแล้ว ให้ตรงกับหน้าของอาจารย์
   const summary = summarizeMarks(
-    sessions.map((session) =>
+    sessions.filter((session) => !session.isOpen).map((session) =>
       cellForSession(enrollment.createdAt, {
         startsAt: session.startsAt,
         status: session.attendances[0]?.status ?? null,
@@ -268,6 +271,7 @@ export default async function StudentCourseDetailPage({ params }: Props) {
                       sessionStartsAt={session.startsAt}
                       room={session.roomSnapshot ?? session.schedule?.room ?? null}
                       distanceM={attendance?.distanceM ?? null}
+                      sessionOpen={session.isOpen}
                     />
                   );
                 })}

@@ -11,6 +11,7 @@ type Props = {
   courseName?: string;
   room: string | null;
   distanceM: number | null;
+  sessionOpen?: boolean;
 };
 
 const STATUS_PILL: Record<AttendanceStatus, { label: string; className: string }> = {
@@ -37,6 +38,7 @@ export default function AttendanceRow({
   courseName,
   room,
   distanceM,
+  sessionOpen = false,
 }: Props) {
   const pill = STATUS_PILL[status];
 
@@ -70,6 +72,11 @@ export default function AttendanceRow({
             <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700">
               <MapPin className="h-3 w-3" />
               ตรวจตำแหน่งแล้ว ~{distanceM}m
+            </span>
+          )}
+          {sessionOpen && (
+            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600">
+              คาบยังเปิดอยู่ · ยังไม่นับใน %
             </span>
           )}
         </div>

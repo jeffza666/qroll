@@ -7,6 +7,7 @@ import ReportClient from "@/components/report/ReportClient";
 import ExportCsvButton from "@/components/report/ExportCsvButton";
 import PageHeader from "@/components/shell/PageHeader";
 import {
+  averageRate,
   cellForSession,
   riskBand,
   summarizeMarks,
@@ -115,12 +116,8 @@ export default async function CourseReportPage({ params }: Props) {
   const totalAbsent = matrixStudents.reduce((sum, s) => sum + s.absentCount, 0);
   const totalLate = matrixStudents.reduce((sum, s) => sum + s.lateCount, 0);
 
-  // Avg pct — เฉลี่ยจาก rate ของแต่ละ student (ไม่ใช่ของทั้ง session)
-  const studentPcts = matrixStudents.flatMap((s) => (s.pct === null ? [] : [s.pct]));
-  const avgPct =
-    studentPcts.length > 0
-      ? Math.round(studentPcts.reduce((x, y) => x + y, 0) / studentPcts.length)
-      : null;
+  // เฉลี่ยจาก % ของนักศึกษาแต่ละคน หน้า teacher home ใช้สูตรเดียวกัน
+  const avgPct = averageRate(matrixStudents.map((s) => s.pct));
 
   const csvFilename = `report-${course.code}${course.section ? `-sec${course.section}` : ""}-${course.semester}.csv`;
 

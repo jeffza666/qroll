@@ -1,5 +1,11 @@
 import PageHeader from "@/components/shell/PageHeader";
-import { attendanceRate } from "@/lib/attendance-summary";
+import {
+  ATTENDANCE_SAFE_PCT,
+  averageRate,
+  studentRates,
+  summarizeClosedSession,
+  type RosterEntry,
+} from "@/lib/attendance-summary";
 import { requireTeacher } from "@/lib/auth-helpers";
 import { bangkokParts, formatBangkokTime } from "@/lib/datetime";
 import { db } from "@/lib/db";
@@ -40,7 +46,15 @@ export default async function TeacherDashboard() {
   const todayDow = today.dayOfWeek;
   const todayLabel = `${DAYS[todayDow]}ที่ ${today.day} ${MONTHS_TH[today.month - 1]} ${today.year + 543}`;
 
-  const [courseCount, enrollmentCount, todaySchedules, offScheduleSessions, closedSessionsForAvg, latestClosedSession] =
+  const [
+    courseCount,
+    enrollmentCount,
+    todaySchedules,
+    offScheduleSessions,
+    closedSessionsForAvg,
+    latestClosedSession,
+    activeEnrollments,
+  ] =
     await Promise.all([
       // Filter เฉพาะ active courses (ไม่นับ archived) — archived = "จบเทอม" ไม่ควรเด้งใน today's schedule
       db.course.count({ where: { teacherId: user.id, archivedAt: null } }),
@@ -110,15 +124,9 @@ export default async function TeacherDashboard() {
       db.classSession.findMany({
         where: { isOpen: false, course: { teacherId: user.id, archivedAt: null } },
         select: {
-          attendances: { select: { status: true } },
-          course: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              _count: { select: { enrollments: { where: { droppedAt: null } } } },
-            },
-          },
+          startsAt: true,
+          attendances: { select: { studentId: true, status: true } },
+          course: { select: { id: true, code: true, name: true } },
         },
       }),
       db.classSession.findFirst({
@@ -127,92 +135,69 @@ export default async function TeacherDashboard() {
         select: {
           id: true,
           startsAt: true,
-          course: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              _count: { select: { enrollments: { where: { droppedAt: null } } } },
-            },
-          },
-          attendances: { select: { status: true } },
+          course: { select: { id: true, code: true, name: true } },
+          attendances: { select: { studentId: true, status: true } },
         },
+      }),
+      db.enrollment.findMany({
+        where: {
+          course: { teacherId: user.id, archivedAt: null },
+          droppedAt: null,
+        },
+        select: { courseId: true, studentId: true, createdAt: true },
       }),
     ]);
 
-  let totalPresent = 0;
-  let totalLate = 0;
-  let totalExpected = 0;
-  const courseTotals = new Map<
+  // ใช้กติกาเดียวกับหน้า report: นับเฉพาะคนที่ยังอยู่ในวิชา และไม่นับคาบก่อนที่นักศึกษาจะเข้าวิชา
+  const rosterByCourse = new Map<string, RosterEntry[]>();
+  for (const e of activeEnrollments) {
+    const roster = rosterByCourse.get(e.courseId) ?? [];
+    roster.push({ studentId: e.studentId, enrolledAt: e.createdAt });
+    rosterByCourse.set(e.courseId, roster);
+  }
+
+  const closedByCourse = new Map<
     string,
-    { id: string; code: string; name: string; present: number; late: number; expected: number }
+    { id: string; code: string; name: string; sessions: typeof closedSessionsForAvg }
   >();
   for (const s of closedSessionsForAvg) {
-    let p = 0;
-    let l = 0;
-    let e = 0;
-    for (const a of s.attendances) {
-      if (a.status === "PRESENT") p++;
-      else if (a.status === "LATE") l++;
-      else if (a.status === "EXCUSED") e++;
-    }
-    totalPresent += p;
-    totalLate += l;
-    totalExpected += s.course._count.enrollments - e;
-
-    const course = courseTotals.get(s.course.id) ?? {
-      id: s.course.id,
-      code: s.course.code,
-      name: s.course.name,
-      present: 0,
-      late: 0,
-      expected: 0,
-    };
-    course.present += p;
-    course.late += l;
-    course.expected += s.course._count.enrollments - e;
-    courseTotals.set(s.course.id, course);
+    const course = closedByCourse.get(s.course.id) ?? { ...s.course, sessions: [] };
+    course.sessions.push(s);
+    closedByCourse.set(s.course.id, course);
   }
-  const avgPct = attendanceRate({
-    present: totalPresent,
-    late: totalLate,
-    counted: totalExpected,
+
+  const allStudentRates: (number | null)[] = [];
+  const courseRates = [...closedByCourse.values()].map((course) => {
+    const rates = studentRates(rosterByCourse.get(course.id) ?? [], course.sessions);
+    allStudentRates.push(...rates);
+    return { id: course.id, code: course.code, name: course.name, pct: averageRate(rates) };
   });
-  const coursesToWatch = [...courseTotals.values()]
-    .flatMap((course) => {
-      const pct = attendanceRate({
-        present: course.present,
-        late: course.late,
-        counted: course.expected,
-      });
-      if (pct === null || pct >= 80) return [];
-      return [{ ...course, pct }];
-    })
+  const avgPct = averageRate(allStudentRates);
+  const coursesToWatch = courseRates
+    .flatMap((course) =>
+      course.pct !== null && course.pct < ATTENDANCE_SAFE_PCT ? [{ ...course, pct: course.pct }] : [],
+    )
     .sort((a, b) => a.pct - b.pct);
   const activeScheduleCount = todaySchedules.filter((s) => s.classSessions.length > 0).length;
   const todayClassCount = todaySchedules.length + offScheduleSessions.length;
   const activeClassCount = activeScheduleCount + offScheduleSessions.length;
 
-  const latestStats = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0 };
-  const latestEnrolled = latestClosedSession?.course._count.enrollments ?? 0;
-  if (latestClosedSession) {
-    for (const a of latestClosedSession.attendances) latestStats[a.status]++;
-    const unmarked =
-      latestEnrolled -
-      latestStats.PRESENT -
-      latestStats.LATE -
-      latestStats.ABSENT -
-      latestStats.EXCUSED;
-    if (unmarked > 0) latestStats.ABSENT += unmarked;
-  }
-  const latestTotal =
-    latestStats.PRESENT + latestStats.LATE + latestStats.ABSENT + latestStats.EXCUSED;
+  const latestSummary = latestClosedSession
+    ? summarizeClosedSession(
+        rosterByCourse.get(latestClosedSession.course.id) ?? [],
+        latestClosedSession,
+      )
+    : null;
+  const latestStats = {
+    PRESENT: latestSummary?.present ?? 0,
+    LATE: latestSummary?.late ?? 0,
+    ABSENT: latestSummary?.absent ?? 0,
+    EXCUSED: latestSummary?.excused ?? 0,
+  };
+  // คนที่เข้าวิชาหลังคาบนี้ไม่นับเป็นผู้มีสิทธิ์เข้าเรียนในคาบนี้
+  const latestEnrolled = latestSummary?.applicable ?? 0;
   const latestCheckedIn = latestStats.PRESENT + latestStats.LATE;
-  const latestPct = attendanceRate({
-    present: latestStats.PRESENT,
-    late: latestStats.LATE,
-    counted: Math.max(0, latestEnrolled - latestStats.EXCUSED),
-  });
+  const latestPct = latestSummary?.pct ?? null;
   const segments: Array<{
     id: string;
     label: string;
@@ -332,7 +317,7 @@ export default async function TeacherDashboard() {
                 <div>
                   <p className="text-xl font-bold text-slate-500">อัตราเข้าเรียนเฉลี่ย</p>
                   <p className="mt-0.5 text-xs font-semibold text-slate-400">
-                    จากคาบที่บันทึกแล้วทั้งหมด
+                    เฉลี่ยรายคน จากคาบที่ปิดแล้ว
                   </p>
                 </div>
               </div>
@@ -733,7 +718,7 @@ export default async function TeacherDashboard() {
                   <div className="w-full grid grid-cols-2 gap-3">
                     {segments.map((s) => {
                       const Icon = s.icon;
-                      const isEmpty = latestTotal === 0;
+                      const isEmpty = latestEnrolled === 0;
                       return (
                         <div
                           key={s.id}
@@ -765,10 +750,10 @@ export default async function TeacherDashboard() {
                       );
                     })}
                   </div>
-                  {latestTotal === 0 && (
+                  {latestEnrolled === 0 && (
                     <p className="mt-5 text-center text-sm text-slate-400 leading-5 max-w-[280px]">
                       {latestClosedSession
-                        ? "คาบล่าสุดยังไม่มีรายการเช็คชื่อ — สรุปจะแสดงเมื่อมีข้อมูล"
+                        ? "ตอนคาบล่าสุดยังไม่มีนักศึกษาในรายชื่อวิชานี้"
                         : "ยังไม่มีคาบที่ปิดแล้ว — เปิดและปิดคาบแรกเพื่อดูสรุปการเข้าเรียน"}
                     </p>
                   )}
